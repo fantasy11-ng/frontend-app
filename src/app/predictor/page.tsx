@@ -48,7 +48,7 @@ export default function PredictorPage() {
   };
 
   const getKnockoutStageProgress = () => {
-    const totalMatches = 15; // 8 + 4 + 2 + 1
+    const totalMatches = 16;
     const completedMatches = Object.keys(predictions.round16).length + 
                            Object.keys(predictions.quarterFinals).length + 
                            Object.keys(predictions.semiFinals).length + 
