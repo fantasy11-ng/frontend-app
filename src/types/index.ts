@@ -9,7 +9,7 @@ export interface User {
 export interface NavigationLink {
   name: string;
   href: string;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<unknown>;
 }
 
 export interface NavbarProps {
@@ -21,3 +21,6 @@ export interface NavbarProps {
 
 // Re-export predictor types
 export * from './predictor';
+
+// Re-export news types
+export * from './news';
