@@ -180,7 +180,7 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
               {/* Article Content */}
               <div className="p-8">
                 <div 
-                  className="prose prose-lg max-w-none"
+                  className="prose prose-lg max-w-none text-[#070A11]"
                   dangerouslySetInnerHTML={{ __html: mockArticle.content }}
                 />
 
