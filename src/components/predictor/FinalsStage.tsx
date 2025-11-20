@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Lightbulb, Trophy } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Lightbulb, Loader2 } from 'lucide-react';
+import { useBracketSeed, useThirdPlaceMatchSeed } from '@/lib/api';
+import Image from 'next/image';
 
 interface FinalsPredictions {
   thirdPlace: string; // winner team name
@@ -14,32 +16,52 @@ interface FinalsStageProps {
   onSave: () => void;
 }
 
-// Team flags
-const teamFlags: { [key: string]: string } = {
-  'Nigeria': '🇳🇬', 'Burundi': '🇧🇮', 'Senegal': '🇸🇳', 'Algeria': '🇩🇿',
-  'Libya': '🇱🇾', 'Togo': '🇹🇬', 'Kenya': '🇰🇪', 'Botswana': '🇧🇼',
-  'Sudan': '🇸🇩', 'Zimbabwe': '🇿🇼', 'Ethiopia': '🇪🇹', 'Somalia': '🇸🇴',
-  'Gabon': '🇬🇦', 'Liberia': '🇱🇷', 'Burkina Faso': '🇧🇫', 'Seychelles': '🇸🇨',
-  'Malawi': '🇲🇼', 'Angola': '🇦🇴', 'Eswatini': '🇸🇿', 'Zambia': '🇿🇲',
-  'Eritrea': '🇪🇷', 'Chad': '🇹🇩', 'Gambia': '🇬🇲', 'Niger': '🇳🇪',
-  'Cape Verde': '🇨🇻', 'Egypt': '🇪🇬', 'Morocco': '🇲🇦', 'Cameroon': '🇨🇲',
-  'Ghana': '🇬🇭', 'Ivory Coast': '🇨🇮', 'Tunisia': '🇹🇳', 'Mali': '🇲🇱'
-};
-
-// Final matches based on semi-final results
-const finalMatches = {
-  thirdPlace: {
-    home: 'Libya',
-    away: 'Cape Verde'
-  },
-  final: {
-    home: 'Nigeria',
-    away: 'Togo'
-  }
-};
-
 export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsStageProps) {
+  const { data: thirdPlaceSeed = [], isLoading: thirdPlaceLoading, error: thirdPlaceError } = useThirdPlaceMatchSeed(true);
+  const { data: finalSeed = [], isLoading: finalLoading, error: finalError } = useBracketSeed('final', true);
   const [selectedPredictions, setSelectedPredictions] = useState<FinalsPredictions>(predictions);
+
+  // Find third place and final fixtures from their respective seeds
+  const thirdPlaceFixture = thirdPlaceSeed.length > 0 && thirdPlaceSeed.find(f => 
+    f.homeTeam.name === predictions.thirdPlace || 
+    f.awayTeam.name === predictions.thirdPlace
+  ) || (thirdPlaceSeed.length > 0 ? thirdPlaceSeed[0] : null);
+  
+  const finalFixture = finalSeed.length > 0 && finalSeed.find(f => 
+    f.homeTeam.name === predictions.champion || 
+    f.awayTeam.name === predictions.champion
+  ) || (finalSeed.length > 0 ? finalSeed[0] : null);
+
+  // Update predictions when bracket seed loads
+  useEffect(() => {
+    if (thirdPlaceSeed.length > 0 && finalSeed.length > 0 && (!selectedPredictions.thirdPlace || !selectedPredictions.champion)) {
+      // Don't auto-select, just ensure we have the fixtures available
+    }
+  }, [thirdPlaceSeed, finalSeed, thirdPlaceFixture, finalFixture, selectedPredictions.thirdPlace, selectedPredictions.champion]);
+
+  const seedLoading = thirdPlaceLoading || finalLoading;
+  const seedError = thirdPlaceError || finalError;
+
+  if (seedLoading) {
+    return (
+      <div className="p-6 text-center">
+        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-gray-500" />
+        <p className="text-gray-500">Loading finals matches...</p>
+      </div>
+    );
+  }
+
+  if (seedError || !thirdPlaceFixture || !finalFixture) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-red-500">Error loading finals matches. Please try again.</p>
+      </div>
+    );
+  }
+
+  // Use bracket seed fixtures
+  const thirdPlaceMatch = thirdPlaceFixture;
+  const finalMatch = finalFixture;
 
   const handleTeamSelect = (match: 'thirdPlace' | 'champion', teamName: string) => {
     const newPredictions = { ...selectedPredictions, [match]: teamName };
@@ -47,7 +69,9 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
     onUpdate(newPredictions);
   };
 
-  const isComplete = selectedPredictions.thirdPlace && selectedPredictions.champion;
+  const isThirdPlaceComplete = !!selectedPredictions.thirdPlace;
+  const isChampionComplete = !!selectedPredictions.champion;
+  const isComplete = isThirdPlaceComplete && isChampionComplete;
 
   return (
     <div className="p-6">
@@ -64,9 +88,9 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
         <div className="flex space-x-3">
           <button
             onClick={onSave}
-            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
-            Save Predictions
+            Submit Predictions
           </button>
         </div>
       </div>
@@ -102,16 +126,30 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
           <div className="space-y-4">
             {/* Home Team */}
             <div
-              onClick={() => handleTeamSelect('thirdPlace', finalMatches.thirdPlace.home)}
+              onClick={() => handleTeamSelect('thirdPlace', thirdPlaceMatch.homeTeam.name)}
               className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                selectedPredictions.thirdPlace === finalMatches.thirdPlace.home
+                selectedPredictions.thirdPlace === thirdPlaceMatch.homeTeam.name
                   ? 'border-green-500 bg-green-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center">
-                <span className="text-2xl mr-3">{teamFlags[finalMatches.thirdPlace.home]}</span>
-                <span className="font-medium text-gray-900">{finalMatches.thirdPlace.home}</span>
+                {thirdPlaceMatch.homeTeam.logo ? (
+                  <div className="w-8 h-8 mr-3 flex-shrink-0">
+                    <Image
+                      src={thirdPlaceMatch.homeTeam.logo}
+                      alt={thirdPlaceMatch.homeTeam.name}
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 mr-3 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                    {thirdPlaceMatch.homeTeam.short || thirdPlaceMatch.homeTeam.name.charAt(0)}
+                  </div>
+                )}
+                <span className="font-medium text-gray-900">{thirdPlaceMatch.homeTeam.name}</span>
               </div>
             </div>
 
@@ -120,16 +158,30 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
 
             {/* Away Team */}
             <div
-              onClick={() => handleTeamSelect('thirdPlace', finalMatches.thirdPlace.away)}
+              onClick={() => handleTeamSelect('thirdPlace', thirdPlaceMatch.awayTeam.name)}
               className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                selectedPredictions.thirdPlace === finalMatches.thirdPlace.away
+                selectedPredictions.thirdPlace === thirdPlaceMatch.awayTeam.name
                   ? 'border-green-500 bg-green-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center">
-                <span className="text-2xl mr-3">{teamFlags[finalMatches.thirdPlace.away]}</span>
-                <span className="font-medium text-gray-900">{finalMatches.thirdPlace.away}</span>
+                {thirdPlaceMatch.awayTeam.logo ? (
+                  <div className="w-8 h-8 mr-3 flex-shrink-0">
+                    <Image
+                      src={thirdPlaceMatch.awayTeam.logo}
+                      alt={thirdPlaceMatch.awayTeam.name}
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 mr-3 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                    {thirdPlaceMatch.awayTeam.short || thirdPlaceMatch.awayTeam.name.charAt(0)}
+                  </div>
+                )}
+                <span className="font-medium text-gray-900">{thirdPlaceMatch.awayTeam.name}</span>
               </div>
             </div>
           </div>
@@ -138,7 +190,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
           {selectedPredictions.thirdPlace && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
-                <Trophy className="w-4 h-4 text-green-600 mr-2" />
+                <Image src="/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                 <span className="text-green-800 font-medium">
                   Winner: {selectedPredictions.thirdPlace}
                 </span>
@@ -150,7 +202,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
         {/* AFCON 2025 Final */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center mb-4">
-            <Trophy className="w-8 h-8 text-yellow-500 mr-3" />
+            <Image src="/Gold.png" alt="Gold Trophy" width={32} height={32} className="w-8 h-8 mr-3" />
             <h3 className="text-lg font-semibold text-gray-900">
               AFCON 2025 Final
             </h3>
@@ -164,16 +216,30 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
           <div className="space-y-4">
             {/* Home Team */}
             <div
-              onClick={() => handleTeamSelect('champion', finalMatches.final.home)}
+              onClick={() => handleTeamSelect('champion', finalMatch.homeTeam.name)}
               className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                selectedPredictions.champion === finalMatches.final.home
+                selectedPredictions.champion === finalMatch.homeTeam.name
                   ? 'border-green-500 bg-green-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center">
-                <span className="text-2xl mr-3">{teamFlags[finalMatches.final.home]}</span>
-                <span className="font-medium text-gray-900">{finalMatches.final.home}</span>
+                {finalMatch.homeTeam.logo ? (
+                  <div className="w-8 h-8 mr-3 flex-shrink-0">
+                    <Image
+                      src={finalMatch.homeTeam.logo}
+                      alt={finalMatch.homeTeam.name}
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 mr-3 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                    {finalMatch.homeTeam.short || finalMatch.homeTeam.name.charAt(0)}
+                  </div>
+                )}
+                <span className="font-medium text-gray-900">{finalMatch.homeTeam.name}</span>
               </div>
             </div>
 
@@ -182,16 +248,30 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
 
             {/* Away Team */}
             <div
-              onClick={() => handleTeamSelect('champion', finalMatches.final.away)}
+              onClick={() => handleTeamSelect('champion', finalMatch.awayTeam.name)}
               className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                selectedPredictions.champion === finalMatches.final.away
+                selectedPredictions.champion === finalMatch.awayTeam.name
                   ? 'border-green-500 bg-green-50'
                   : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <div className="flex items-center">
-                <span className="text-2xl mr-3">{teamFlags[finalMatches.final.away]}</span>
-                <span className="font-medium text-gray-900">{finalMatches.final.away}</span>
+                {finalMatch.awayTeam.logo ? (
+                  <div className="w-8 h-8 mr-3 flex-shrink-0">
+                    <Image
+                      src={finalMatch.awayTeam.logo}
+                      alt={finalMatch.awayTeam.name}
+                      width={32}
+                      height={32}
+                      className="object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 mr-3 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                    {finalMatch.awayTeam.short || finalMatch.awayTeam.name.charAt(0)}
+                  </div>
+                )}
+                <span className="font-medium text-gray-900">{finalMatch.awayTeam.name}</span>
               </div>
             </div>
           </div>
@@ -200,7 +280,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
           {selectedPredictions.champion && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
-                <Trophy className="w-4 h-4 text-green-600 mr-2" />
+                <Image src="/Gold.png" alt="Gold Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                 <span className="text-green-800 font-medium">
                   Winner: {selectedPredictions.champion}
                 </span>
@@ -214,13 +294,13 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
       {isComplete && (
         <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center">
-            <Trophy className="w-6 h-6 text-green-600 mr-3" />
+            <Image src="/Gold.png" alt="Gold Trophy" width={24} height={24} className="w-6 h-6 mr-3" />
             <div>
               <h3 className="text-lg font-semibold text-green-800">
                 Tournament Prediction Complete!
               </h3>
               <p className="text-green-700">
-                You have successfully predicted the entire AFCON 2025 tournament. Click "Save Predictions" to submit your picks.
+                You have successfully predicted the entire AFCON 2025 tournament. Click &quot;Save Predictions&quot; to submit your picks.
               </p>
             </div>
           </div>

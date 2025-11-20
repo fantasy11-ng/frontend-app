@@ -3,20 +3,15 @@
 import React, { useState } from 'react';
 import { Menu, X, User } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import UserDropdown from './UserDropdown';
 
-interface NavbarProps {
-  isAuthenticated?: boolean;
-  userName?: string;
-  userInitials?: string;
-}
-
-const Navbar: React.FC<NavbarProps> = ({ 
-  isAuthenticated = false, 
-  userInitials = 'FF' 
-}) => {
+const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, isAuthenticated } = useAuth();  
 
   const navigationLinks = [
     { name: 'Home', href: '/' },
@@ -38,12 +33,16 @@ const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <div className="flex flex-col">
-              <span className="text-white text-xl font-bold">Fantasy11</span>
-              <span className="text-white text-xs -mt-1">FOOTBALL</span>
-            </div>
-          </div>
+          <Link href="/" className="flex-shrink-0 flex items-center">
+            <Image
+              src="/Logo.png"
+              alt="Fantasyfi Logo"
+              width={120}
+              height={56}
+              className="object-contain h-8 w-auto"
+              priority
+            />
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:block">
@@ -65,27 +64,22 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Right side - User icons and mobile menu */}
+          {/* Right side - User dropdown and mobile menu */}
           <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
-              <>
-                {/* User Profile Icons */}
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-semibold">
-                      {userInitials}
-                    </span>
-                  </div>
-                </div>
-              </>
+            {isAuthenticated && user ? (
+              <UserDropdown />
             ) : (
               <>
-                {/* Unauthenticated user icons */}
-                <div className="flex items-center space-x-2">
+                {/* Unauthenticated user - show sign in link */}
+                <Link
+                  href="/sign-in"
+                  className="flex items-center space-x-2 text-white hover:text-gray-300 transition-colors"
+                >
                   <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-white" />
                   </div>
-                </div>
+                  <span className="hidden sm:block text-sm font-medium">Sign In</span>
+                </Link>
               </>
             )}
 

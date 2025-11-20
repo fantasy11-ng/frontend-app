@@ -89,7 +89,7 @@ const relatedArticles: NewsArticle[] = [
 
 export default function ArticlePage({ params }: { params: { id: string } }) {
   const [isBookmarked, setIsBookmarked] = useState(false);
-
+  console.log("params",params);
   const handleShare = async () => {
     if (navigator.share) {
       try {

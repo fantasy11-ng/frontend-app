@@ -3,17 +3,19 @@
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
 import { GripVertical } from 'lucide-react';
+import Image from 'next/image';
 
 interface SortableTeamItemProps {
   id: string;
   position: number;
   teamName: string;
-  flag: string;
+  teamLogo?: string;
+  teamShort?: string;
   badge: string; // e.g., '1st'
   highlight?: boolean;
 }
 
-export default function SortableTeamItem({ id, position, teamName, flag, badge, highlight }: SortableTeamItemProps) {
+export default function SortableTeamItem({ id, position, teamName, teamLogo, teamShort, badge, highlight }: SortableTeamItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
@@ -43,7 +45,21 @@ export default function SortableTeamItem({ id, position, teamName, flag, badge, 
       </div>
 
       <div className="flex items-center flex-1">
-        <span className="text-2xl mr-2">{flag}</span>
+        {teamLogo ? (
+          <div className="w-8 h-8 mr-2 flex-shrink-0">
+            <Image
+              src={teamLogo}
+              alt={teamName}
+              width={32}
+              height={32}
+              className="object-contain"
+            />
+          </div>
+        ) : (
+          <div className="w-8 h-8 mr-2 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+            {teamShort || teamName.charAt(0)}
+          </div>
+        )}
         <span className="font-medium text-gray-900">{teamName}</span>
       </div>
 
