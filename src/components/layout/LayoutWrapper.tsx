@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from './Navbar';
 
@@ -9,15 +10,21 @@ interface LayoutWrapperProps {
 }
 
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
-  const { isAuthenticated, user } = useAuth();
+  const pathname = usePathname();
+  const { isAuthenticated } = useAuth();
+  
+  // Hide navbar on auth pages and landing page (when not authenticated)
+  const isAuthPage = pathname?.startsWith('/sign-in') || 
+                     pathname?.startsWith('/sign-up') || 
+                     pathname?.startsWith('/reset-password');
+  
+  // Show navbar only for authenticated users on home page, or on other pages
+  const shouldShowNavbar = !isAuthPage && (isAuthenticated || pathname !== '/');
 
   return (
     <>
-      <Navbar 
-        isAuthenticated={isAuthenticated}
-        userInitials={user?.initials || 'FF'}
-      />
-      <main className="pt-16">
+      {shouldShowNavbar && <Navbar />}
+      <main className={shouldShowNavbar ? 'pt-16' : ''}>
         {children}
       </main>
     </>

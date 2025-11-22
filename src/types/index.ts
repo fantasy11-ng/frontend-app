@@ -24,3 +24,6 @@ export * from './predictor';
 
 // Re-export news types
 export * from './news';
+
+// Re-export team types
+export * from './team';
