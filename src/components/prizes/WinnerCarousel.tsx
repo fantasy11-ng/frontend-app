@@ -16,9 +16,9 @@ interface WinnerCarouselProps {
   year: string;
 }
 
-export default function WinnerCarousel({ title, photos, year }: WinnerCarouselProps) {
+export default function WinnerCarousel({ title, photos }: WinnerCarouselProps) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
+  const [, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {

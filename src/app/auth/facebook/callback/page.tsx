@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useOAuthCallback } from '@/lib/api/hooks/useOAuth';
 
-export default function FacebookCallbackPage() {
+function FacebookCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const oauthCallback = useOAuthCallback();
@@ -58,6 +58,21 @@ export default function FacebookCallbackPage() {
         <p className="text-gray-600">Completing Facebook sign in...</p>
       </div>
     </div>
+  );
+}
+
+export default function FacebookCallbackPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <FacebookCallbackContent />
+    </Suspense>
   );
 }
 

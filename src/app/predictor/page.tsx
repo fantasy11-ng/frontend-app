@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, Suspense } from "react";
 import { Calendar, Check } from "lucide-react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -34,7 +34,7 @@ interface TournamentPredictions {
   };
 }
 
-export default function PredictorPage() {
+function PredictorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -706,5 +706,20 @@ export default function PredictorPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PredictorPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading predictor...</p>
+        </div>
+      </div>
+    }>
+      <PredictorPageContent />
+    </Suspense>
   );
 }
