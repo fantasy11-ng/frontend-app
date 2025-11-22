@@ -28,12 +28,18 @@ export function useSignup() {
 
   return useMutation({
     mutationFn: (data: SignupData) => authApi.signup(data),
-    onSuccess: (responseData) => {
+    onSuccess: async (responseData) => {
       // Store tokens in cookies
       tokenCookies.setAccessToken(responseData.accessToken);
       tokenCookies.setRefreshToken(responseData.refreshToken);
-      // Update auth state
-      queryClient.setQueryData(authKeys.user(), responseData.user);
+      // Fetch full user details to ensure we have firstName/lastName for initials
+      try {
+        const fullUser = await authApi.getCurrentUser();
+        queryClient.setQueryData(authKeys.user(), fullUser);
+      } catch (error) {
+        // If fetching fails, fall back to user from signup response
+        queryClient.setQueryData(authKeys.user(), responseData.user);
+      }
       toast.success('Account created successfully!');
     },
     onError: (error: unknown) => {
@@ -50,12 +56,18 @@ export function useSignin() {
 
   return useMutation({
     mutationFn: (data: SigninData) => authApi.signin(data),
-    onSuccess: (responseData) => {
+    onSuccess: async (responseData) => {
       // Store tokens in cookies
       tokenCookies.setAccessToken(responseData.accessToken);
       tokenCookies.setRefreshToken(responseData.refreshToken);
-      // Update auth state
-      queryClient.setQueryData(authKeys.user(), responseData.user);
+      // Fetch full user details to ensure we have firstName/lastName for initials
+      try {
+        const fullUser = await authApi.getCurrentUser();
+        queryClient.setQueryData(authKeys.user(), fullUser);
+      } catch (error) {
+        // If fetching fails, fall back to user from signin response
+        queryClient.setQueryData(authKeys.user(), responseData.user);
+      }
       toast.success('Signed in successfully!');
     },
     onError: (error: unknown) => {

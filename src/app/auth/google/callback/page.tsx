@@ -3,14 +3,11 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useOAuthCallback } from '@/lib/api/hooks/useOAuth';
-import { useQueryClient } from '@tanstack/react-query';
-import { authKeys } from '@/lib/api/hooks/useAuth';
 
 export default function GoogleCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const oauthCallback = useOAuthCallback();
-  const queryClient = useQueryClient();
 
   const code = searchParams.get('code');
   const error = searchParams.get('error');
@@ -37,9 +34,8 @@ export default function GoogleCallbackPage() {
     oauthCallback.mutate(
       { provider: 'google', code },
       {
-        onSuccess: (responseData) => {
-          // Update auth state with user data
-          queryClient.setQueryData(authKeys.user(), responseData.user);
+        onSuccess: () => {
+          // User data is already fetched and set in the hook
           // Small delay to ensure state is updated
           setTimeout(() => {
             router.push('/');
@@ -53,7 +49,7 @@ export default function GoogleCallbackPage() {
         },
       }
     );
-  }, [code, error, oauthCallback, router, queryClient]);
+  }, [code, error, oauthCallback, router]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">

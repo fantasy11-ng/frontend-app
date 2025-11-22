@@ -59,19 +59,34 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
     return initial;
   });
 
+  // Track the last roundCode we initialized for to detect stage changes
+  const [lastInitializedRoundCode, setLastInitializedRoundCode] = useState<RoundCode | null>(null);
+
   // Update selected winners when bracket seed or saved predictions load
+  // Reset when stage/roundCode changes
   useEffect(() => {
-    if (bracketSeed.length > 0) {
+    // Reset initialization if roundCode changed (user switched stages)
+    if (lastInitializedRoundCode !== null && lastInitializedRoundCode !== roundCode) {
+      setLastInitializedRoundCode(null);
+      setSelectedWinners({});
+    }
+
+    if (bracketSeed.length > 0 && lastInitializedRoundCode !== roundCode) {
       const initial: { [externalFixtureId: string]: string } = {};
       
       // First, try to use saved predictions from API
       if (savedPredictions.length > 0) {
         savedPredictions.forEach((savedPred) => {
-          const fixture = bracketSeed.length > 0 && bracketSeed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
+          const fixture = bracketSeed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
           if (fixture) {
-            const winnerTeam = fixture.homeTeam.id === savedPred.predictedWinnerTeamId 
-              ? fixture.homeTeam 
-              : fixture.awayTeam;
+            // Correctly determine winner - check both home and away teams
+            let winnerTeam = null;
+            if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
+              winnerTeam = fixture.homeTeam;
+            } else if (fixture.awayTeam.id === savedPred.predictedWinnerTeamId) {
+              winnerTeam = fixture.awayTeam;
+            }
+            
             if (winnerTeam) {
               initial[savedPred.externalFixtureId.toString()] = winnerTeam.name;
             }
@@ -89,15 +104,37 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
         });
       }
       
-      if (Object.keys(initial).length > 0) {
-        setSelectedWinners(initial);
-        // Update parent state if we loaded from API
-        if (savedPredictions.length > 0) {
-          onUpdate(initial);
-        }
+      // Always update state, even if empty (to clear previous stage's data)
+      setSelectedWinners(initial);
+      // Update parent state if we loaded from API or have props predictions
+      if (savedPredictions.length > 0 || Object.keys(initial).length > 0) {
+        onUpdate(initial);
       }
+      setLastInitializedRoundCode(roundCode);
     }
-  }, [bracketSeed, savedPredictions, predictions, onUpdate]);
+  }, [bracketSeed, savedPredictions, predictions, onUpdate, roundCode, lastInitializedRoundCode]);
+
+  // Sync with props predictions if they change externally (but don't override user selections)
+  // Only sync if we've already initialized for this roundCode
+  useEffect(() => {
+    if (bracketSeed.length > 0 && lastInitializedRoundCode === roundCode) {
+      // Only update if props have new predictions that aren't in our local state
+      setSelectedWinners(prev => {
+        const updated = { ...prev };
+        let hasChanges = false;
+        
+        bracketSeed.forEach((fixture) => {
+          const fixtureIdKey = fixture.externalFixtureId.toString();
+          if (predictions[fixtureIdKey] && !prev[fixtureIdKey]) {
+            updated[fixtureIdKey] = predictions[fixtureIdKey];
+            hasChanges = true;
+          }
+        });
+        
+        return hasChanges ? updated : prev;
+      });
+    }
+  }, [predictions, bracketSeed, roundCode, lastInitializedRoundCode]);
 
   const handleTeamSelect = (externalFixtureId: number, teamName: string) => {
     const fixtureIdKey = externalFixtureId.toString();
@@ -106,8 +143,13 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
     onUpdate(newSelections);
   };
 
+  // Filter out matches where teams aren't determined yet (e.g., one team is null/TBD)
+  const validMatches = bracketSeed.filter(fixture => 
+    fixture.homeTeam.id && fixture.awayTeam.id
+  );
+  
   const completedMatches = Object.keys(selectedWinners).filter(id => selectedWinners[id]).length;
-  const totalMatches = bracketSeed.length;
+  const totalMatches = validMatches.length;
 
   const isStageComplete = completedMatches === totalMatches && totalMatches > 0;
 
@@ -120,10 +162,18 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
     );
   }
 
-  if (seedError || bracketSeed.length === 0) {
+  if (seedError || (bracketSeed.length === 0 && !seedLoading)) {
     return (
       <div className="p-6 text-center">
         <p className="text-red-500">Error loading matches. Please try again.</p>
+      </div>
+    );
+  }
+  
+  if (!seedLoading && validMatches.length === 0 && bracketSeed.length > 0) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-500">No matches available yet. Please check back later.</p>
       </div>
     );
   }
@@ -170,7 +220,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
         stage === 'quarter' ? 'grid-cols-1 md:grid-cols-2' : 
         'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
       }`}>
-        {bracketSeed.length > 0 && bracketSeed.map((fixture, index) => {
+        {validMatches.length > 0 && validMatches.map((fixture, index) => {
           const fixtureIdKey = fixture.externalFixtureId.toString();
           const selectedWinner = selectedWinners[fixtureIdKey];
           
@@ -284,3 +334,4 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
     </div>
   );
 }
+

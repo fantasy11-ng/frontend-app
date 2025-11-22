@@ -37,6 +37,27 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
   );
 
+  // Track saved state for each group (what was last saved to API)
+  // Also track locally saved states to handle immediate updates
+  const [locallySavedStates, setLocallySavedStates] = useState<GroupPredictions>({});
+  
+  const savedGroupStates = useMemo(() => {
+    const saved: GroupPredictions = { ...locallySavedStates };
+    groups.forEach((group) => {
+      if (group.myPrediction) {
+        if (Array.isArray(group.myPrediction)) {
+          saved[group.name] = group.myPrediction;
+        } else if (group.myPrediction && typeof group.myPrediction === 'object' && 'teams' in group.myPrediction) {
+          const orderedTeams = [...group.myPrediction.teams]
+            .sort((a, b) => a.index - b.index)
+            .map((t) => t.name);
+          saved[group.name] = orderedTeams;
+        }
+      }
+    });
+    return saved;
+  }, [groups, locallySavedStates]);
+
   // Create a map of group name to teams for easy lookup
   const groupTeamsMap = useMemo(() => {
     const map: Record<string, Team[]> = {};
@@ -99,17 +120,38 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
   const isGroupComplete = (groupName: string) => initializedGroups[groupName]?.length === 4;
   const completedGroups = Object.keys(initializedGroups).filter(isGroupComplete);
 
+  // Check if a group has unsaved changes
+  const hasUnsavedChanges = (groupName: string): boolean => {
+    const current = predictions[groupName] || initializedGroups[groupName] || [];
+    const saved = savedGroupStates[groupName] || [];
+    
+    // If no saved state exists, there are changes if current is complete
+    if (saved.length === 0) {
+      return current.length === 4;
+    }
+    
+    // Compare current with saved state
+    if (current.length !== saved.length) {
+      return true;
+    }
+    
+    // Check if order has changed
+    return current.some((team, index) => team !== saved[index]);
+  };
+
   const handleReset = (groupName: string) => {
     const defaultOrder = groupTeamsMap[groupName]?.map((team) => team.name) || [];
-    const next = { ...initializedGroups, [groupName]: defaultOrder };
-    onUpdate(next);
+    // Update with reset order, merging with existing predictions
+    const updated = { ...predictions, [groupName]: defaultOrder };
+    onUpdate(updated);
   };
 
   const handleSaveGroup = async (groupName: string) => {
     const group = groupMap[groupName];
     if (!group) return;
 
-    const teamNames = initializedGroups[groupName];
+    // Use current predictions state (from props) to ensure we have the latest
+    const teamNames = predictions[groupName] || initializedGroups[groupName];
     if (!teamNames || teamNames.length !== 4) {
       toast.error('Please rank all 4 teams before saving');
       return;
@@ -145,9 +187,20 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
 
       // Invalidate and refetch groups to get updated predictions
       await queryClient.invalidateQueries({ queryKey: ['predictor', 'groups'] });
+      await queryClient.invalidateQueries({ queryKey: ['predictor', 'stage', stageId] });
 
-      // Update local predictions
-      onUpdate({ ...initializedGroups });
+      // Update local predictions with saved data
+      const updated = { ...predictions, [groupName]: teamNames };
+      onUpdate(updated);
+
+      // Update locally saved state immediately
+      setLocallySavedStates(prev => ({
+        ...prev,
+        [groupName]: [...teamNames] // Create a copy to avoid reference issues
+      }));
+
+      // Invalidate groups query to refresh savedGroupStates
+      await queryClient.invalidateQueries({ queryKey: ['predictor', 'groups'] });
 
       toast.success(`${groupName} prediction saved successfully!`);
     } catch (error: any) {
@@ -181,11 +234,17 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const current = initializedGroups[groupName];
+    // Use current predictions state (from props) to ensure we have the latest
+    const current = predictions[groupName] || initializedGroups[groupName] || [];
     const oldIndex = current.findIndex((t) => t === active.id);
     const newIndex = current.findIndex((t) => t === over.id);
+    
+    if (oldIndex === -1 || newIndex === -1) return;
+    
     const reordered = arrayMove(current, oldIndex, newIndex);
-    onUpdate({ ...initializedGroups, [groupName]: reordered });
+    // Update with the new order, merging with existing predictions
+    const updated = { ...predictions, [groupName]: reordered };
+    onUpdate(updated);
   };
 
   if (groups.length === 0) {
@@ -273,7 +332,7 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
                 <button 
                   onClick={() => handleSaveGroup(group.name)} 
                   className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                  disabled={savingGroupId === group.id || !isComplete}
+                  disabled={savingGroupId === group.id || !isComplete || !hasUnsavedChanges(group.name)}
                 >
                   {savingGroupId === group.id ? (
                     <>

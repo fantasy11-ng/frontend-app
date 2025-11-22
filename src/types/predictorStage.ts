@@ -24,7 +24,7 @@ export interface StagePredictionsResponse {
 }
 
 // ---- Bracket rounds (/predictor/bracket/{roundCode}) ----
-export type RoundCode = 'r16' | 'qf' | 'sf' | 'final';
+export type RoundCode = 'r16' | 'qf' | 'sf' | 'final' | 'third-place';
 export type ThirdPlaceRoundCode = 'third-place';
 
 export interface BracketPredictionInput {
@@ -57,9 +57,26 @@ export interface BracketSeedFixture {
   awayTeam: BracketSeedTeam;
 }
 
+// New API response structure for bracket rounds
+export interface BracketSeedPair {
+  home: BracketSeedTeam | { id: number | null; name: string; short: string; logo: string };
+  away: BracketSeedTeam | { id: number | null; name: string; short: string; logo: string };
+}
+
+export interface BracketSeedData {
+  round: string;
+  qualified: {
+    winners: number[];
+    runnersUp: number[];
+    thirdQualified: number[];
+  };
+  participants: (number | null)[];
+  pairs: BracketSeedPair[];
+}
+
 export interface BracketSeedResponse {
   success: boolean;
-  data: BracketSeedFixture[];
+  data: BracketSeedFixture[] | BracketSeedData;
 }
 
 // ---- Third-placed qualifiers (/predictor/third-placed-qualifiers) ----

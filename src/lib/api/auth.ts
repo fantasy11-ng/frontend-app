@@ -87,7 +87,7 @@ export const authApi = {
   // This should redirect to Google OAuth, so we return the URL
   initiateGoogleOAuth: (): string => {
     const redirectUri = typeof window !== 'undefined' 
-      ? `${window.location.origin}/auth/google/callback`
+      ? `${window.location.origin}/auth/google`
       : '';
     return `${apiClient.defaults.baseURL}auth/google${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ''}`;
   },

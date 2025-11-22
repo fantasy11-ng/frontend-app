@@ -53,7 +53,55 @@ export const predictorApi = {
   // GET /predictor/bracket/{roundCode}/seed - seeded participants for a round
   getBracketSeed: async (roundCode: RoundCode): Promise<BracketSeedFixture[]> => {
     const response = await apiClient.get<BracketSeedResponse>(`/predictor/bracket/${roundCode}/seed`);
-    return response.data.data;
+    const data = response.data.data;
+    
+    // Handle new format: { round, qualified, participants, pairs }
+    if (!Array.isArray(data) && data && typeof data === 'object' && 'pairs' in data) {
+      const bracketData = data as { pairs: Array<{ home?: { id?: number | null; name?: string; short?: string; logo?: string }; away?: { id?: number | null; name?: string; short?: string; logo?: string }; externalFixtureId?: number; fixtureId?: number; id?: number }>; participants?: (number | null)[] };
+      const fixtures: BracketSeedFixture[] = [];
+      
+      bracketData.pairs.forEach((pair, index: number) => {
+        // Try to get externalFixtureId from various possible locations
+        // The API might provide it in pair.externalFixtureId, pair.fixtureId, or pair.id
+        // If not available, we'll need to derive it or the API should be updated to include it
+        const externalFixtureId = pair.externalFixtureId || pair.fixtureId || pair.id || 
+          (bracketData.participants && bracketData.participants[index] !== null ? bracketData.participants[index] : null) ||
+          (index + 1000); // Fallback: use index + 1000 as temporary ID
+        
+        // Handle cases where home/away might be null, empty, or have missing id
+        const homeTeam = pair.home && (pair.home.id !== null && pair.home.id !== undefined && typeof pair.home.id === 'number') ? {
+          id: pair.home.id,
+          name: pair.home.name || '',
+          short: pair.home.short || '',
+          logo: pair.home.logo || ''
+        } : null;
+        
+        const awayTeam = pair.away && (pair.away.id !== null && pair.away.id !== undefined && typeof pair.away.id === 'number') ? {
+          id: pair.away.id,
+          name: pair.away.name || '',
+          short: pair.away.short || '',
+          logo: pair.away.logo || ''
+        } : null;
+        
+        // Only add fixture if both teams are present (skip if one team is TBD/null)
+        if (homeTeam && awayTeam && homeTeam.id && awayTeam.id) {
+          fixtures.push({
+            externalFixtureId: typeof externalFixtureId === 'number' ? externalFixtureId : (index + 1000),
+            homeTeam,
+            awayTeam
+          });
+        }
+      });
+      
+      if (fixtures.length === 0) {
+        console.warn(`No valid fixtures found in bracket seed for ${roundCode}. Response:`, bracketData);
+      }
+      
+      return fixtures;
+    }
+    
+    // Handle old format: array of BracketSeedFixture
+    return Array.isArray(data) ? data : [];
   },
 
   // GET /predictor/bracket/{roundCode}/me - user's bracket predictions for a round
@@ -117,30 +165,27 @@ export const predictorApi = {
 
   // ----- Third-place match -----
 
-  // GET /predictor/bracket/third-place-match/seed - seeded participants for third place match
-  // Note: Uses bracket seed endpoint pattern
+  // GET /predictor/bracket/third-place/seed - seeded participants for third place match
+  // Uses the same bracket seed endpoint pattern with roundCode 'third-place'
   getThirdPlaceMatchSeed: async (): Promise<BracketSeedFixture[]> => {
-    const response = await apiClient.get<BracketSeedResponse>('/predictor/bracket/third-place/seed');
-    return response.data.data;
+    // Use the same getBracketSeed function with 'third-place' as roundCode
+    return predictorApi.getBracketSeed('third-place' as RoundCode);
   },
 
-  // GET /predictor/third-place-match/me - user's third place match prediction
+  // GET /predictor/bracket/third-place/me - user's third place match prediction
+  // Uses the same bracket predictions endpoint pattern with roundCode 'third-place'
   getThirdPlaceMatchPrediction: async (): Promise<BracketPredictionsResponse['data']> => {
-    const response = await apiClient.get<BracketPredictionsResponse>(
-      '/predictor/third-place/me',
-    );
-    return response.data.data;
+    // Use the same getBracketPredictions function with 'third-place' as roundCode
+    return predictorApi.getBracketPredictions('third-place' as RoundCode);
   },
 
-  // POST /predictor/third-place-match - submit third place match prediction
+  // POST /predictor/bracket/third-place - submit third place match prediction
+  // Uses the same bracket predictions endpoint pattern with roundCode 'third-place'
   saveThirdPlaceMatchPrediction: async (
     data: BracketPredictionsRequest,
   ): Promise<BracketPredictionsResponse['data']> => {
-    const response = await apiClient.post<BracketPredictionsResponse>(
-      '/predictor/third-place-match',
-      data,
-    );
-    return response.data.data;
+    // Use the same saveBracketPredictions function with 'third-place' as roundCode
+    return predictorApi.saveBracketPredictions('third-place' as RoundCode, data);
   },
 
   // ----- Competition details -----

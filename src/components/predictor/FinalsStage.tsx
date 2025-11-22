@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Lightbulb, Loader2 } from 'lucide-react';
-import { useBracketSeed, useThirdPlaceMatchSeed } from '@/lib/api';
+import { useBracketSeed, useThirdPlaceMatchSeed, useBracketPredictions, useThirdPlaceMatchPrediction } from '@/lib/api';
 import Image from 'next/image';
 
 interface FinalsPredictions {
@@ -19,25 +19,125 @@ interface FinalsStageProps {
 export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsStageProps) {
   const { data: thirdPlaceSeed = [], isLoading: thirdPlaceLoading, error: thirdPlaceError } = useThirdPlaceMatchSeed(true);
   const { data: finalSeed = [], isLoading: finalLoading, error: finalError } = useBracketSeed('final', true);
+  const { data: thirdPlaceSavedPredictions = [] } = useThirdPlaceMatchPrediction(true);
+  const { data: finalSavedPredictions = [] } = useBracketPredictions('final', true);
   const [selectedPredictions, setSelectedPredictions] = useState<FinalsPredictions>(predictions);
+  const hasInitializedRef = useRef(false);
 
   // Find third place and final fixtures from their respective seeds
-  const thirdPlaceFixture = thirdPlaceSeed.length > 0 && thirdPlaceSeed.find(f => 
-    f.homeTeam.name === predictions.thirdPlace || 
-    f.awayTeam.name === predictions.thirdPlace
-  ) || (thirdPlaceSeed.length > 0 ? thirdPlaceSeed[0] : null);
+  // Filter valid matches (where both teams are determined)
+  const validThirdPlaceMatches = thirdPlaceSeed.filter(fixture => 
+    fixture.homeTeam && fixture.homeTeam.id && fixture.awayTeam && fixture.awayTeam.id
+  );
+  const validFinalMatches = finalSeed.filter(fixture => 
+    fixture.homeTeam && fixture.homeTeam.id && fixture.awayTeam && fixture.awayTeam.id
+  );
   
-  const finalFixture = finalSeed.length > 0 && finalSeed.find(f => 
-    f.homeTeam.name === predictions.champion || 
-    f.awayTeam.name === predictions.champion
-  ) || (finalSeed.length > 0 ? finalSeed[0] : null);
+  // Get third place fixture - prefer one matching saved prediction, otherwise use first available
+  const thirdPlaceFixture = validThirdPlaceMatches.length > 0 
+    ? (validThirdPlaceMatches.find(f => 
+        predictions.thirdPlace && (
+          f.homeTeam.name === predictions.thirdPlace || 
+          f.awayTeam.name === predictions.thirdPlace
+        )
+      ) || validThirdPlaceMatches[0])
+    : null;
+  
+  // Get final fixture - prefer one matching saved prediction, otherwise use first available
+  const finalFixture = validFinalMatches.length > 0 
+    ? (validFinalMatches.find(f => 
+        predictions.champion && (
+          f.homeTeam.name === predictions.champion || 
+          f.awayTeam.name === predictions.champion
+        )
+      ) || validFinalMatches[0])
+    : null;
 
-  // Update predictions when bracket seed loads
+  // Load saved predictions from API when seeds are available (only once)
   useEffect(() => {
-    if (thirdPlaceSeed.length > 0 && finalSeed.length > 0 && (!selectedPredictions.thirdPlace || !selectedPredictions.champion)) {
-      // Don't auto-select, just ensure we have the fixtures available
+    if (hasInitializedRef.current) return;
+    
+    const loaded: FinalsPredictions = { 
+      thirdPlace: predictions.thirdPlace || '', 
+      champion: predictions.champion || '' 
+    };
+    let hasUpdates = false;
+
+    // Filter valid matches inline to avoid dependency issues
+    const validThirdPlace = thirdPlaceSeed.filter(fixture => 
+      fixture.homeTeam && fixture.homeTeam.id && fixture.awayTeam && fixture.awayTeam.id
+    );
+    const validFinal = finalSeed.filter(fixture => 
+      fixture.homeTeam && fixture.homeTeam.id && fixture.awayTeam && fixture.awayTeam.id
+    );
+
+    // Load third-place match prediction
+    // Try to load from saved predictions if we have both seed and prediction data
+    if (validThirdPlace.length > 0 && thirdPlaceSavedPredictions.length > 0) {
+      const thirdPlaceFixture = validThirdPlace[0];
+      if (thirdPlaceFixture) {
+        const savedPred = thirdPlaceSavedPredictions[0];
+        const winnerTeam = thirdPlaceFixture.homeTeam.id === savedPred.predictedWinnerTeamId 
+          ? thirdPlaceFixture.homeTeam 
+          : thirdPlaceFixture.awayTeam;
+        if (winnerTeam) {
+          loaded.thirdPlace = winnerTeam.name;
+          hasUpdates = true;
+        }
+      }
+    } else if (thirdPlaceSavedPredictions.length > 0 && !loaded.thirdPlace) {
+      // If we have saved predictions but no seed data yet, we can't determine the team name
+      // But we should still mark as initialized if props already have the value
+      // The saved prediction will be shown once seed data is available
     }
-  }, [thirdPlaceSeed, finalSeed, thirdPlaceFixture, finalFixture, selectedPredictions.thirdPlace, selectedPredictions.champion]);
+
+    // Load final match prediction
+    if (validFinal.length > 0 && finalSavedPredictions.length > 0) {
+      const finalFixture = validFinal[0];
+      if (finalFixture) {
+        const savedPred = finalSavedPredictions[0];
+        const winnerTeam = finalFixture.homeTeam.id === savedPred.predictedWinnerTeamId 
+          ? finalFixture.homeTeam 
+          : finalFixture.awayTeam;
+        if (winnerTeam) {
+          loaded.champion = winnerTeam.name;
+          hasUpdates = true;
+        }
+      }
+    }
+
+    if (hasUpdates) {
+      setSelectedPredictions(loaded);
+      onUpdate(loaded);
+      hasInitializedRef.current = true;
+    } else if (predictions.thirdPlace || predictions.champion) {
+      // Fallback to props if no API updates (don't call onUpdate to avoid loop)
+      setSelectedPredictions(predictions);
+      hasInitializedRef.current = true;
+    } else if (thirdPlaceSavedPredictions.length > 0 || finalSavedPredictions.length > 0) {
+      // If we have saved predictions but can't load them yet (no seed data), mark as initialized
+      // This prevents the component from trying to re-initialize
+      hasInitializedRef.current = true;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    thirdPlaceSeed.length, 
+    finalSeed.length, 
+    thirdPlaceSavedPredictions.length, 
+    finalSavedPredictions.length
+  ]);
+
+  // Sync selectedPredictions with predictions prop when it changes (after initialization)
+  useEffect(() => {
+    if (hasInitializedRef.current) {
+      // Only update if there are actual differences to prevent unnecessary re-renders
+      if (predictions.thirdPlace !== selectedPredictions.thirdPlace || 
+          predictions.champion !== selectedPredictions.champion) {
+        setSelectedPredictions(predictions);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [predictions.thirdPlace, predictions.champion]);
 
   const seedLoading = thirdPlaceLoading || finalLoading;
   const seedError = thirdPlaceError || finalError;
@@ -51,17 +151,34 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
     );
   }
 
-  if (seedError || !thirdPlaceFixture || !finalFixture) {
+  // Show error only if there's an actual error, not just missing fixtures
+  if (seedError) {
     return (
       <div className="p-6 text-center">
         <p className="text-red-500">Error loading finals matches. Please try again.</p>
+        {seedError && <p className="text-sm text-gray-500 mt-2">{String(seedError)}</p>}
       </div>
     );
   }
 
+  // Show message if final match isn't available yet (but no error)
+  if (!finalFixture && !seedLoading && !finalError) {
+    return (
+      <div className="p-6 text-center">
+        <p className="text-gray-500">Final match is not available yet. Please check back later.</p>
+      </div>
+    );
+  }
+
+  // If we don't have final fixture, don't render (already handled above)
+  if (!finalFixture) {
+    return null;
+  }
+
   // Use bracket seed fixtures
-  const thirdPlaceMatch = thirdPlaceFixture;
   const finalMatch = finalFixture;
+  // Third place match - show if available, but don't require it
+  const thirdPlaceMatch = thirdPlaceFixture;
 
   const handleTeamSelect = (match: 'thirdPlace' | 'champion', teamName: string) => {
     const newPredictions = { ...selectedPredictions, [match]: teamName };
@@ -106,8 +223,9 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
       </div>
 
       {/* Finals Matches */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* 3rd Place Playoff */}
+      <div className={`grid gap-8 ${(thirdPlaceMatch || selectedPredictions.thirdPlace || thirdPlaceSeed.length > 0) ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
+        {/* 3rd Place Playoff - Always show on finals page */}
+        {thirdPlaceMatch ? (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center mb-4">
             <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
@@ -198,6 +316,71 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
             </div>
           )}
         </div>
+        ) : selectedPredictions.thirdPlace ? (
+          // Show saved prediction even if match isn't available yet
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                3
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                3rd Place playoff
+              </h3>
+              <div className="w-3 h-3 bg-green-500 rounded-full ml-auto"></div>
+            </div>
+            <p className="text-gray-600 mb-6">Pick the winner of the 3rd place match</p>
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center">
+                <Image src="/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                <span className="text-green-800 font-medium">
+                  Your Prediction: {selectedPredictions.thirdPlace}
+                </span>
+              </div>
+            </div>
+            <p className="text-gray-500 text-sm mt-4">Match details will be available after semi-finals</p>
+          </div>
+        ) : thirdPlaceSeed.length > 0 ? (
+          // Show placeholder if third place seed exists but no valid match yet
+          <div className="bg-white border border-gray-200 rounded-lg p-6 opacity-50">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                3
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                3rd Place playoff
+              </h3>
+            </div>
+            <p className="text-gray-500">Third place match will be available after semi-finals</p>
+          </div>
+        ) : (
+          // Always show third-place section on finals page
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+                3
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                3rd Place playoff
+              </h3>
+              {selectedPredictions.thirdPlace && (
+                <div className="w-3 h-3 bg-green-500 rounded-full ml-auto"></div>
+              )}
+            </div>
+            <p className="text-gray-600 mb-6">Pick the winner of the 3rd place match</p>
+            {selectedPredictions.thirdPlace ? (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <div className="flex items-center">
+                  <Image src="/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                  <span className="text-green-800 font-medium">
+                    Your Prediction: {selectedPredictions.thirdPlace}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-gray-500">Third place match will be available after semi-finals</p>
+            )}
+          </div>
+        )}
 
         {/* AFCON 2025 Final */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
