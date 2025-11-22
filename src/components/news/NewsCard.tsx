@@ -1,6 +1,6 @@
 'use client';
 
-import { NewsArticle } from '@/types';
+import { NewsArticle } from '@/types/news';
 import Link from 'next/link';
 
 interface NewsCardProps {

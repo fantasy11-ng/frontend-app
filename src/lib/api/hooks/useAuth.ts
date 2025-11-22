@@ -37,6 +37,7 @@ export function useSignup() {
         const fullUser = await authApi.getCurrentUser();
         queryClient.setQueryData(authKeys.user(), fullUser);
       } catch (error) {
+        console.error('Error fetching current user:', error);
         // If fetching fails, fall back to user from signup response
         queryClient.setQueryData(authKeys.user(), responseData.user);
       }
@@ -65,6 +66,7 @@ export function useSignin() {
         const fullUser = await authApi.getCurrentUser();
         queryClient.setQueryData(authKeys.user(), fullUser);
       } catch (error) {
+        console.error('Error fetching current user:', error);
         // If fetching fails, fall back to user from signin response
         queryClient.setQueryData(authKeys.user(), responseData.user);
       }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -33,7 +34,6 @@ export default function ThirdBestTeams({
   groupStage, 
   groups,
   onUpdate, 
-  onSave, 
   onNextStage,
   isSubmitting = false
 }: ThirdBestTeamsProps) {

@@ -74,7 +74,7 @@ export default function PlayersTable({ players }: PlayersTableProps) {
           Top 10 Players of the season
         </h2>
         <p className="text-gray-600">
-          Comprehensive performance statistics for AFCON 2025's top performers
+          Comprehensive performance statistics for AFCON 2025&apos;s top performers
         </p>
       </div>
 
@@ -237,7 +237,7 @@ export default function PlayersTable({ players }: PlayersTableProps) {
       {filteredPlayers.length === 0 && searchQuery && (
         <div className="text-center py-12">
           <p className="text-gray-500">
-            Oops! It looks like we couldn't find any results for "{searchQuery}". Try searching for something else!
+            Oops! It looks like we couldn&apos;t find any results for &quot;{searchQuery}&quot;. Try searching for something else!
           </p>
         </div>
       )}
