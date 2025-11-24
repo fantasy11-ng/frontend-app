@@ -36,7 +36,13 @@ export interface BracketPredictionsRequest {
   predictions: BracketPredictionInput[];
 }
 
-export type BracketPrediction = BracketPredictionInput;
+export interface BracketPrediction {
+  id?: number;
+  externalFixtureId: number;
+  roundCode?: RoundCode;
+  predictedWinnerTeamId?: number;
+  predictedWinner?: BracketSeedTeam;
+}
 
 export interface BracketPredictionsResponse {
   success: boolean;
@@ -55,6 +61,15 @@ export interface BracketSeedFixture {
   externalFixtureId: number;
   homeTeam: BracketSeedTeam;
   awayTeam: BracketSeedTeam;
+}
+
+export interface BracketSeedWithQualified {
+  fixtures: BracketSeedFixture[];
+  qualified: {
+    winners: number[];
+    runnersUp: number[];
+    thirdQualified: number[];
+  };
 }
 
 // New API response structure for bracket rounds

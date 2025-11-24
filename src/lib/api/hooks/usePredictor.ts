@@ -6,6 +6,7 @@ import type {
   RoundCode,
   BracketSeedFixture,
   BracketPrediction,
+  BracketSeedWithQualified,
   CompetitionData,
 } from '@/types/predictorStage';
 
@@ -43,6 +44,16 @@ export function useBracketSeed(roundCode: RoundCode, enabled = true) {
   return useQuery<BracketSeedFixture[]>({
     queryKey: ['predictor', 'bracket', roundCode, 'seed'],
     queryFn: () => predictorApi.getBracketSeed(roundCode),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+export function useBracketSeedWithQualified(roundCode: RoundCode, enabled = true) {
+  return useQuery<BracketSeedWithQualified>({
+    queryKey: ['predictor', 'bracket', roundCode, 'seed', 'qualified'],
+    queryFn: () => predictorApi.getBracketSeedWithQualified(roundCode),
     enabled,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useMemo, useState, useRef, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { Calendar, Check } from "lucide-react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,10 +9,32 @@ import { useGroups, useStages, useStagePredictions, useBracketSeed, useBracketPr
 import { predictorApi } from "@/lib/api";
 import { FinalsStage, GroupStage, KnockoutStage, ThirdBestTeams } from '@/components/predictor';
 import toast from 'react-hot-toast';
-import type { RoundCode } from '@/types/predictorStage';
+import type { RoundCode, BracketPrediction } from '@/types/predictorStage';
 
 
 export type PredictionStage = 'group' | 'thirdBest' | 'round16' | 'quarter' | 'semi' | 'finals';
+
+const determineWinnerName = (
+  fixture:
+    | { homeTeam: { id: number; name: string }; awayTeam: { id: number; name: string } }
+    | undefined,
+  savedPred: BracketPrediction,
+) => {
+  if (savedPred.predictedWinner?.name) {
+    return savedPred.predictedWinner.name;
+  }
+
+  if (fixture && savedPred.predictedWinnerTeamId) {
+    if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
+      return fixture.homeTeam.name;
+    }
+    if (fixture.awayTeam.id === savedPred.predictedWinnerTeamId) {
+      return fixture.awayTeam.name;
+    }
+  }
+
+  return null;
+};
 
 interface TournamentPredictions {
   groupStage: {
@@ -137,28 +159,32 @@ function PredictorPageContent() {
     }
   }, [searchParams, router]);
 
-  // Load saved predictions for knockout stages when switching to them
-  const { data: round16Seed = [] } = useBracketSeed('r16', currentStage === 'round16');
-  const { data: round16Predictions = [] } = useBracketPredictions('r16', currentStage === 'round16');
-  
-  const { data: quarterSeed = [] } = useBracketSeed('qf', currentStage === 'quarter');
-  const { data: quarterPredictions = [] } = useBracketPredictions('qf', currentStage === 'quarter');
-  
-  const { data: semiSeed = [] } = useBracketSeed('sf', currentStage === 'semi');
-  const { data: semiPredictions = [] } = useBracketPredictions('sf', currentStage === 'semi');
+  // Only fetch bracket data for the stage the user is currently on
+  const isRound16Stage = currentStage === 'round16';
+  const isQuarterStage = currentStage === 'quarter';
+  const isSemiStage = currentStage === 'semi';
+  const isFinalsStage = currentStage === 'finals';
 
-  // Load round16 predictions into state
+  const { data: round16Seed = [] } = useBracketSeed('r16', isRound16Stage);
+  const { data: round16Predictions = [] } = useBracketPredictions('r16', isRound16Stage);
+  
+  const { data: quarterSeed = [] } = useBracketSeed('qf', isQuarterStage);
+  const { data: quarterPredictions = [] } = useBracketPredictions('qf', isQuarterStage);
+  
+  const { data: semiSeed = [] } = useBracketSeed('sf', isSemiStage);
+  const { data: semiPredictions = [] } = useBracketPredictions('sf', isSemiStage);
+
+  // Load round16 predictions into state - only when on that stage
   useEffect(() => {
-    if (currentStage === 'round16' && round16Seed.length > 0 && round16Predictions.length > 0) {
+    if (!isRound16Stage) return;
+    if (round16Seed.length > 0 && round16Predictions.length > 0) {
       const loaded: { [externalFixtureId: string]: string } = {};
       round16Predictions.forEach((savedPred) => {
         const fixture = round16Seed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
         if (fixture) {
-          const winnerTeam = fixture.homeTeam.id === savedPred.predictedWinnerTeamId 
-            ? fixture.homeTeam 
-            : fixture.awayTeam;
-          if (winnerTeam) {
-            loaded[savedPred.externalFixtureId.toString()] = winnerTeam.name;
+          const winnerName = determineWinnerName(fixture, savedPred);
+          if (winnerName) {
+            loaded[savedPred.externalFixtureId.toString()] = winnerName;
           }
         }
       });
@@ -166,20 +192,19 @@ function PredictorPageContent() {
         setPredictions(prev => ({ ...prev, round16: loaded }));
       }
     }
-  }, [currentStage, round16Seed, round16Predictions]);
+  }, [isRound16Stage, round16Seed, round16Predictions]);
 
-  // Load quarter predictions into state
+  // Load quarter predictions into state - only when on that stage
   useEffect(() => {
-    if (currentStage === 'quarter' && quarterSeed.length > 0 && quarterPredictions.length > 0) {
+    if (!isQuarterStage) return;
+    if (quarterSeed.length > 0 && quarterPredictions.length > 0) {
       const loaded: { [externalFixtureId: string]: string } = {};
       quarterPredictions.forEach((savedPred) => {
         const fixture = quarterSeed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
         if (fixture) {
-          const winnerTeam = fixture.homeTeam.id === savedPred.predictedWinnerTeamId 
-            ? fixture.homeTeam 
-            : fixture.awayTeam;
-          if (winnerTeam) {
-            loaded[savedPred.externalFixtureId.toString()] = winnerTeam.name;
+          const winnerName = determineWinnerName(fixture, savedPred);
+          if (winnerName) {
+            loaded[savedPred.externalFixtureId.toString()] = winnerName;
           }
         }
       });
@@ -187,20 +212,19 @@ function PredictorPageContent() {
         setPredictions(prev => ({ ...prev, quarterFinals: loaded }));
       }
     }
-  }, [currentStage, quarterSeed, quarterPredictions]);
+  }, [isQuarterStage, quarterSeed, quarterPredictions]);
 
-  // Load semi predictions into state
+  // Load semi predictions into state - only when on that stage
   useEffect(() => {
-    if (currentStage === 'semi' && semiSeed.length > 0 && semiPredictions.length > 0) {
+    if (!isSemiStage) return;
+    if (semiSeed.length > 0 && semiPredictions.length > 0) {
       const loaded: { [externalFixtureId: string]: string } = {};
       semiPredictions.forEach((savedPred) => {
         const fixture = semiSeed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
         if (fixture) {
-          const winnerTeam = fixture.homeTeam.id === savedPred.predictedWinnerTeamId 
-            ? fixture.homeTeam 
-            : fixture.awayTeam;
-          if (winnerTeam) {
-            loaded[savedPred.externalFixtureId.toString()] = winnerTeam.name;
+          const winnerName = determineWinnerName(fixture, savedPred);
+          if (winnerName) {
+            loaded[savedPred.externalFixtureId.toString()] = winnerName;
           }
         }
       });
@@ -208,32 +232,19 @@ function PredictorPageContent() {
         setPredictions(prev => ({ ...prev, semiFinals: loaded }));
       }
     }
-  }, [currentStage, semiSeed, semiPredictions]);
+  }, [isSemiStage, semiSeed, semiPredictions]);
 
-  // Load finals predictions (third-place and final)
-  const { data: thirdPlaceSeed = [] } = useThirdPlaceMatchSeed(currentStage === 'finals');
-  const { data: thirdPlacePredictions = [] } = useThirdPlaceMatchPrediction(currentStage === 'finals');
-  const { data: finalSeedForFinals = [] } = useBracketSeed('final', currentStage === 'finals');
-  const { data: finalPredictionsForFinals = [] } = useBracketPredictions('final', currentStage === 'finals');
+  // Load finals predictions (third-place and final) - only fetch when on finals stage
+  const { data: thirdPlaceSeed = [] } = useThirdPlaceMatchSeed(isFinalsStage);
+  const { data: thirdPlacePredictions = [] } = useThirdPlaceMatchPrediction(isFinalsStage);
+  const { data: finalSeedForFinals = [] } = useBracketSeed('final', isFinalsStage);
+  const { data: finalPredictionsForFinals = [] } = useBracketPredictions('final', isFinalsStage);
 
-  // Load finals predictions into state when switching to finals stage
-  // Use a ref to track if we've already loaded to prevent infinite loops
-  const finalsLoadedRef = useRef<string>('');
-  
+  // Load finals predictions into state - only when on finals stage
   useEffect(() => {
-    // Reset when switching away from finals
-    if (currentStage !== 'finals') {
-      finalsLoadedRef.current = '';
-      return;
-    }
+    if (!isFinalsStage) return;
 
-    // Create a key from the data to detect when it actually changes
-    const dataKey = `${thirdPlaceSeed.length}-${thirdPlacePredictions.length}-${finalSeedForFinals.length}-${finalPredictionsForFinals.length}`;
-    
-    // Only load once per data key
-    if (finalsLoadedRef.current === dataKey) return;
-
-    if (currentStage === 'finals' && (thirdPlaceSeed.length > 0 || finalSeedForFinals.length > 0)) {
+    if (thirdPlaceSeed.length > 0 || finalSeedForFinals.length > 0) {
       const loaded: { thirdPlace: string; champion: string } = {
         thirdPlace: predictions.finals.thirdPlace || '',
         champion: predictions.finals.champion || ''
@@ -243,40 +254,30 @@ function PredictorPageContent() {
       // Load third-place prediction
       if (thirdPlaceSeed.length > 0 && thirdPlacePredictions.length > 0) {
         const thirdPlaceFixture = thirdPlaceSeed[0];
-        if (thirdPlaceFixture) {
-          const savedPred = thirdPlacePredictions[0];
-          const winnerTeam = thirdPlaceFixture.homeTeam.id === savedPred.predictedWinnerTeamId 
-            ? thirdPlaceFixture.homeTeam 
-            : thirdPlaceFixture.awayTeam;
-          if (winnerTeam) {
-            loaded.thirdPlace = winnerTeam.name;
-            hasUpdates = true;
-          }
+        const savedPred = thirdPlacePredictions[0];
+        const winnerName = determineWinnerName(thirdPlaceFixture, savedPred);
+        if (winnerName) {
+          loaded.thirdPlace = winnerName;
+          hasUpdates = true;
         }
       }
 
       // Load final prediction
       if (finalSeedForFinals.length > 0 && finalPredictionsForFinals.length > 0) {
         const finalFixture = finalSeedForFinals[0];
-        if (finalFixture) {
-          const savedPred = finalPredictionsForFinals[0];
-          const winnerTeam = finalFixture.homeTeam.id === savedPred.predictedWinnerTeamId 
-            ? finalFixture.homeTeam 
-            : finalFixture.awayTeam;
-          if (winnerTeam) {
-            loaded.champion = winnerTeam.name;
-            hasUpdates = true;
-          }
+        const savedPred = finalPredictionsForFinals[0];
+        const winnerName = determineWinnerName(finalFixture, savedPred);
+        if (winnerName) {
+          loaded.champion = winnerName;
+          hasUpdates = true;
         }
       }
 
       if (hasUpdates) {
         setPredictions(prev => ({ ...prev, finals: loaded }));
-        finalsLoadedRef.current = dataKey;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStage, thirdPlaceSeed.length, thirdPlacePredictions.length, finalSeedForFinals.length, finalPredictionsForFinals.length]);
+  }, [isFinalsStage, thirdPlaceSeed, thirdPlacePredictions, finalSeedForFinals, finalPredictionsForFinals, predictions.finals]);
 
   // Calculate progress
   const getGroupStageProgress = () => {

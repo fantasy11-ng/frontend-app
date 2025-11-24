@@ -14,11 +14,83 @@ import type {
   BracketPredictionsResponse,
   BracketSeedResponse,
   BracketSeedFixture,
+  BracketSeedData,
+  BracketSeedPair,
+  BracketSeedWithQualified,
   ThirdPlacedQualifiersRequest,
   ThirdPlacedQualifiersResponse,
   CompetitionResponse,
   CompetitionData,
 } from '@/types/predictorStage';
+
+const emptyQualified = { winners: [] as number[], runnersUp: [] as number[], thirdQualified: [] as number[] };
+
+const parseBracketSeedResponse = (data: BracketSeedResponse['data']): BracketSeedWithQualified => {
+  if (!Array.isArray(data) && data && typeof data === 'object' && 'pairs' in data) {
+    const bracketData = data as BracketSeedData;
+    const fixtures: BracketSeedFixture[] = [];
+
+    bracketData.pairs.forEach((pair, index: number) => {
+      const pairWithIds = pair as BracketSeedPair & { fixtureId?: number; externalFixtureId?: number; id?: number };
+      const externalFixtureId =
+        pairWithIds.fixtureId ||
+        pairWithIds.externalFixtureId ||
+        pairWithIds.id ||
+        (bracketData.participants && bracketData.participants[index] !== null
+          ? bracketData.participants[index]
+          : null) ||
+        index + 1000;
+
+      const homeTeam =
+        pair.home &&
+        pair.home.id !== null &&
+        pair.home.id !== undefined &&
+        typeof pair.home.id === 'number'
+          ? {
+              id: pair.home.id,
+              name: pair.home.name || '',
+              short: pair.home.short || '',
+              logo: pair.home.logo || '',
+            }
+          : null;
+
+      const awayTeam =
+        pair.away &&
+        pair.away.id !== null &&
+        pair.away.id !== undefined &&
+        typeof pair.away.id === 'number'
+          ? {
+              id: pair.away.id,
+              name: pair.away.name || '',
+              short: pair.away.short || '',
+              logo: pair.away.logo || '',
+            }
+          : null;
+
+      if (homeTeam && awayTeam && homeTeam.id && awayTeam.id) {
+        fixtures.push({
+          externalFixtureId: typeof externalFixtureId === 'number' ? externalFixtureId : index + 1000,
+          homeTeam,
+          awayTeam,
+        });
+      }
+    });
+
+    if (fixtures.length === 0) {
+      console.warn(`No valid fixtures found in bracket seed. Response:`, bracketData);
+    }
+
+    return {
+      fixtures,
+      qualified: bracketData.qualified || emptyQualified,
+    };
+  }
+
+  return {
+    fixtures: Array.isArray(data) ? data : [],
+    qualified: emptyQualified,
+  };
+};
 
 // Predictor API functions
 export const predictorApi = {
@@ -53,55 +125,14 @@ export const predictorApi = {
   // GET /predictor/bracket/{roundCode}/seed - seeded participants for a round
   getBracketSeed: async (roundCode: RoundCode): Promise<BracketSeedFixture[]> => {
     const response = await apiClient.get<BracketSeedResponse>(`/predictor/bracket/${roundCode}/seed`);
-    const data = response.data.data;
-    
-    // Handle new format: { round, qualified, participants, pairs }
-    if (!Array.isArray(data) && data && typeof data === 'object' && 'pairs' in data) {
-      const bracketData = data as { pairs: Array<{ home?: { id?: number | null; name?: string; short?: string; logo?: string }; away?: { id?: number | null; name?: string; short?: string; logo?: string }; externalFixtureId?: number; fixtureId?: number; id?: number }>; participants?: (number | null)[] };
-      const fixtures: BracketSeedFixture[] = [];
-      
-      bracketData.pairs.forEach((pair, index: number) => {
-        // Try to get externalFixtureId from various possible locations
-        // The API might provide it in pair.externalFixtureId, pair.fixtureId, or pair.id
-        // If not available, we'll need to derive it or the API should be updated to include it
-        const externalFixtureId = pair.externalFixtureId || pair.fixtureId || pair.id || 
-          (bracketData.participants && bracketData.participants[index] !== null ? bracketData.participants[index] : null) ||
-          (index + 1000); // Fallback: use index + 1000 as temporary ID
-        
-        // Handle cases where home/away might be null, empty, or have missing id
-        const homeTeam = pair.home && (pair.home.id !== null && pair.home.id !== undefined && typeof pair.home.id === 'number') ? {
-          id: pair.home.id,
-          name: pair.home.name || '',
-          short: pair.home.short || '',
-          logo: pair.home.logo || ''
-        } : null;
-        
-        const awayTeam = pair.away && (pair.away.id !== null && pair.away.id !== undefined && typeof pair.away.id === 'number') ? {
-          id: pair.away.id,
-          name: pair.away.name || '',
-          short: pair.away.short || '',
-          logo: pair.away.logo || ''
-        } : null;
-        
-        // Only add fixture if both teams are present (skip if one team is TBD/null)
-        if (homeTeam && awayTeam && homeTeam.id && awayTeam.id) {
-          fixtures.push({
-            externalFixtureId: typeof externalFixtureId === 'number' ? externalFixtureId : (index + 1000),
-            homeTeam,
-            awayTeam
-          });
-        }
-      });
-      
-      if (fixtures.length === 0) {
-        console.warn(`No valid fixtures found in bracket seed for ${roundCode}. Response:`, bracketData);
-      }
-      
-      return fixtures;
-    }
-    
-    // Handle old format: array of BracketSeedFixture
-    return Array.isArray(data) ? data : [];
+    const parsed = parseBracketSeedResponse(response.data.data);
+    return parsed.fixtures;
+  },
+
+  // GET /predictor/bracket/{roundCode}/seed with qualified info
+  getBracketSeedWithQualified: async (roundCode: RoundCode): Promise<BracketSeedWithQualified> => {
+    const response = await apiClient.get<BracketSeedResponse>(`/predictor/bracket/${roundCode}/seed`);
+    return parseBracketSeedResponse(response.data.data);
   },
 
   // GET /predictor/bracket/{roundCode}/me - user's bracket predictions for a round
