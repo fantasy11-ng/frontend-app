@@ -12,7 +12,7 @@ export default function Logo({ className = '', width = 200, height = 80 }: LogoP
   return (
     <div className={`flex items-center justify-center mb-8 ${className}`}>
       <Image
-        src="/Logo.png"
+        src="/images/Logo.png"
         alt="Fantasyfi Logo"
         width={width}
         height={height}

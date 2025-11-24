@@ -314,7 +314,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
           {selectedPredictions.thirdPlace && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
-                <Image src="/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                <Image src="/images/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                 <span className="text-green-800 font-medium">
                   Winner: {selectedPredictions.thirdPlace}
                 </span>
@@ -337,7 +337,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
             <p className="text-gray-600 mb-6">Pick the winner of the 3rd place match</p>
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
-                <Image src="/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                <Image src="/images/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                 <span className="text-green-800 font-medium">
                   Your Prediction: {selectedPredictions.thirdPlace}
                 </span>
@@ -376,7 +376,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
             {selectedPredictions.thirdPlace ? (
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center">
-                  <Image src="/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                  <Image src="/images/Bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                   <span className="text-green-800 font-medium">
                     Your Prediction: {selectedPredictions.thirdPlace}
                   </span>
@@ -391,7 +391,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
         {/* AFCON 2025 Final */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center mb-4">
-            <Image src="/Gold.png" alt="Gold Trophy" width={32} height={32} className="w-8 h-8 mr-3" />
+            <Image src="/images/Gold.png" alt="Gold Trophy" width={32} height={32} className="w-8 h-8 mr-3" />
             <h3 className="text-lg font-semibold text-gray-900">
               AFCON 2025 Final
             </h3>
@@ -469,7 +469,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
           {selectedPredictions.champion && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
-                <Image src="/Gold.png" alt="Gold Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                <Image src="/images/Gold.png" alt="Gold Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                 <span className="text-green-800 font-medium">
                   Winner: {selectedPredictions.champion}
                 </span>
@@ -483,7 +483,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
       {isComplete && (
         <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center">
-            <Image src="/Gold.png" alt="Gold Trophy" width={24} height={24} className="w-6 h-6 mr-3" />
+            <Image src="/images/Gold.png" alt="Gold Trophy" width={24} height={24} className="w-6 h-6 mr-3" />
             <div>
               <h3 className="text-lg font-semibold text-green-800">
                 Tournament Prediction Complete!

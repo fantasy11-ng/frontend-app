@@ -11,7 +11,7 @@ export default function LandingHeader() {
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center">
             <Image
-              src="/Logo.png"
+              src="/images/Logo.png"
               alt="Fantasyfi Logo"
               width={120}
               height={56}

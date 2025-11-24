@@ -26,7 +26,7 @@ const ChampionshipPage: React.FC<ChampionshipPageProps> = ({
           {/* Trophy Icon */}
           <div className="flex justify-center mb-8">
             <div className="flex items-center justify-center">
-              <Image src="/Gold.png" alt="Championship Trophy" width={382} height={208} className="w-full h-full object-contain" />
+              <Image src="/images/Gold.png" alt="Championship Trophy" width={382} height={208} className="w-full h-full object-contain" />
             </div>
           </div>
 

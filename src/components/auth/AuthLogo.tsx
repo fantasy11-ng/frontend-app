@@ -12,7 +12,7 @@ export default function AuthLogo({ className = '', width = 124, height = 78 }: A
   return (
     <div className={`flex items-center justify-center mb-8 ${className}`}>
       <Image
-        src="/AuthLogo.png"
+        src="/images/AuthLogo.png"
         alt="Fantasyfi Logo"
         width={width}
         height={height}
