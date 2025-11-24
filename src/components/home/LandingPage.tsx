@@ -17,7 +17,7 @@ export default function LandingPage() {
       <section className="relative min-h-screen text-white overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url(/home.png)" }}
+          style={{ backgroundImage: "url(/images/home.png)" }}
         />
 
         <div className="absolute inset-0 bg-black/10"></div>
@@ -398,7 +398,7 @@ export default function LandingPage() {
       <section className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white py-24 overflow-hidden">
         <div
           className="absolute inset-0 opacity-20 bg-cover bg-center"
-          style={{ backgroundImage: "url(/home.png)" }}
+          style={{ backgroundImage: "url(/images/home.png)" }}
         ></div>
         <div className="relative max-w-7xl mx-auto px-4 text-left">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
