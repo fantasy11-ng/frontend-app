@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Lightbulb, Loader2 } from 'lucide-react';
 import { useBracketSeed, useThirdPlaceMatchSeed, useBracketPredictions, useThirdPlaceMatchPrediction } from '@/lib/api';
+import type { BracketPrediction, BracketSeedFixture } from '@/types/predictorStage';
 import Image from 'next/image';
 
 interface FinalsPredictions {
@@ -15,6 +16,23 @@ interface FinalsStageProps {
   onUpdate: (predictions: FinalsPredictions) => void;
   onSave: () => void;
 }
+
+const determineWinnerName = (fixture: BracketSeedFixture | undefined, savedPred: BracketPrediction) => {
+  if (savedPred.predictedWinner?.name) {
+    return savedPred.predictedWinner.name;
+  }
+
+  if (fixture && savedPred.predictedWinnerTeamId) {
+    if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
+      return fixture.homeTeam.name;
+    }
+    if (fixture.awayTeam.id === savedPred.predictedWinnerTeamId) {
+      return fixture.awayTeam.name;
+    }
+  }
+
+  return null;
+};
 
 export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsStageProps) {
   const { data: thirdPlaceSeed = [], isLoading: thirdPlaceLoading, error: thirdPlaceError } = useThirdPlaceMatchSeed(true);
@@ -53,13 +71,12 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
       ) || validFinalMatches[0])
     : null;
 
-  // Load saved predictions from API when seeds are available (only once)
+  // Load saved predictions from API whenever they're available
   useEffect(() => {
-    if (hasInitializedRef.current) return;
-    
+    // Start with current state to preserve existing selections
     const loaded: FinalsPredictions = { 
-      thirdPlace: predictions.thirdPlace || '', 
-      champion: predictions.champion || '' 
+      thirdPlace: selectedPredictions.thirdPlace || '', 
+      champion: selectedPredictions.champion || '' 
     };
     let hasUpdates = false;
 
@@ -75,34 +92,22 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
     // Try to load from saved predictions if we have both seed and prediction data
     if (validThirdPlace.length > 0 && thirdPlaceSavedPredictions.length > 0) {
       const thirdPlaceFixture = validThirdPlace[0];
-      if (thirdPlaceFixture) {
-        const savedPred = thirdPlaceSavedPredictions[0];
-        const winnerTeam = thirdPlaceFixture.homeTeam.id === savedPred.predictedWinnerTeamId 
-          ? thirdPlaceFixture.homeTeam 
-          : thirdPlaceFixture.awayTeam;
-        if (winnerTeam) {
-          loaded.thirdPlace = winnerTeam.name;
-          hasUpdates = true;
-        }
+      const savedPred = thirdPlaceSavedPredictions[0];
+      const winnerName = determineWinnerName(thirdPlaceFixture ?? undefined, savedPred);
+      if (winnerName && loaded.thirdPlace !== winnerName) {
+        loaded.thirdPlace = winnerName;
+        hasUpdates = true;
       }
-    } else if (thirdPlaceSavedPredictions.length > 0 && !loaded.thirdPlace) {
-      // If we have saved predictions but no seed data yet, we can't determine the team name
-      // But we should still mark as initialized if props already have the value
-      // The saved prediction will be shown once seed data is available
     }
 
     // Load final match prediction
     if (validFinal.length > 0 && finalSavedPredictions.length > 0) {
       const finalFixture = validFinal[0];
-      if (finalFixture) {
-        const savedPred = finalSavedPredictions[0];
-        const winnerTeam = finalFixture.homeTeam.id === savedPred.predictedWinnerTeamId 
-          ? finalFixture.homeTeam 
-          : finalFixture.awayTeam;
-        if (winnerTeam) {
-          loaded.champion = winnerTeam.name;
-          hasUpdates = true;
-        }
+      const savedPred = finalSavedPredictions[0];
+      const winnerName = determineWinnerName(finalFixture ?? undefined, savedPred);
+      if (winnerName && loaded.champion !== winnerName) {
+        loaded.champion = winnerName;
+        hasUpdates = true;
       }
     }
 
@@ -110,14 +115,15 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
       setSelectedPredictions(loaded);
       onUpdate(loaded);
       hasInitializedRef.current = true;
-    } else if (predictions.thirdPlace || predictions.champion) {
-      // Fallback to props if no API updates (don't call onUpdate to avoid loop)
-      setSelectedPredictions(predictions);
-      hasInitializedRef.current = true;
-    } else if (thirdPlaceSavedPredictions.length > 0 || finalSavedPredictions.length > 0) {
-      // If we have saved predictions but can't load them yet (no seed data), mark as initialized
-      // This prevents the component from trying to re-initialize
-      hasInitializedRef.current = true;
+    } else if (!hasInitializedRef.current) {
+      // Only initialize from props if we haven't initialized yet and no saved predictions
+      if (predictions.thirdPlace || predictions.champion) {
+        setSelectedPredictions(predictions);
+        hasInitializedRef.current = true;
+      } else if (thirdPlaceSavedPredictions.length > 0 || finalSavedPredictions.length > 0) {
+        // If we have saved predictions but can't load them yet (no seed data), mark as initialized
+        hasInitializedRef.current = true;
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [

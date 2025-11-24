@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Lightbulb, Loader2 } from 'lucide-react';
-import { useBracketSeed, useBracketPredictions } from '@/lib/api';
-import type { RoundCode } from '@/types/predictorStage';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { Lightbulb, Loader2, Check } from 'lucide-react';
+import { useBracketSeedWithQualified, useBracketPredictions } from '@/lib/api';
+import type { RoundCode, BracketPrediction, BracketSeedFixture } from '@/types/predictorStage';
 import Image from 'next/image';
 
 interface KnockoutStageProps {
@@ -38,10 +38,28 @@ const stageInstructions = {
   semi: 'Pick the 2 teams that will reach the Final + 3rd Place playoff'
 };
 
+const getWinnerNameFromPrediction = (fixture: BracketSeedFixture, savedPred: BracketPrediction) => {
+  if (savedPred.predictedWinner?.name) {
+    return savedPred.predictedWinner.name;
+  }
+
+  if (savedPred.predictedWinnerTeamId) {
+    if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
+      return fixture.homeTeam.name;
+    }
+    if (fixture.awayTeam.id === savedPred.predictedWinnerTeamId) {
+      return fixture.awayTeam.name;
+    }
+  }
+
+  return null;
+};
+
 export default function KnockoutStage({ stage, predictions, onUpdate, onNextStage, isSubmitting = false }: KnockoutStageProps) {
   const roundCode = getRoundCode(stage);
-  const { data: bracketSeed = [], isLoading: seedLoading, error: seedError } = useBracketSeed(roundCode, true);
+  const { data: bracketSeedData, isLoading: seedLoading, error: seedError } = useBracketSeedWithQualified(roundCode, true);
   const { data: savedPredictions = [] } = useBracketPredictions(roundCode, true);
+  const bracketSeed = useMemo(() => bracketSeedData?.fixtures ?? [], [bracketSeedData?.fixtures]);
   
   // Store predictions by externalFixtureId
   const [selectedWinners, setSelectedWinners] = useState<{ [externalFixtureId: string]: string }>(() => {
@@ -59,72 +77,134 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
     return initial;
   });
 
+  const savedSelections = useMemo(() => {
+    if (bracketSeed.length === 0 || savedPredictions.length === 0) {
+      return {};
+    }
+    const selections: Record<string, string> = {};
+    savedPredictions.forEach((savedPred) => {
+      const fixture = bracketSeed.find((f) => f.externalFixtureId === savedPred.externalFixtureId);
+      if (fixture) {
+        const winnerName = getWinnerNameFromPrediction(fixture, savedPred);
+        if (winnerName) {
+          selections[savedPred.externalFixtureId.toString()] = winnerName;
+        }
+      }
+    });
+    return selections;
+  }, [bracketSeed, savedPredictions]);
+
+  const mergedSelections = useMemo(
+    () => ({
+      ...savedSelections,
+      ...predictions,
+      ...selectedWinners,
+    }),
+    [savedSelections, predictions, selectedWinners],
+  );
+
   // Track the last roundCode we initialized for to detect stage changes
   const [lastInitializedRoundCode, setLastInitializedRoundCode] = useState<RoundCode | null>(null);
+  const initializedWithEmptyPropsRef = useRef<boolean>(false);
 
-  // Update selected winners when bracket seed or saved predictions load
   // Reset when stage/roundCode changes
   useEffect(() => {
-    // Reset initialization if roundCode changed (user switched stages)
     if (lastInitializedRoundCode !== null && lastInitializedRoundCode !== roundCode) {
       setLastInitializedRoundCode(null);
       setSelectedWinners({});
+      initializedWithEmptyPropsRef.current = false;
     }
+  }, [roundCode, lastInitializedRoundCode]);
 
-    if (bracketSeed.length > 0 && lastInitializedRoundCode !== roundCode) {
+  // Load saved predictions from API whenever they're available
+  useEffect(() => {
+    // Don't load if we're switching to a different stage
+    if (lastInitializedRoundCode !== null && lastInitializedRoundCode !== roundCode) return;
+    
+    // Need both seed and predictions to load
+    if (bracketSeed.length === 0) return;
+    if (savedPredictions.length === 0) return;
+
+    const loaded: { [externalFixtureId: string]: string } = {};
+    
+    savedPredictions.forEach((savedPred) => {
+      const fixture = bracketSeed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
+      if (fixture) {
+        const winnerName = getWinnerNameFromPrediction(fixture, savedPred);
+        if (winnerName) {
+          loaded[savedPred.externalFixtureId.toString()] = winnerName;
+        }
+      }
+    });
+
+    // Always update if we have loaded predictions (even if we already have some in state)
+    if (Object.keys(loaded).length > 0) {
+      // Replace state with saved predictions from API (they are the source of truth)
+      setSelectedWinners(prev => {
+        // Check if we need to update (if loaded predictions differ from current state)
+        const needsUpdate = Object.keys(loaded).some(key => prev[key] !== loaded[key]) ||
+                           Object.keys(loaded).length !== Object.keys(prev).length;
+        return needsUpdate ? loaded : prev;
+      });
+      
+      // Always call onUpdate to sync with parent
+      onUpdate(loaded);
+      
+      if (lastInitializedRoundCode !== roundCode) {
+        setLastInitializedRoundCode(roundCode);
+      }
+      initializedWithEmptyPropsRef.current = false;
+    }
+  }, [bracketSeed, savedPredictions, roundCode, lastInitializedRoundCode, onUpdate]);
+
+  // Initialize from props predictions if no saved predictions available
+  useEffect(() => {
+    if (bracketSeed.length === 0) return;
+    if (lastInitializedRoundCode === roundCode) return; // Already initialized
+    if (savedPredictions.length > 0) return; // Saved predictions will be handled by the effect above
+
+    const needsInitialization = lastInitializedRoundCode !== roundCode;
+    const propsBecamePopulated = lastInitializedRoundCode === roundCode && 
+                                  initializedWithEmptyPropsRef.current &&
+                                  Object.keys(predictions).length > 0;
+
+    if (needsInitialization || propsBecamePopulated) {
       const initial: { [externalFixtureId: string]: string } = {};
       
-      // First, try to use saved predictions from API
-      if (savedPredictions.length > 0) {
-        savedPredictions.forEach((savedPred) => {
-          const fixture = bracketSeed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
-          if (fixture) {
-            // Correctly determine winner - check both home and away teams
-            let winnerTeam = null;
-            if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
-              winnerTeam = fixture.homeTeam;
-            } else if (fixture.awayTeam.id === savedPred.predictedWinnerTeamId) {
-              winnerTeam = fixture.awayTeam;
-            }
-            
-            if (winnerTeam) {
-              initial[savedPred.externalFixtureId.toString()] = winnerTeam.name;
-            }
-          }
-        });
-      }
+      bracketSeed.forEach((fixture) => {
+        const fixtureIdKey = fixture.externalFixtureId.toString();
+        if (predictions[fixtureIdKey]) {
+          initial[fixtureIdKey] = predictions[fixtureIdKey];
+        }
+      });
       
-      // Fallback to props predictions if no saved predictions
-      if (Object.keys(initial).length === 0) {
-        bracketSeed.forEach((fixture) => {
-          const fixtureIdKey = fixture.externalFixtureId.toString();
-          if (predictions[fixtureIdKey]) {
-            initial[fixtureIdKey] = predictions[fixtureIdKey];
-          }
-        });
-      }
-      
-      // Always update state, even if empty (to clear previous stage's data)
+      initializedWithEmptyPropsRef.current = Object.keys(initial).length === 0;
       setSelectedWinners(initial);
-      // Update parent state if we loaded from API or have props predictions
-      if (savedPredictions.length > 0 || Object.keys(initial).length > 0) {
+      
+      if (Object.keys(initial).length > 0) {
         onUpdate(initial);
+        initializedWithEmptyPropsRef.current = false;
       }
-      setLastInitializedRoundCode(roundCode);
+      
+      if (needsInitialization) {
+        setLastInitializedRoundCode(roundCode);
+      }
     }
-  }, [bracketSeed, savedPredictions, predictions, onUpdate, roundCode, lastInitializedRoundCode]);
+  }, [bracketSeed, predictions, roundCode, lastInitializedRoundCode, savedPredictions.length, onUpdate]);
 
   // Sync with props predictions if they change externally (but don't override user selections)
   // Only sync if we've already initialized for this roundCode
   useEffect(() => {
     if (bracketSeed.length > 0 && lastInitializedRoundCode === roundCode) {
-      // Only update if props have new predictions that aren't in our local state
+      // Update if props have new predictions that aren't in our local state
+      // This handles the case where props are populated after initial render
       setSelectedWinners(prev => {
         const updated = { ...prev };
         let hasChanges = false;
         
         bracketSeed.forEach((fixture) => {
           const fixtureIdKey = fixture.externalFixtureId.toString();
+          // If props have a prediction for this fixture and we don't have one yet, use the props value
           if (predictions[fixtureIdKey] && !prev[fixtureIdKey]) {
             updated[fixtureIdKey] = predictions[fixtureIdKey];
             hasChanges = true;
@@ -140,7 +220,8 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
     const fixtureIdKey = externalFixtureId.toString();
     const newSelections = { ...selectedWinners, [fixtureIdKey]: teamName };
     setSelectedWinners(newSelections);
-    onUpdate(newSelections);
+    const nextSelections = { ...savedSelections, ...predictions, ...newSelections };
+    onUpdate(nextSelections);
   };
 
   // Filter out matches where teams aren't determined yet (e.g., one team is null/TBD)
@@ -148,7 +229,10 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
     fixture.homeTeam.id && fixture.awayTeam.id
   );
   
-  const completedMatches = Object.keys(selectedWinners).filter(id => selectedWinners[id]).length;
+  const completedMatches = validMatches.filter(fixture => {
+    const key = fixture.externalFixtureId.toString();
+    return !!mergedSelections[key];
+  }).length;
   const totalMatches = validMatches.length;
 
   const isStageComplete = completedMatches === totalMatches && totalMatches > 0;
@@ -222,7 +306,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
       }`}>
         {validMatches.length > 0 && validMatches.map((fixture, index) => {
           const fixtureIdKey = fixture.externalFixtureId.toString();
-          const selectedWinner = selectedWinners[fixtureIdKey];
+          const selectedWinner = mergedSelections[fixtureIdKey];
           
           return (
             <div key={fixture.externalFixtureId} className="bg-white border border-gray-200 rounded-lg p-6">
@@ -245,23 +329,32 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="flex items-center">
-                    {fixture.homeTeam.logo ? (
-                      <div className="w-8 h-8 mr-3 flex-shrink-0">
-                        <Image
-                          src={fixture.homeTeam.logo}
-                          alt={fixture.homeTeam.name}
-                          width={32}
-                          height={32}
-                          className="object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 mr-3 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
-                        {fixture.homeTeam.short || fixture.homeTeam.name.charAt(0)}
-                      </div>
-                    )}
-                    <span className="font-medium text-gray-900">{fixture.homeTeam.name}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {fixture.homeTeam.logo ? (
+                        <div className="w-8 h-8 mr-3 flex-shrink-0">
+                          <Image
+                            src={fixture.homeTeam.logo}
+                            alt={fixture.homeTeam.name}
+                            width={32}
+                            height={32}
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 mr-3 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                          {fixture.homeTeam.short || fixture.homeTeam.name.charAt(0)}
+                        </div>
+                      )}
+                      <span className="font-medium text-gray-900">{fixture.homeTeam.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {selectedWinner === fixture.homeTeam.name && (
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -277,23 +370,32 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <div className="flex items-center">
-                    {fixture.awayTeam.logo ? (
-                      <div className="w-8 h-8 mr-3 flex-shrink-0">
-                        <Image
-                          src={fixture.awayTeam.logo}
-                          alt={fixture.awayTeam.name}
-                          width={32}
-                          height={32}
-                          className="object-contain"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-8 h-8 mr-3 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
-                        {fixture.awayTeam.short || fixture.awayTeam.name.charAt(0)}
-                      </div>
-                    )}
-                    <span className="font-medium text-gray-900">{fixture.awayTeam.name}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {fixture.awayTeam.logo ? (
+                        <div className="w-8 h-8 mr-3 flex-shrink-0">
+                          <Image
+                            src={fixture.awayTeam.logo}
+                            alt={fixture.awayTeam.name}
+                            width={32}
+                            height={32}
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 mr-3 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600">
+                          {fixture.awayTeam.short || fixture.awayTeam.name.charAt(0)}
+                        </div>
+                      )}
+                      <span className="font-medium text-gray-900">{fixture.awayTeam.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {selectedWinner === fixture.awayTeam.name && (
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
