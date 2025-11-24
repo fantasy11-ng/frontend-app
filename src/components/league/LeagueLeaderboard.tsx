@@ -74,7 +74,7 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-6 border border-pink-200">
             <div className="flex items-center space-x-3 mb-2">
-              <Image src="/images/Gold.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />
+              <Image src="/images/gold.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />
               <span className="text-sm font-medium text-gray-700">Global Rank</span>
             </div>
             <div className="text-3xl font-bold text-red-500">#{stats.globalRank}</div>
