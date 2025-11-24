@@ -404,7 +404,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
               {selectedWinner && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                   <div className="flex items-center">
-                    <Image src="./images/gold.png" alt="Gold Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                    <Image src="/images/gold.png" alt="Gold Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                     <span className="text-green-800 font-medium">
                       Winner: {selectedWinner}
                     </span>
