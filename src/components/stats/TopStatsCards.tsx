@@ -12,7 +12,7 @@ export default function TopStatsCards({ stats }: TopStatsCardsProps) {
   const getIcon = (icon: string) => {
     switch (icon) {
       case 'points':
-        return <Image src="/Gold.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />;
+        return <Image src="/images/Gold.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />;
       case 'goals':
         return <Target className="w-6 h-6 text-red-700" />;
       case 'assists':

@@ -87,7 +87,7 @@ export default function LandingPage() {
               </div>
               <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
                 <Image
-                  src="/Feature1.png"
+                  src="/images/Feature1.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -118,7 +118,7 @@ export default function LandingPage() {
               </div>
               <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
               <Image
-                  src="/Feature2.png"
+                  src="/images/Feature2.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -149,7 +149,7 @@ export default function LandingPage() {
               </div>
               <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
               <Image
-                  src="/Feature3.png"
+                  src="/images/Feature3.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -179,7 +179,7 @@ export default function LandingPage() {
               </div>
               <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
               <Image
-                  src="/Feature4.png"
+                  src="/images/Feature4.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -205,7 +205,7 @@ export default function LandingPage() {
             {/* 1st Place */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 text-center border border-white/20">
               <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Image src="/Gold.png" alt="Gold Trophy" width={40} height={40} className="w-10 h-10" />
+                <Image src="/images/Gold.png" alt="Gold Trophy" width={40} height={40} className="w-10 h-10" />
               </div>
               <h3 className="text-2xl font-bold mb-2">
                 Ultimate Fantasy11 Champion
@@ -232,7 +232,7 @@ export default function LandingPage() {
             {/* 2nd Place */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 text-center border border-white/20">
               <div className="w-20 h-20 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Image src="/Silver.png" alt="Silver Trophy" width={40} height={40} className="w-10 h-10" />
+                <Image src="/images/Silver.png" alt="Silver Trophy" width={40} height={40} className="w-10 h-10" />
               </div>
               <h3 className="text-2xl font-bold mb-2">Second Place Champion</h3>
               <p className="text-3xl font-bold text-gray-300 mb-4">N750,000</p>
@@ -255,7 +255,7 @@ export default function LandingPage() {
             {/* 3rd Place */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 text-center border border-white/20">
               <div className="w-20 h-20 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Image src="/Bronze.png" alt="Bronze Trophy" width={40} height={40} className="w-10 h-10" />
+                <Image src="/images/Bronze.png" alt="Bronze Trophy" width={40} height={40} className="w-10 h-10" />
               </div>
               <h3 className="text-2xl font-bold mb-2">Third Place Champion</h3>
               <p className="text-3xl font-bold text-amber-400 mb-4">N500,000</p>
@@ -299,7 +299,7 @@ export default function LandingPage() {
               >
                 <div className="h-48 flex items-center justify-center">
                 <Image
-                  src="/home.png"
+                  src="/images/home.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -432,7 +432,7 @@ export default function LandingPage() {
             <div className="mb-4 md:mb-0">
               <Link href="/" className="flex items-center">
                 <Image
-                  src="/Logo.png"
+                  src="/images/Logo.png"
                   alt="Fantasyfi Logo"
                   width={140}
                   height={56}

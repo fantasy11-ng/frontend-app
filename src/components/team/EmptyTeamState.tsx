@@ -15,7 +15,7 @@ const EmptyTeamState: React.FC<EmptyTeamStateProps> = ({ onCreateTeam }) => {
           {/* Trophy Icon */}
           <div className="flex justify-center mb-8">
             <Image 
-              src="/Gold.png" 
+              src="/images/Gold.png" 
               alt="Trophy" 
               width={200} 
               height={200} 
@@ -37,7 +37,7 @@ const EmptyTeamState: React.FC<EmptyTeamStateProps> = ({ onCreateTeam }) => {
           <div className="mb-8 max-w-2xl mx-auto">
             <div className="relative rounded-lg overflow-hidden" style={{ height: '704px', width: '546px' }}>
               <Image
-                src="/Pitch.png"
+                src="/images/Pitch.png"
                 alt="Empty football pitch"
                 fill
                 className="object-cover"

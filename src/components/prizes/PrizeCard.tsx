@@ -63,11 +63,11 @@ export default function PrizeCard({ prize }: PrizeCardProps) {
       <div className="flex justify-center mb-4">
         <div className={`${colors.icon} opacity-80`}>
           {prize.color === 'gold' ? (
-            <Image src="/Gold.png" alt="Gold Trophy" width={417} height={227} className="" />
+            <Image src="/images/Gold.png" alt="Gold Trophy" width={417} height={227} className="" />
           ) : prize.color === 'silver' ? (
-            <Image src="/Silver.png" alt="Silver Trophy" width={417} height={227}  className="" />
+            <Image src="/images/Silver.png" alt="Silver Trophy" width={417} height={227}  className="" />
           ) : prize.color === 'bronze' ? (
-            <Image src="/Bronze.png" alt="Bronze Trophy" width={417} height={227}  className="" />
+            <Image src="/images/Bronze.png" alt="Bronze Trophy" width={417} height={227}  className="" />
           ) : (
             <Gift className="w-16 h-16" />
           )}

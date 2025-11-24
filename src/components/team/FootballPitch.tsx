@@ -17,7 +17,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({ players = [] }) => {
   return (
     <div className="w-full rounded-lg overflow-hidden relative" style={{ aspectRatio: '16/9', height: '704px', width: '546px' }}>
       <Image
-        src="/Pitch.png"
+        src="/images/Pitch.png"
         alt="Football pitch"
         fill
         className="object-cover"
