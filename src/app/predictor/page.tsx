@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useMemo, useState, Suspense } from "react";
+import { useEffect, useMemo, useState, Suspense, useRef } from "react";
 import { Calendar, Check } from "lucide-react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
@@ -101,6 +101,9 @@ function PredictorPageContent() {
       champion: ''
     }
   });
+
+  // Track loaded finals predictions to prevent infinite loops
+  const loadedFinalsRef = useRef<{ thirdPlace: string; champion: string } | null>(null);
 
   // When we have both groups and saved predictions for the group stage,
   // initialize the local predictions state so the UI reflects saved data.
@@ -240,44 +243,59 @@ function PredictorPageContent() {
   const { data: finalSeedForFinals = [] } = useBracketSeed('final', isFinalsStage);
   const { data: finalPredictionsForFinals = [] } = useBracketPredictions('final', isFinalsStage);
 
+  // Extract prediction values using useMemo to create stable dependencies
+  const thirdPlaceWinner = useMemo(() => {
+    if (thirdPlaceSeed.length > 0 && thirdPlacePredictions.length > 0) {
+      const thirdPlaceFixture = thirdPlaceSeed[0];
+      const savedPred = thirdPlacePredictions[0];
+      return determineWinnerName(thirdPlaceFixture, savedPred);
+    }
+    return null;
+  }, [thirdPlaceSeed, thirdPlacePredictions]);
+
+  const finalWinner = useMemo(() => {
+    if (finalSeedForFinals.length > 0 && finalPredictionsForFinals.length > 0) {
+      const finalFixture = finalSeedForFinals[0];
+      const savedPred = finalPredictionsForFinals[0];
+      return determineWinnerName(finalFixture, savedPred);
+    }
+    return null;
+  }, [finalSeedForFinals, finalPredictionsForFinals]);
+
   // Load finals predictions into state - only when on finals stage
   useEffect(() => {
-    if (!isFinalsStage) return;
-
-    if (thirdPlaceSeed.length > 0 || finalSeedForFinals.length > 0) {
-      const loaded: { thirdPlace: string; champion: string } = {
-        thirdPlace: predictions.finals.thirdPlace || '',
-        champion: predictions.finals.champion || ''
-      };
-      let hasUpdates = false;
-
-      // Load third-place prediction
-      if (thirdPlaceSeed.length > 0 && thirdPlacePredictions.length > 0) {
-        const thirdPlaceFixture = thirdPlaceSeed[0];
-        const savedPred = thirdPlacePredictions[0];
-        const winnerName = determineWinnerName(thirdPlaceFixture, savedPred);
-        if (winnerName) {
-          loaded.thirdPlace = winnerName;
-          hasUpdates = true;
-        }
-      }
-
-      // Load final prediction
-      if (finalSeedForFinals.length > 0 && finalPredictionsForFinals.length > 0) {
-        const finalFixture = finalSeedForFinals[0];
-        const savedPred = finalPredictionsForFinals[0];
-        const winnerName = determineWinnerName(finalFixture, savedPred);
-        if (winnerName) {
-          loaded.champion = winnerName;
-          hasUpdates = true;
-        }
-      }
-
-      if (hasUpdates) {
-        setPredictions(prev => ({ ...prev, finals: loaded }));
-      }
+    if (!isFinalsStage) {
+      loadedFinalsRef.current = null; // Reset when leaving finals stage
+      return;
     }
-  }, [isFinalsStage, thirdPlaceSeed, thirdPlacePredictions, finalSeedForFinals, finalPredictionsForFinals, predictions.finals]);
+
+    // Only update if we have new prediction values that differ from what we've loaded
+    const shouldUpdateThirdPlace = thirdPlaceWinner !== null && 
+      thirdPlaceWinner !== loadedFinalsRef.current?.thirdPlace;
+    const shouldUpdateChampion = finalWinner !== null && 
+      finalWinner !== loadedFinalsRef.current?.champion;
+
+    if (shouldUpdateThirdPlace || shouldUpdateChampion) {
+      setPredictions(prev => {
+        const newThirdPlace = shouldUpdateThirdPlace ? thirdPlaceWinner! : prev.finals.thirdPlace;
+        const newChampion = shouldUpdateChampion ? finalWinner! : prev.finals.champion;
+
+        // Update ref with new values
+        loadedFinalsRef.current = {
+          thirdPlace: newThirdPlace,
+          champion: newChampion
+        };
+
+        return {
+          ...prev,
+          finals: {
+            thirdPlace: newThirdPlace,
+            champion: newChampion
+          }
+        };
+      });
+    }
+  }, [isFinalsStage, thirdPlaceWinner, finalWinner]);
 
   // Calculate progress
   const getGroupStageProgress = () => {
@@ -650,6 +668,7 @@ function PredictorPageContent() {
                 ...prev,
                 finals: finalsPredictions
               }))}
+              isSubmitting={isSubmitting}
               onSave={async () => {
                 // Submit third-place and final predictions separately
                 setIsSubmitting(true);
@@ -667,10 +686,8 @@ function PredictorPageContent() {
                           : thirdPlaceFixture.awayTeam.id;
                       
                       await predictorApi.saveThirdPlaceMatchPrediction({
-                        predictions: [{
-                          externalFixtureId: thirdPlaceFixture.externalFixtureId,
-                          predictedWinnerTeamId,
-                        }],
+                        externalFixtureId: thirdPlaceFixture.externalFixtureId,
+                        predictedWinnerTeamId,
                       });
                     }
                   }
