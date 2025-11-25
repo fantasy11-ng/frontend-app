@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Lightbulb, Loader2, Check } from 'lucide-react';
 import { useBracketSeedWithQualified, useBracketPredictions } from '@/lib/api';
 import type { RoundCode, BracketPrediction, BracketSeedFixture } from '@/types/predictorStage';
@@ -60,6 +60,13 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
   const { data: bracketSeedData, isLoading: seedLoading, error: seedError } = useBracketSeedWithQualified(roundCode, true);
   const { data: savedPredictions = [] } = useBracketPredictions(roundCode, true);
   const bracketSeed = useMemo(() => bracketSeedData?.fixtures ?? [], [bracketSeedData?.fixtures]);
+  const onUpdateRef = useRef(onUpdate);
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  }, [onUpdate]);
+  const syncParentSelections = useCallback((nextSelections: { [externalFixtureId: string]: string }) => {
+    onUpdateRef.current(nextSelections);
+  }, []);
   
   // Store predictions by externalFixtureId
   const [selectedWinners, setSelectedWinners] = useState<{ [externalFixtureId: string]: string }>(() => {
@@ -148,14 +155,14 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
       });
       
       // Always call onUpdate to sync with parent
-      onUpdate(loaded);
+      syncParentSelections(loaded);
       
       if (lastInitializedRoundCode !== roundCode) {
         setLastInitializedRoundCode(roundCode);
       }
       initializedWithEmptyPropsRef.current = false;
     }
-  }, [bracketSeed, savedPredictions, roundCode, lastInitializedRoundCode, onUpdate]);
+  }, [bracketSeed, savedPredictions, roundCode, lastInitializedRoundCode, syncParentSelections]);
 
   // Initialize from props predictions if no saved predictions available
   useEffect(() => {
@@ -182,7 +189,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
       setSelectedWinners(initial);
       
       if (Object.keys(initial).length > 0) {
-        onUpdate(initial);
+        syncParentSelections(initial);
         initializedWithEmptyPropsRef.current = false;
       }
       
@@ -190,7 +197,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
         setLastInitializedRoundCode(roundCode);
       }
     }
-  }, [bracketSeed, predictions, roundCode, lastInitializedRoundCode, savedPredictions.length, onUpdate]);
+  }, [bracketSeed, predictions, roundCode, lastInitializedRoundCode, savedPredictions.length, syncParentSelections]);
 
   // Sync with props predictions if they change externally (but don't override user selections)
   // Only sync if we've already initialized for this roundCode
@@ -221,7 +228,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
     const newSelections = { ...selectedWinners, [fixtureIdKey]: teamName };
     setSelectedWinners(newSelections);
     const nextSelections = { ...savedSelections, ...predictions, ...newSelections };
-    onUpdate(nextSelections);
+    syncParentSelections(nextSelections);
   };
 
   // Filter out matches where teams aren't determined yet (e.g., one team is null/TBD)

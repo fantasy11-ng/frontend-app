@@ -56,7 +56,7 @@ const CreateLeagueModal: React.FC<CreateLeagueModalProps> = ({
               value={leagueName}
               onChange={(e) => setLeagueName(e.target.value)}
               placeholder="Enter league name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+              className="text-[#070A11] w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
             />
           </div>
 
@@ -70,7 +70,7 @@ const CreateLeagueModal: React.FC<CreateLeagueModalProps> = ({
                 type="text"
                 value={invitationCode}
                 readOnly
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-center font-mono text-gray-900"
+                className="text-[#070A11] w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-center font-mono text-gray-900"
               />
             </div>
             <p className="text-xs text-gray-600 mt-2">

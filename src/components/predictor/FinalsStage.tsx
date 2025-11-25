@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Lightbulb, Loader2 } from 'lucide-react';
 import { useBracketSeed, useThirdPlaceMatchSeed, useBracketPredictions, useThirdPlaceMatchPrediction } from '@/lib/api';
 import type { BracketPrediction, BracketSeedFixture } from '@/types/predictorStage';
@@ -15,6 +15,7 @@ interface FinalsStageProps {
   predictions: FinalsPredictions;
   onUpdate: (predictions: FinalsPredictions) => void;
   onSave: () => void;
+  isSubmitting?: boolean;
 }
 
 const determineWinnerName = (fixture: BracketSeedFixture | undefined, savedPred: BracketPrediction) => {
@@ -34,13 +35,22 @@ const determineWinnerName = (fixture: BracketSeedFixture | undefined, savedPred:
   return null;
 };
 
-export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsStageProps) {
+export default function FinalsStage({ predictions, onUpdate, onSave, isSubmitting = false }: FinalsStageProps) {
   const { data: thirdPlaceSeed = [], isLoading: thirdPlaceLoading, error: thirdPlaceError } = useThirdPlaceMatchSeed(true);
   const { data: finalSeed = [], isLoading: finalLoading, error: finalError } = useBracketSeed('final', true);
   const { data: thirdPlaceSavedPredictions = [] } = useThirdPlaceMatchPrediction(true);
   const { data: finalSavedPredictions = [] } = useBracketPredictions('final', true);
   const [selectedPredictions, setSelectedPredictions] = useState<FinalsPredictions>(predictions);
   const hasInitializedRef = useRef(false);
+  const onUpdateRef = useRef(onUpdate);
+
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  }, [onUpdate]);
+
+  const syncParentPredictions = useCallback((next: FinalsPredictions) => {
+    onUpdateRef.current(next);
+  }, []);
 
   // Find third place and final fixtures from their respective seeds
   // Filter valid matches (where both teams are determined)
@@ -113,7 +123,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
 
     if (hasUpdates) {
       setSelectedPredictions(loaded);
-      onUpdate(loaded);
+      syncParentPredictions(loaded);
       hasInitializedRef.current = true;
     } else if (!hasInitializedRef.current) {
       // Only initialize from props if we haven't initialized yet and no saved predictions
@@ -125,12 +135,17 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
         hasInitializedRef.current = true;
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    thirdPlaceSeed.length, 
-    finalSeed.length, 
-    thirdPlaceSavedPredictions.length, 
-    finalSavedPredictions.length
+    thirdPlaceSeed,
+    finalSeed,
+    thirdPlaceSavedPredictions,
+    finalSavedPredictions,
+    selectedPredictions.thirdPlace,
+    selectedPredictions.champion,
+    predictions.thirdPlace,
+    predictions.champion,
+    predictions,
+    syncParentPredictions,
   ]);
 
   // Sync selectedPredictions with predictions prop when it changes (after initialization)
@@ -189,7 +204,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
   const handleTeamSelect = (match: 'thirdPlace' | 'champion', teamName: string) => {
     const newPredictions = { ...selectedPredictions, [match]: teamName };
     setSelectedPredictions(newPredictions);
-    onUpdate(newPredictions);
+    syncParentPredictions(newPredictions);
   };
 
   const isThirdPlaceComplete = !!selectedPredictions.thirdPlace;
@@ -211,9 +226,17 @@ export default function FinalsStage({ predictions, onUpdate, onSave }: FinalsSta
         <div className="flex space-x-3">
           <button
             onClick={onSave}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            disabled={isSubmitting}
+            className={`px-6 py-2 bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2 ${
+              isSubmitting 
+                ? 'opacity-50 cursor-not-allowed' 
+                : 'hover:bg-green-700'
+            }`}
           >
-            Submit Predictions
+            {isSubmitting && (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            )}
+            {isSubmitting ? 'Submitting...' : 'Submit Predictions'}
           </button>
         </div>
       </div>

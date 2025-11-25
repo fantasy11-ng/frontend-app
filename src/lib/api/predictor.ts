@@ -213,10 +213,16 @@ export const predictorApi = {
   // POST /predictor/bracket/third-place - submit third place match prediction
   // Uses the same bracket predictions endpoint pattern with roundCode 'third-place'
   saveThirdPlaceMatchPrediction: async (
-    data: BracketPredictionsRequest,
-  ): Promise<BracketPredictionsResponse['data']> => {
-    // Use the same saveBracketPredictions function with 'third-place' as roundCode
-    return predictorApi.saveBracketPredictions('third-place' as RoundCode, data);
+    data: {
+      externalFixtureId: number;
+      predictedWinnerTeamId: number;
+    },
+  ): Promise<{ success: boolean }> => {
+    const response = await apiClient.post<{ success: boolean }>(
+      '/predictor/third-place-match',
+      data,
+    );
+    return response.data;
   },
 
   // ----- Competition details -----
