@@ -63,7 +63,7 @@ export default function HomePage() {
 
           <div className="bg-white rounded-xl shadow-md p-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-24 h-24 bg-red-100 rounded-full -mr-12 -mt-12 opacity-20"></div>
-            <Image src="/images/gold.png" alt="Trophy" width={32} height={32} className="w-8 h-8 mb-4 relative z-10" />
+            <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Trophy" width={32} height={32} className="w-8 h-8 mb-4 relative z-10" />
             <p className="text-sm text-gray-600 mb-1">Rank</p>
             <p className="text-xs text-gray-500 mb-2">Global Ranking</p>
             <p className="text-2xl font-bold text-red-600">1,247</p>
@@ -208,7 +208,7 @@ export default function HomePage() {
                   >
                     <div className="flex items-center gap-3">
                       {achievement.icon === 'trophy' ? (
-                        <Image src="/images/gold.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />
+                        <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />
                       ) : achievement.icon === 'target' ? (
                         <Target className="w-6 h-6 text-red-600" />
                       ) : (
