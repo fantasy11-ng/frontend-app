@@ -12,7 +12,7 @@ export default function AuthLogo({ className = '', width = 124, height = 78 }: A
   return (
     <div className={`flex items-center justify-center mb-8 ${className}`}>
       <Image
-        src="/images/auth-logo.png"
+        src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265434/AuthLogo_pg9i6q.png"
         alt="Fantasyfi Logo"
         width={width}
         height={height}

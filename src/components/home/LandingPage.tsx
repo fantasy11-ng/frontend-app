@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ChevronRight,
-  Plus,
-  Calendar,
-} from "lucide-react";
+import { ChevronRight, Plus, Calendar } from "lucide-react";
 import LandingHeader from "./LandingHeader";
 
 export default function LandingPage() {
@@ -67,7 +63,7 @@ export default function LandingPage() {
             {/* Feature 1 */}
             <div className="space-y-6">
               <div>
-              <div className="flex items-center space-x-2 text-[#070A11] text-sm">
+                <div className="flex items-center space-x-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-1">
@@ -87,7 +83,7 @@ export default function LandingPage() {
               </div>
               <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
                 <Image
-                  src="/images/feature1.png"
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Container_fppxgt.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -98,7 +94,7 @@ export default function LandingPage() {
             {/* Feature 2 */}
             <div className="space-y-6">
               <div>
-              <div className="flex items-center space-x-2 text-[#070A11] text-sm">
+                <div className="flex items-center space-x-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -117,8 +113,8 @@ export default function LandingPage() {
                 </Link>
               </div>
               <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
-              <Image
-                  src="/images/feature2.png"
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Frame_jygnal.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -129,7 +125,7 @@ export default function LandingPage() {
             {/* Feature 3 */}
             <div className="space-y-6">
               <div>
-              <div className="flex items-center space-x-2 text-[#070A11] text-sm">
+                <div className="flex items-center space-x-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -148,8 +144,8 @@ export default function LandingPage() {
                 </Link>
               </div>
               <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
-              <Image
-                  src="/images/feature3.png"
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Container_1_yivji1.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -178,8 +174,8 @@ export default function LandingPage() {
                 </Link>
               </div>
               <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
-              <Image
-                  src="/images/feature4.png"
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267173/Background_ekx6eu.png"
                   alt="Team Builder"
                   width={500}
                   height={300}
@@ -204,8 +200,14 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {/* 1st Place */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 text-center border border-white/20">
-              <div className="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Image src="/images/gold.png" alt="Gold Trophy" width={40} height={40} className="w-10 h-10" />
+              <div className="flex items-center justify-center mx-auto mb-6">
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png"
+                  alt="Gold Trophy"
+                  width={417}
+                  height={227}
+                  className=""
+                />
               </div>
               <h3 className="text-2xl font-bold mb-2">
                 Ultimate Fantasy11 Champion
@@ -231,8 +233,14 @@ export default function LandingPage() {
 
             {/* 2nd Place */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 text-center border border-white/20">
-              <div className="w-20 h-20 bg-gray-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Image src="/images/silver.png" alt="Silver Trophy" width={40} height={40} className="w-10 h-10" />
+              <div className="flex items-center justify-center mx-auto mb-6">
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Silver_zo3xqh.png"
+                  alt="Silver Trophy"
+                  width={417}
+                  height={227}
+                  className=""
+                />
               </div>
               <h3 className="text-2xl font-bold mb-2">Second Place Champion</h3>
               <p className="text-3xl font-bold text-gray-300 mb-4">N750,000</p>
@@ -254,8 +262,14 @@ export default function LandingPage() {
 
             {/* 3rd Place */}
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 text-center border border-white/20">
-              <div className="w-20 h-20 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Image src="/images/bronze.png" alt="Bronze Trophy" width={40} height={40} className="w-10 h-10" />
+              <div className="flex items-center justify-center mx-auto mb-6">
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png"
+                  alt="Bronze Trophy"
+                  width={417}
+                  height={227}
+                  className=""
+                />
               </div>
               <h3 className="text-2xl font-bold mb-2">Third Place Champion</h3>
               <p className="text-3xl font-bold text-amber-400 mb-4">N500,000</p>
@@ -298,12 +312,13 @@ export default function LandingPage() {
                 className="bg-white/10 backdrop-blur-sm rounded-lg overflow-hidden hover:bg-white/20 transition-colors border border-white/20"
               >
                 <div className="h-48 flex items-center justify-center">
-                <Image
-                  src="/images/home.png"
-                  alt="Team Builder"
-                  width={500}
-                  height={300}
-                />                </div>
+                  <Image
+                    src="/images/home.png"
+                    alt="Team Builder"
+                    width={500}
+                    height={300}
+                  />{" "}
+                </div>
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-white mb-2">
                     AFCON 2025 Fantasy: Complete Guide to Winning Your League
@@ -401,28 +416,30 @@ export default function LandingPage() {
           style={{ backgroundImage: "url(/images/home.png)" }}
         ></div>
         <div className="relative max-w-7xl mx-auto px-4 text-left">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-9xl font-bold mb-6">
             Ready to Dominate?
           </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Join millions of fans competing in Africa&apos;s biggest fantasy
-            football game.
-          </p>
-          <Link
-            href="/sign-up"
-            className="inline-flex items-center justify-center px-8 py-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors mb-4"
-          >
-            Sign Up Now
-          </Link>
-          <p className="text-gray-400 text-sm">
-            Already have an account?{" "}
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2 my-8">
+              <Image
+                src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764268570/trophy_c03hic.png"
+                alt="Ready to Dominate"
+                width={55}
+                height={45}
+                className=""
+              />
+              <p className="text-xl text-gray-300 max-w-[432px]">
+                Join millions of fans competing in Africa&apos;s biggest fantasy
+                football game.
+              </p>
+            </div>
             <Link
-              href="/sign-in"
-              className="text-green-400 hover:text-green-300 underline"
+              href="/my-team"
+              className="inline-flex items-center justify-center px-8 bg-[#4AA96C] text-white font-semibold rounded-full transition-colors mb-4 h-10"
             >
-              Log In
+              Create your team now!
             </Link>
-          </p>
+          </div>
         </div>
       </section>
 
@@ -432,7 +449,7 @@ export default function LandingPage() {
             <div className="mb-4 md:mb-0">
               <Link href="/" className="flex items-center">
                 <Image
-                  src="/images/logo.png"
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Logo_x03fz0.png"
                   alt="Fantasyfi Logo"
                   width={140}
                   height={56}
