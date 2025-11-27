@@ -37,7 +37,7 @@ const EmptyTeamState: React.FC<EmptyTeamStateProps> = ({ onCreateTeam }) => {
           <div className="mb-8 max-w-2xl text-center justify-center flex mx-auto">
             <div className="relative rounded-lg overflow-hidden" style={{ height: '704px', width: '546px' }}>
               <Image
-                src="/images/pitch.png"
+                src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265434/Pitch_a8soyt.png"
                 alt="Empty football pitch"
                 fill
                 className="object-cover"
