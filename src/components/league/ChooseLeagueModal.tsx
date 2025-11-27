@@ -94,7 +94,7 @@ const ChooseLeagueModal: React.FC<ChooseLeagueModalProps> = ({
                           <option.customIcon />
                         </div>
                       ) : option.id === 'championship' ? (
-                        <Image src="/images/gold.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />
+                        <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />
                       ) : Icon ? (
                         <Icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-green-500'}`} />
                       ) : null}

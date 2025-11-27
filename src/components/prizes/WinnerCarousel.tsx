@@ -85,7 +85,7 @@ export default function WinnerCarousel({ title, photos }: WinnerCarouselProps) {
                 
                 {/* Trophy Icon and Title Overlay */}
                 <div className="absolute top-4 left-4 flex items-center space-x-2 z-10">
-                  <Image src="/images/gold.png" alt="Trophy" width={20} height={20} className="w-5 h-5 drop-shadow-lg" />
+                  <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Trophy" width={20} height={20} className="w-5 h-5 drop-shadow-lg" />
                   <span className="text-white font-semibold text-lg drop-shadow-lg">{title}</span>
                 </div>
               </div>

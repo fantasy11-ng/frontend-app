@@ -337,7 +337,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
           {selectedPredictions.thirdPlace && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
-                <Image src="/images/bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                 <span className="text-green-800 font-medium">
                   Winner: {selectedPredictions.thirdPlace}
                 </span>
@@ -360,7 +360,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
             <p className="text-gray-600 mb-6">Pick the winner of the 3rd place match</p>
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
-                <Image src="/images/bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                 <span className="text-green-800 font-medium">
                   Your Prediction: {selectedPredictions.thirdPlace}
                 </span>
@@ -399,7 +399,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
             {selectedPredictions.thirdPlace ? (
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center">
-                  <Image src="/images/bronze.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                  <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                   <span className="text-green-800 font-medium">
                     Your Prediction: {selectedPredictions.thirdPlace}
                   </span>
@@ -414,7 +414,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
         {/* AFCON 2025 Final */}
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <div className="flex items-center mb-4">
-            <Image src="/images/gold.png" alt="Gold Trophy" width={32} height={32} className="w-8 h-8 mr-3" />
+            <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Gold Trophy" width={32} height={32} className="w-8 h-8 mr-3" />
             <h3 className="text-lg font-semibold text-gray-900">
               AFCON 2025 Final
             </h3>
@@ -492,7 +492,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
           {selectedPredictions.champion && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
-                <Image src="/images/gold.png" alt="Gold Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Gold Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
                 <span className="text-green-800 font-medium">
                   Winner: {selectedPredictions.champion}
                 </span>
@@ -506,7 +506,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
       {isComplete && (
         <div className="mt-8 p-6 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-center">
-            <Image src="/images/gold.png" alt="Gold Trophy" width={24} height={24} className="w-6 h-6 mr-3" />
+            <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Gold Trophy" width={24} height={24} className="w-6 h-6 mr-3" />
             <div>
               <h3 className="text-lg font-semibold text-green-800">
                 Tournament Prediction Complete!
