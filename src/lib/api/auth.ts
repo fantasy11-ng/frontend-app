@@ -1,5 +1,16 @@
 import { apiClient } from './client';
 
+// Helper function to get the correct origin for OAuth redirects
+const getRedirectOrigin = (): string => {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+  
+  // Use window.location.origin which automatically detects the current domain
+  // This works for both localhost (development) and deployed domains (production)
+  return window.location.origin;
+};
+
 // Types
 export interface SignupData {
   firstName: string;
@@ -86,9 +97,8 @@ export const authApi = {
   // GET /auth/google - Initiate Google OAuth flow
   // This should redirect to Google OAuth, so we return the URL
   initiateGoogleOAuth: (): string => {
-    const redirectUri = typeof window !== 'undefined' 
-      ? `${window.location.origin}/auth/google`
-      : '';
+    const origin = getRedirectOrigin();
+    const redirectUri = origin ? `${origin}/auth/google/callback` : '';
     return `${apiClient.defaults.baseURL}auth/google${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ''}`;
   },
 
@@ -103,9 +113,8 @@ export const authApi = {
 
   // GET /auth/facebook - Initiate Facebook OAuth flow
   initiateFacebookOAuth: (): string => {
-    const redirectUri = typeof window !== 'undefined' 
-      ? `${window.location.origin}/auth/facebook/callback`
-      : '';
+    const origin = getRedirectOrigin();
+    const redirectUri = origin ? `${origin}/auth/facebook/callback` : '';
     return `${apiClient.defaults.baseURL}auth/facebook${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ''}`;
   },
 
