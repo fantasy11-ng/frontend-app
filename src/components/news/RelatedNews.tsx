@@ -1,11 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { NewsArticle } from '@/types/news';
+import { BlogPostListItem } from '@/types/news';
+import Image from 'next/image';
 
 interface RelatedNewsProps {
-  articles: NewsArticle[];
+  articles: BlogPostListItem[];
 }
+
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const formatReadingTime = (minutes: number): string => {
+  return `${minutes} min read`;
+};
 
 export default function RelatedNews({ articles }: RelatedNewsProps) {
   return (
@@ -16,15 +34,24 @@ export default function RelatedNews({ articles }: RelatedNewsProps) {
         {articles.map((article) => (
           <Link
             key={article.id}
-            href={`/news/${article.id}`}
+            href={`/news/${article.slug}`}
             className="block group"
           >
             <div className="flex space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
               {/* Article Image */}
               <div className="flex-shrink-0">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
-                  <div className="text-white text-lg opacity-20">⚽</div>
-                </div>
+                {article.coverImageUrl ? (
+                  <Image
+                    fill
+                    src={article.coverImageUrl}
+                    alt={article.title}
+                    className="w-16 h-16 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+                    <div className="text-white text-lg opacity-20">⚽</div>
+                  </div>
+                )}
               </div>
 
               {/* Article Content */}
@@ -38,9 +65,9 @@ export default function RelatedNews({ articles }: RelatedNewsProps) {
                 </p>
 
                 <div className="flex items-center text-xs text-gray-400">
-                  <span>{article.publishedAt}</span>
+                  <span>{formatDate(article.createdAt)}</span>
                   <span className="mx-1">•</span>
-                  <span>{article.readTime}</span>
+                  <span>{formatReadingTime(article.readingTimeMinutes)}</span>
                 </div>
               </div>
             </div>

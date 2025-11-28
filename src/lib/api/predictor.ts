@@ -203,11 +203,12 @@ export const predictorApi = {
     return predictorApi.getBracketSeed('third-place' as RoundCode);
   },
 
-  // GET /predictor/bracket/third-place/me - user's third place match prediction
-  // Uses the same bracket predictions endpoint pattern with roundCode 'third-place'
+  // GET /predictor/third-place-match/me - user's third place match prediction
   getThirdPlaceMatchPrediction: async (): Promise<BracketPredictionsResponse['data']> => {
-    // Use the same getBracketPredictions function with 'third-place' as roundCode
-    return predictorApi.getBracketPredictions('third-place' as RoundCode);
+    const response = await apiClient.get<BracketPredictionsResponse>(
+      '/predictor/third-place-match/me',
+    );
+    return response.data.data;
   },
 
   // POST /predictor/bracket/third-place - submit third place match prediction

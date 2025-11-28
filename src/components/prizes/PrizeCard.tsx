@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Gift, LucideIcon } from 'lucide-react';
-import Image from 'next/image';
+import { LucideIcon } from "lucide-react";
+import Image from "next/image";
 
 interface PrizeCardProps {
   prize: {
@@ -10,66 +10,92 @@ interface PrizeCardProps {
     title: string;
     cashPrize: string;
     rewards: string[];
-    color: 'gold' | 'silver' | 'bronze' | 'blue' | 'purple' | 'orange';
+    color: "gold" | "silver" | "bronze" | "blue" | "purple" | "orange";
     icon: LucideIcon;
   };
 }
 
 const colorClasses = {
   gold: {
-    bg: 'bg-gradient-to-br from-yellow-50 via-yellow-100 to-yellow-50',
-    text: 'text-yellow-900',
-    prizeText: 'text-yellow-900',
-    icon: 'text-yellow-700'
+    bg: "bg-gradient-to-br from-yellow-50 via-yellow-100 to-yellow-50",
+    text: "text-yellow-900",
+    prizeText: "text-yellow-900",
+    icon: "text-yellow-700",
   },
   silver: {
-    bg: 'bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50',
-    text: 'text-gray-900',
-    prizeText: 'text-gray-900',
-    icon: 'text-gray-700'
+    bg: "bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50",
+    text: "text-gray-900",
+    prizeText: "text-gray-900",
+    icon: "text-gray-700",
   },
   bronze: {
-    bg: 'bg-gradient-to-br from-amber-50 via-amber-100 to-amber-50',
-    text: 'text-amber-900',
-    prizeText: 'text-amber-900',
-    icon: 'text-amber-700'
+    bg: "bg-gradient-to-br from-amber-50 via-amber-100 to-amber-50",
+    text: "text-amber-900",
+    prizeText: "text-amber-900",
+    icon: "text-amber-700",
   },
   blue: {
-    bg: 'bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50',
-    text: 'text-blue-900',
-    prizeText: 'text-blue-900',
-    icon: 'text-blue-700'
+    bg: "bg-gradient-to-br from-blue-50 via-blue-100 to-blue-50",
+    text: "text-blue-900",
+    prizeText: "text-blue-900",
+    icon: "text-blue-700",
   },
   purple: {
-    bg: 'bg-gradient-to-br from-purple-50 via-purple-100 to-purple-50',
-    text: 'text-purple-900',
-    prizeText: 'text-purple-900',
-    icon: 'text-purple-700'
+    bg: "bg-gradient-to-br from-purple-50 via-purple-100 to-purple-50",
+    text: "text-purple-900",
+    prizeText: "text-purple-900",
+    icon: "text-purple-700",
   },
   orange: {
-    bg: 'bg-gradient-to-br from-orange-50 via-orange-100 to-orange-50',
-    text: 'text-orange-900',
-    prizeText: 'text-orange-900',
-    icon: 'text-orange-700'
-  }
+    bg: "bg-gradient-to-br from-orange-50 via-orange-100 to-orange-50",
+    text: "text-orange-900",
+    prizeText: "text-orange-900",
+    icon: "text-orange-700",
+  },
 };
 
 export default function PrizeCard({ prize }: PrizeCardProps) {
   const colors = colorClasses[prize.color];
 
   return (
-    <div className={`${colors.bg} rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden`}>
+    <div
+      className={`${colors.bg} rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden`}
+    >
       {/* Icon */}
       <div className="flex justify-center mb-4">
         <div className={`${colors.icon} opacity-80`}>
-          {prize.color === 'gold' ? (
-            <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Gold Trophy" width={417} height={227} className="" />
-          ) : prize.color === 'silver' ? (
-            <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Silver_zo3xqh.png" alt="Silver Trophy" width={417} height={227}  className="" />
-          ) : prize.color === 'bronze' ? (
-            <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png" alt="Bronze Trophy" width={417} height={227}  className="" />
+          {prize.color === "gold" ? (
+            <Image
+              src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png"
+              alt="Gold Trophy"
+              width={489}
+              height={266}
+              className="!w-[489px] !h-[266px] max-w-[1000px]"
+            />
+          ) : prize.color === "silver" ? (
+            <Image
+              src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Silver_zo3xqh.png"
+              alt="Silver Trophy"
+              width={417}
+              height={227}
+              className="!w-[417px] !h-[227px] max-w-[1000px]"
+            />
+          ) : prize.color === "bronze" ? (
+            <Image
+              src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png"
+              alt="Bronze Trophy"
+              width={379}
+              height={206}
+              className="!w-[379px] !h-[206px] max-w-[1000px]"
+            />
           ) : (
-            <Gift className="w-16 h-16" />
+            <Image
+              src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764268567/image_5_g8v1ws.png"
+              alt="Bronze Trophy"
+              width={417}
+              height={227}
+              className=""
+            />
           )}
         </div>
       </div>
