@@ -1,110 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, ChevronDown } from "lucide-react";
 import FeaturedArticle from "@/components/news/FeaturedArticle";
 import { NewsCard, NewsSection } from "@/components/news";
-
-interface NewsArticle {
-  id: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  publishedAt: string;
-  readTime: string;
-  category: "general" | "team" | "player";
-  image: string;
-  featured?: boolean;
-  tags: string[];
-}
-
-const mockArticles: NewsArticle[] = [
-  {
-    id: "1",
-    title: "AFCON 2025 Fantasy: Complete Guide to Winning Your League",
-    excerpt:
-      "Everything you need to know about dominating your fantasy league this season. From budget management to captain selection, our comprehensive guide covers all the strategies used by top managers.",
-    content:
-      "The AFCON 2025 Fantasy League is set to be an exciting event for football fans around the globe. With the tournament taking place in Morocco, this guide will help you navigate the ins and outs of creating a winning fantasy team. First, understanding the tournament format is crucial. Next, consider the players. In addition to star players, another important aspect is budget management. Finally, stay updated on injuries and team news.",
-    author: "Fantasy 11 Editorial Team",
-    publishedAt: "1 hour ago",
-    readTime: "12 min read",
-    category: "general",
-    image: "/api/placeholder/800/400",
-    featured: true,
-    tags: ["Mohammed Salah", "Liverpool", "Morocco", "Quarter Finals"],
-  },
-  {
-    id: "2",
-    title: "Top 10 Players to Watch in AFCON 2025",
-    excerpt:
-      "Discover the star players who could make or break your fantasy team this tournament.",
-    content: "Content here...",
-    author: "Fantasy 11 Editorial Team",
-    publishedAt: "2 hours ago",
-    readTime: "8 min read",
-    category: "player",
-    image: "/api/placeholder/400/250",
-    tags: ["Mohammed Salah", "Sadio Mané", "Victor Osimhen"],
-  },
-  {
-    id: "3",
-    title: "Team Analysis: Nigeria vs Egypt Preview",
-    excerpt:
-      "A deep dive into the tactical battle between two AFCON powerhouses.",
-    content: "Content here...",
-    author: "Fantasy 11 Editorial Team",
-    publishedAt: "3 hours ago",
-    readTime: "6 min read",
-    category: "team",
-    image: "/api/placeholder/400/250",
-    tags: ["Nigeria", "Egypt", "Group Stage"],
-  },
-  {
-    id: "4",
-    title: "Injury Updates: Latest from AFCON 2025",
-    excerpt:
-      "Stay updated with the latest injury news affecting your fantasy picks.",
-    content: "Content here...",
-    author: "Fantasy 11 Editorial Team",
-    publishedAt: "4 hours ago",
-    readTime: "5 min read",
-    category: "player",
-    image: "/api/placeholder/400/250",
-    tags: ["Injuries", "Updates", "Fitness"],
-  },
-  {
-    id: "5",
-    title: "Morocco Hosts AFCON 2025: Venue Guide",
-    excerpt: "Everything you need to know about the host cities and stadiums.",
-    content: "Content here...",
-    author: "Fantasy 11 Editorial Team",
-    publishedAt: "5 hours ago",
-    readTime: "10 min read",
-    category: "general",
-    image: "/api/placeholder/400/250",
-    tags: ["Morocco", "Venues", "Stadiums"],
-  },
-  {
-    id: "6",
-    title: "Fantasy Tips: Budget Management Strategies",
-    excerpt:
-      "Learn how to maximize your fantasy budget for optimal team performance.",
-    content: "Content here...",
-    author: "Fantasy 11 Editorial Team",
-    publishedAt: "6 hours ago",
-    readTime: "7 min read",
-    category: "general",
-    image: "/api/placeholder/400/250",
-    tags: ["Budget", "Strategy", "Tips"],
-  },
-];
+import { useBlogPosts } from "@/lib/api";
 
 export default function NewsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+
+  // Debounce search query with 700ms delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 700);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [searchQuery]);
+
+  // Build API params using debounced search query
+  const apiParams = useMemo(() => {
+    const params: { q?: string; status?: string; category?: string } = {
+      status: "published",
+    };
+    
+    if (debouncedSearchQuery) {
+      params.q = debouncedSearchQuery;
+    }
+    
+    if (selectedCategory !== "all") {
+      params.category = selectedCategory;
+    }
+    
+    return params;
+  }, [debouncedSearchQuery, selectedCategory]);
+
+  const { data, isLoading, error } = useBlogPosts(apiParams);
 
   const categories = [
     { value: "all", label: "All Categories" },
@@ -113,26 +49,19 @@ export default function NewsPage() {
     { value: "player", label: "Player News" },
   ];
 
-  const featuredArticle = mockArticles.find((article) => article.featured);
-  const otherArticles = mockArticles.filter((article) => !article.featured);
+  const articles = data?.items || [];
+  const featuredArticle = articles.length > 0 ? articles[0] : null;
+  const otherArticles = articles.slice(1);
 
-  const filteredArticles = otherArticles.filter((article) => {
-    const matchesSearch =
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || article.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const generalNews = filteredArticles.filter(
-    (article) => article.category === "general"
+  // Group articles by category for display
+  const generalNews = otherArticles.filter(
+    (article) => article.category.slug === "general" || article.category.name.toLowerCase().includes("general")
   );
-  const teamNews = filteredArticles.filter(
-    (article) => article.category === "team"
+  const teamNews = otherArticles.filter(
+    (article) => article.category.slug === "team" || article.category.name.toLowerCase().includes("team")
   );
-  const playerNews = filteredArticles.filter(
-    (article) => article.category === "player"
+  const playerNews = otherArticles.filter(
+    (article) => article.category.slug === "player" || article.category.name.toLowerCase().includes("player")
   );
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,6 +70,7 @@ export default function NewsPage() {
 
   const clearSearch = () => {
     setSearchQuery("");
+    setDebouncedSearchQuery("");
   };
 
   const selectedCategoryLabel =
@@ -224,24 +154,38 @@ export default function NewsPage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="text-gray-600">Loading news...</div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="text-center py-12">
+            <div className="text-red-600">Error loading news. Please try again later.</div>
+          </div>
+        )}
+
         {/* No Search Results */}
-        {searchQuery && filteredArticles.length === 0 && (
+        {!isLoading && !error && debouncedSearchQuery && articles.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-500 text-md mb-2">
               Oops! It looks like we couldn&apos;t find any results for &quot;
-              {searchQuery}&quot;.
+              {debouncedSearchQuery}&quot;.
             </div>
             <p className="text-gray-400">Try searching for something else.</p>
           </div>
         )}
 
         {/* Featured Article */}
-        {!searchQuery && featuredArticle && (
+        {!isLoading && !error && !debouncedSearchQuery && featuredArticle && (
           <FeaturedArticle article={featuredArticle} />
         )}
 
         {/* News Sections */}
-        {!searchQuery && (
+        {!isLoading && !error && !debouncedSearchQuery && (
           <div className="space-y-12">
             {generalNews.length > 0 && (
               <NewsSection
@@ -266,19 +210,37 @@ export default function NewsPage() {
                 seeAllLink="/news?category=player"
               />
             )}
+
+            {/* Show remaining articles if no specific category sections */}
+            {generalNews.length === 0 && teamNews.length === 0 && playerNews.length === 0 && otherArticles.length > 0 && (
+              <NewsSection
+                title="All News"
+                articles={otherArticles.slice(0, 8)}
+                seeAllLink="/news"
+              />
+            )}
           </div>
         )}
 
         {/* Search Results */}
-        {searchQuery && filteredArticles.length > 0 && (
+        {!isLoading && !error && debouncedSearchQuery && articles.length > 0 && (
           <div className="space-y-8">
             <h2 className="text-2xl font-bold text-gray-900">
-              Search Results ({filteredArticles.length})
+              Search Results ({articles.length})
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredArticles.map((article) => (
+              {articles.map((article) => (
                 <NewsCard key={article.id} article={article} />
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* No articles at all */}
+        {!isLoading && !error && articles.length === 0 && !debouncedSearchQuery && (
+          <div className="text-center py-12">
+            <div className="text-gray-500 text-md mb-2">
+              No news articles available at the moment.
             </div>
           </div>
         )}

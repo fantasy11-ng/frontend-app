@@ -4,6 +4,25 @@ import Link from 'next/link';
 import { Users, Target, DollarSign, Crown, Clock, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import { useBlogPosts } from '@/lib/api';
+import { BlogPostListItem } from '@/types/news';
+
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) return 'Just now';
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const formatReadingTime = (minutes: number): string => {
+  return `${minutes} min read`;
+};
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -12,6 +31,10 @@ export default function HomePage() {
     (user?.firstName && user?.lastName
       ? `${user.firstName} ${user.lastName}`
       : user?.firstName || user?.lastName || user?.email?.split('@')[0] || 'User');
+
+  // Fetch latest news posts
+  const { data: newsData } = useBlogPosts({ status: 'published', limit: 4 });
+  const newsArticles = newsData?.items || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -324,30 +347,47 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6">
-            {[1, 2, 3, 4].map((item) => (
-              <Link
-                key={item}
-                href="/news"
-                className="group"
-              >
-                <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 rounded-lg mb-3 flex items-center justify-center group-hover:opacity-90 transition-opacity">
-                  <span className="text-white text-4xl">⚽</span>
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
-                  AFCON 2025 Fantasy: Complete Guide to Winning Your League
-                </h3>
-                <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                  Everything you need to know about dominating your fantasy league this season.
-                </p>
-                <div className="flex items-center text-xs text-gray-500">
-                  <span>1 hour ago</span>
-                  <span className="mx-2">•</span>
-                  <span>12 min read</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {newsArticles.length > 0 ? (
+            <div className="grid md:grid-cols-4 gap-6">
+              {newsArticles.map((article: BlogPostListItem) => (
+                <Link
+                  key={article.id}
+                  href={`/news/${article.slug}`}
+                  className="group"
+                >
+                  <div className="h-48 bg-gradient-to-br from-green-400 to-green-600 rounded-lg mb-3 flex items-center justify-center group-hover:opacity-90 transition-opacity overflow-hidden relative">
+                    {article.coverImageUrl ? (
+                      <Image
+                        src={article.coverImageUrl}
+                        alt={article.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                        priority
+                      />
+                    ) : (
+                      <span className="text-white text-4xl">⚽</span>
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors line-clamp-2">
+                    {article.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                    {article.excerpt}
+                  </p>
+                  <div className="flex items-center text-xs text-gray-500">
+                    <span>{formatDate(article.createdAt)}</span>
+                    <span className="mx-2">•</span>
+                    <span>{formatReadingTime(article.readingTimeMinutes)}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              No news articles available at the moment.
+            </div>
+          )}
         </div>
       </div>
     </div>

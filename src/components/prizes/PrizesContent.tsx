@@ -9,21 +9,8 @@ export default function PrizesContent() {
     {
       id: '1',
       place: 1,
-      title: 'Ultimate Fantasy11 Champion',
-      cashPrize: 'N1,000,000',
-      rewards: [
-        'AFCON 2025 VIP Experience',
-        'Signed Jersey Collection',
-        'Trophy & Medal'
-      ],
-      color: 'gold' as const,
-      icon: Gift
-    },
-    {
-      id: '2',
-      place: 2,
       title: 'Second Place Champion',
-      cashPrize: 'N750,000',
+      cashPrize: '₦750,000',
       rewards: [
         'AFCON 2025 Premium Tickets',
         'Signed Football',
@@ -33,10 +20,23 @@ export default function PrizesContent() {
       icon: Gift
     },
     {
+      id: '2',
+      place: 2,
+      title: 'Ultimate Fantasy11 Champion',
+      cashPrize: '₦1,000,000',
+      rewards: [
+        'AFCON 2025 VIP Experience',
+        'Signed Jersey Collection',
+        'Trophy & Medal'
+      ],
+      color: 'gold' as const,
+      icon: Gift
+    },
+    {
       id: '3',
       place: 3,
       title: 'Third Place Champion',
-      cashPrize: 'N500,000',
+      cashPrize: '₦500,000',
       rewards: [
         'AFCON 2025 Standard Tickets',
         'Team Merchandise',
@@ -58,7 +58,7 @@ export default function PrizesContent() {
         'Signed Jersey Collection',
         'Trophy & Medal'
       ],
-      color: 'gold' as const,
+      color: 'blue' as const,
       icon: Gift
     },
     {
@@ -71,7 +71,7 @@ export default function PrizesContent() {
         'Signed Football',
         'Medal'
       ],
-      color: 'silver' as const,
+      color: 'orange' as const,
       icon: Gift
     },
     {

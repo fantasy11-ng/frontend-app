@@ -7,8 +7,12 @@ export * from './auth';
 // Export predictor API functions
 export * from './predictor';
 
+// Export blog API functions
+export * from './blog';
+
 // Export hooks
 export * from './hooks/useAuth';
 export * from './hooks/useOAuth';
 export * from './hooks/usePredictor';
+export * from './hooks/useBlog';
 

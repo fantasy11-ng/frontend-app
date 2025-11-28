@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import NewsCard from './NewsCard';
-import { NewsArticle } from '@/types/news';
+import { BlogPostListItem } from '@/types/news';
 
 interface NewsSectionProps {
   title: string;
-  articles: NewsArticle[];
+  articles: BlogPostListItem[];
   seeAllLink: string;
 }
 
