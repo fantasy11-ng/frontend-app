@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Share2, Bookmark } from 'lucide-react';
+import { ArrowLeft, Share2, Bookmark, Loader2 } from 'lucide-react';
 import RelatedNews from '@/components/news/RelatedNews';
 import { useBlogPost } from '@/lib/api';
 import Image from 'next/image';
@@ -54,7 +54,7 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading article...</div>
+        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
       </div>
     );
   }

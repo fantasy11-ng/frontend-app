@@ -1,5 +1,6 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import LandingPage from '@/components/home/LandingPage';
 import HomePage from '@/components/home/HomePage';
@@ -11,7 +12,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
       </div>
     );
   }

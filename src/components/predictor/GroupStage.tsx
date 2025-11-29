@@ -251,7 +251,7 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
     return (
       <div className="p-6">
         <div className="text-center py-12">
-          <p className="text-gray-500">Loading groups...</p>
+          <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-500" />
         </div>
       </div>
     );
@@ -335,10 +335,7 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
                   disabled={savingGroupId === group.id || !isComplete || !hasUnsavedChanges(group.name)}
                 >
                   {savingGroupId === group.id ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
                     'Save Group'
                   )}

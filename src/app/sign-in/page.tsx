@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoogleOAuth } from '@/lib/api/hooks/useOAuth';
 import AuthLogo from '@/components/auth/AuthLogo';
@@ -152,7 +152,14 @@ export default function SignInPage() {
                 isLoading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              {isLoading ? 'Logging in...' : 'Log in'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin inline-block" />
+                  Logging in...
+                </>
+              ) : (
+                'Log in'
+              )}
             </button>
           </form>
 

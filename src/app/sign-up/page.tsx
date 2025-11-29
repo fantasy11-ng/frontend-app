@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { PasswordRequirements } from '@/components/auth';
 import AuthLogo from '@/components/auth/AuthLogo';
 import { useAuth } from '@/contexts/AuthContext';
@@ -209,7 +209,14 @@ export default function SignUpPage() {
                   : 'bg-green-600 text-gray-300 cursor-not-allowed opacity-50'
               }`}
             >
-              {isLoading ? 'Creating account...' : 'Create account'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin inline-block" />
+                  Creating account...
+                </>
+              ) : (
+                'Create account'
+              )}
             </button>
           </form>
 

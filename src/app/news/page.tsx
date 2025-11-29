@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronDown, Loader2 } from "lucide-react";
 import FeaturedArticle from "@/components/news/FeaturedArticle";
 import { NewsCard, NewsSection } from "@/components/news";
 import { useBlogPosts } from "@/lib/api";
@@ -157,7 +157,7 @@ export default function NewsPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
-            <div className="text-gray-600">Loading news...</div>
+            <Loader2 className="w-8 h-8 animate-spin text-gray-500 mx-auto" />
           </div>
         )}
 
