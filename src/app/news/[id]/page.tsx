@@ -62,7 +62,7 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
   if (error || !data?.post) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1440px] mx-auto px-4 py-8">
           <div className="mb-6">
             <Link 
               href="/news"
@@ -86,7 +86,7 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 py-8">
         {/* Back Button */}
         <div className="mb-6">
           <Link 

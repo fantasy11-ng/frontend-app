@@ -97,7 +97,7 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
           value={searchQuery}
           onChange={(e) => handleSearchChange(e.target.value)}
           placeholder="Search players or teams..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="text-[#070A11] w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
@@ -106,7 +106,7 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
         <select
           value={selectedPosition}
           onChange={(e) => handlePositionChange(e.target.value)}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="text-[#070A11] flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           {positions.map((pos) => (
             <option key={pos} value={pos}>
@@ -117,7 +117,7 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
         <select
           value={selectedCountry}
           onChange={(e) => handleCountryChange(e.target.value)}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="text-[#070A11] flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
         >
           {countries.map((country) => (
             <option key={country} value={country}>

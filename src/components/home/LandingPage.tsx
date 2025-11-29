@@ -42,7 +42,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-black/10"></div>
 
         <div className="relative min-h-screen flex flex-col">
-          <div className="flex-1 flex flex-col justify-end max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
+          <div className="flex-1 flex flex-col justify-end max-w-[1440px] mx-auto px-4 py-24 sm:py-32">
             <div className="">
               <div className="flex items-start space-x-4 max-w-2xl mt-32 sm:mt-40 md:mt-48">
                 <div className="flex-shrink-0">
@@ -75,7 +75,7 @@ export default function LandingPage() {
       </section>
 
       <section id="features" className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-5xl font-medium text-[#070A11] mb-4 max-w-[684px] mx-auto">
               We&apos;ve got all the tools you need to dominate AFCON 2025
@@ -210,7 +210,7 @@ export default function LandingPage() {
       </section>
 
       <section id="prizes" className="py-20 bg-[#1A0000] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               $1M Prize Pool
@@ -316,7 +316,7 @@ export default function LandingPage() {
       </section>
 
       <section className="py-20 bg-[#1A0000] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4">
           <div className="mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold mb-2">
               AFCON News & Fantasy Tips
@@ -387,7 +387,7 @@ export default function LandingPage() {
       </section>
 
       <section id="how-it-works" className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               Frequently Asked Questions
@@ -453,7 +453,7 @@ export default function LandingPage() {
           className="absolute inset-0 opacity-20 bg-cover bg-center"
           style={{ backgroundImage: "url(/images/home.png)" }}
         ></div>
-        <div className="relative max-w-7xl mx-auto px-4 text-left">
+        <div className="relative max-w-[1440px] mx-auto px-4 text-left">
           <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-9xl font-bold mb-6">
             Ready to Dominate?
           </h2>
@@ -482,7 +482,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="bg-gray-900 text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1440px] mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
               <Link href="/" className="flex items-center">

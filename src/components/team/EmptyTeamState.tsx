@@ -10,7 +10,7 @@ interface EmptyTeamStateProps {
 const EmptyTeamState: React.FC<EmptyTeamStateProps> = ({ onCreateTeam }) => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 md:p-12">
           {/* Trophy Icon */}
           <div className="flex justify-center mb-8">
