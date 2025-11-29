@@ -12,6 +12,7 @@ import type {
   RoundCode,
   BracketPredictionsRequest,
   BracketPredictionsResponse,
+  BracketPrediction,
   BracketSeedResponse,
   BracketSeedFixture,
   BracketSeedData,
@@ -205,10 +206,18 @@ export const predictorApi = {
 
   // GET /predictor/third-place-match/me - user's third place match prediction
   getThirdPlaceMatchPrediction: async (): Promise<BracketPredictionsResponse['data']> => {
-    const response = await apiClient.get<BracketPredictionsResponse>(
+    const response = await apiClient.get<BracketPredictionsResponse | { success: boolean; data: BracketPrediction }>(
       '/predictor/third-place-match/me',
     );
-    return response.data.data;
+    
+    // Handle both array and single object responses
+    if (Array.isArray(response.data.data)) {
+      return response.data.data;
+    }
+    
+    // If it's a single object, wrap it in an array
+    const singlePrediction = response.data.data as BracketPrediction;
+    return [singlePrediction];
   },
 
   // POST /predictor/bracket/third-place - submit third place match prediction

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, Suspense, useRef } from "react";
 import { Calendar, Check } from "lucide-react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
-import { useGroups, useStages, useStagePredictions, useBracketSeed, useBracketPredictions, useThirdPlaceMatchSeed, useThirdPlaceMatchPrediction } from "@/lib/api";
+import { useGroups, useStages, useStagePredictions, useBracketSeed, useBracketPredictions, useThirdPlaceMatchSeed, useThirdPlaceMatchPrediction, useThirdPlacedQualifiers } from "@/lib/api";
 import { predictorApi } from "@/lib/api";
 import { FinalsStage, GroupStage, KnockoutStage, ThirdBestTeams } from '@/components/predictor';
 import toast from 'react-hot-toast';
@@ -104,6 +104,8 @@ function PredictorPageContent() {
 
   // Track loaded finals predictions to prevent infinite loops
   const loadedFinalsRef = useRef<{ thirdPlace: string; champion: string } | null>(null);
+  // Track if we're updating stage to prevent feedback loops
+  const isUpdatingStageRef = useRef(false);
 
   // When we have both groups and saved predictions for the group stage,
   // initialize the local predictions state so the UI reflects saved data.
@@ -142,25 +144,14 @@ function PredictorPageContent() {
     }
   }, [groups, groupStagePredictions]);
 
-  // Sync stage with URL params when they change externally (e.g., browser back/forward)
-  // Also set initial URL param if missing
-  useEffect(() => {
-    const stageParam = searchParams.get('stage');
-    const validStages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
-    
-    if (stageParam && validStages.includes(stageParam as PredictionStage)) {
-      const newStage = stageParam as PredictionStage;
-      setCurrentStage(prevStage => {
-        // Only update if different to avoid unnecessary re-renders
-        return prevStage !== newStage ? newStage : prevStage;
-      });
-    } else if (!stageParam) {
-      // If no stage param, set it in URL to 'group'
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('stage', 'group');
-      router.replace(`/predictor?${params.toString()}`, { scroll: false });
-    }
-  }, [searchParams, router]);
+  // Fetch saved predictions for all stages to check completion status
+  // This allows us to determine which stages are unlocked
+  const { data: savedThirdBestTeams = [] } = useThirdPlacedQualifiers(true);
+  const { data: savedRound16Predictions = [] } = useBracketPredictions('r16', true);
+  const { data: savedQuarterPredictions = [] } = useBracketPredictions('qf', true);
+  const { data: savedSemiPredictions = [] } = useBracketPredictions('sf', true);
+  const { data: savedThirdPlaceMatch = [] } = useThirdPlaceMatchPrediction(true);
+  const { data: savedFinalPredictions = [] } = useBracketPredictions('final', true);
 
   // Only fetch bracket data for the stage the user is currently on
   const isRound16Stage = currentStage === 'round16';
@@ -355,11 +346,31 @@ function PredictorPageContent() {
 
   // Update URL when stage changes
   const updateStage = (newStage: PredictionStage) => {
+    // Prevent navigation to locked stages
+    if (!isStageAccessible(newStage)) {
+      toast.error('Please complete the previous stage before proceeding.');
+      return;
+    }
+    
+    // Prevent feedback loops
+    if (isUpdatingStageRef.current) {
+      return;
+    }
+    
+    isUpdatingStageRef.current = true;
+    
+    // Update state first for immediate UI update
     setCurrentStage(newStage);
+    
     // Update URL without causing a page reload
     const params = new URLSearchParams(searchParams.toString());
     params.set('stage', newStage);
     router.replace(`/predictor?${params.toString()}`, { scroll: false });
+    
+    // Reset flag after a short delay to allow URL update to complete
+    setTimeout(() => {
+      isUpdatingStageRef.current = false;
+    }, 100);
   };
 
   const handleNextStage = async () => {
@@ -447,25 +458,124 @@ function PredictorPageContent() {
   const isStageCompleted = (stage: PredictionStage) => {
     switch (stage) {
       case 'group':
-        return Object.values(predictions.groupStage).filter(group => group.length === 4).length === groups.length;
+        // Check both local state and saved API predictions
+        const localGroupCompleted = Object.values(predictions.groupStage).filter(group => group.length === 4).length === groups.length;
+        const savedGroupCompleted = groupStagePredictions && groupStagePredictions.length > 0 && 
+          groupStagePredictions.every(pred => pred.teams.length === 4);
+        return localGroupCompleted || savedGroupCompleted;
       case 'thirdBest':
-        return predictions.thirdBestTeams.length === 4;
+        // Check both local state and saved API predictions
+        const localThirdBestCompleted = predictions.thirdBestTeams.length === 4;
+        const savedThirdBestCompleted = savedThirdBestTeams.length === 4;
+        return localThirdBestCompleted || savedThirdBestCompleted;
       case 'round16':
-        // Round of 16 can have 8 matches, but some might not be determined yet
-        const round16Keys = Object.keys(predictions.round16).filter(key => predictions.round16[key]);
-        return round16Keys.length >= 8; // Allow for flexibility if some matches aren't ready
+        // Check both local state and saved API predictions
+        const localRound16Keys = Object.keys(predictions.round16).filter(key => predictions.round16[key]);
+        const localRound16Completed = localRound16Keys.length >= 8;
+        const savedRound16Completed = savedRound16Predictions.length >= 8;
+        return localRound16Completed || savedRound16Completed;
       case 'quarter':
-        const quarterKeys = Object.keys(predictions.quarterFinals).filter(key => predictions.quarterFinals[key]);
-        return quarterKeys.length >= 4;
+        // Check both local state and saved API predictions
+        const localQuarterKeys = Object.keys(predictions.quarterFinals).filter(key => predictions.quarterFinals[key]);
+        const localQuarterCompleted = localQuarterKeys.length >= 4;
+        const savedQuarterCompleted = savedQuarterPredictions.length >= 4;
+        return localQuarterCompleted || savedQuarterCompleted;
       case 'semi':
-        const semiKeys = Object.keys(predictions.semiFinals).filter(key => predictions.semiFinals[key]);
-        return semiKeys.length >= 2;
+        // Check both local state and saved API predictions
+        const localSemiKeys = Object.keys(predictions.semiFinals).filter(key => predictions.semiFinals[key]);
+        const localSemiCompleted = localSemiKeys.length >= 2;
+        const savedSemiCompleted = savedSemiPredictions.length >= 2;
+        return localSemiCompleted || savedSemiCompleted;
       case 'finals':
-        return predictions.finals.thirdPlace !== '' && predictions.finals.champion !== '';
+        // Check both local state and saved API predictions
+        const localFinalsCompleted = predictions.finals.thirdPlace !== '' && predictions.finals.champion !== '';
+        const savedFinalsCompleted = savedThirdPlaceMatch.length > 0 && savedFinalPredictions.length > 0;
+        return localFinalsCompleted || savedFinalsCompleted;
       default:
         return false;
     }
   };
+
+  // Check if a stage is accessible (all previous stages must be completed)
+  const isStageAccessible = (stage: PredictionStage): boolean => {
+    const stages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
+    const stageIndex = stages.indexOf(stage);
+    
+    // First stage is always accessible
+    if (stageIndex === 0) {
+      return true;
+    }
+    
+    // Check if all previous stages are completed
+    for (let i = 0; i < stageIndex; i++) {
+      if (!isStageCompleted(stages[i])) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
+  // Sync stage with URL params when they change externally (e.g., browser back/forward)
+  // This effect only handles external URL changes, not internal updates via updateStage
+  useEffect(() => {
+    // Skip if we're in the middle of updating stage to prevent feedback loops
+    if (isUpdatingStageRef.current) {
+      return;
+    }
+    
+    const stageParam = searchParams.get('stage');
+    const validStages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
+    
+    if (stageParam && validStages.includes(stageParam as PredictionStage)) {
+      const newStage = stageParam as PredictionStage;
+      
+      // Only update if the stage actually changed
+      if (currentStage === newStage) {
+        return;
+      }
+      
+      // Check if the stage is accessible before allowing navigation
+      if (!isStageAccessible(newStage)) {
+        // Redirect to the first incomplete stage or group stage
+        const stages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
+        let firstIncompleteStage: PredictionStage = 'group';
+        
+        for (const stage of stages) {
+          if (!isStageCompleted(stage)) {
+            firstIncompleteStage = stage;
+            break;
+          }
+        }
+        
+        // Only redirect if we're not already on the correct stage
+        if (currentStage !== firstIncompleteStage) {
+          isUpdatingStageRef.current = true;
+          const params = new URLSearchParams(searchParams.toString());
+          params.set('stage', firstIncompleteStage);
+          router.replace(`/predictor?${params.toString()}`, { scroll: false });
+          setCurrentStage(firstIncompleteStage);
+          toast.error('Please complete previous stages before accessing this stage.');
+          setTimeout(() => {
+            isUpdatingStageRef.current = false;
+          }, 100);
+        }
+        return;
+      }
+      
+      // Update stage if it's different and accessible
+      setCurrentStage(newStage);
+    } else if (!stageParam) {
+      // If no stage param, set it in URL to 'group' (only if not already on group)
+      if (currentStage !== 'group') {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('stage', 'group');
+        router.replace(`/predictor?${params.toString()}`, { scroll: false });
+      }
+    }
+    // Only depend on searchParams and currentStage to prevent unnecessary re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const groupProgress = getGroupStageProgress();
   const knockoutProgress = getKnockoutStageProgress();
@@ -483,7 +593,7 @@ function PredictorPageContent() {
             <div className="text-right">
               <div className="text-red-600 font-medium">{overallProgress}% Complete</div>
               {/* TODO: Add the actual ending date and time of the tournament */}
-              <div className="text-gray-500 text-sm">December 21, 2024 at 18:00 GMT</div>
+              <div className="text-gray-500 text-sm">January 18, 2026 at 18:00 GMT</div>
             </div>
           </div>
 
@@ -558,23 +668,31 @@ function PredictorPageContent() {
             ].map((stage) => {
               const isActive = currentStage === stage.id;
               const isCompleted = isStageCompleted(stage.id as PredictionStage);
+              const isAccessible = isStageAccessible(stage.id as PredictionStage);
               
               return (
                 <button
                   key={stage.id}
                   onClick={() => updateStage(stage.id as PredictionStage)}
-                  className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                  disabled={!isAccessible}
+                  className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-150 ${
                     isActive
                       ? 'border-green-500 text-green-600 bg-green-50'
                       : isCompleted
                       ? 'border-gray-200 text-green-600 hover:border-gray-300'
-                      : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                      : isAccessible
+                      ? 'border-gray-200 text-gray-500 hover:border-gray-300'
+                      : 'border-gray-200 text-gray-400 opacity-50 cursor-not-allowed'
                   }`}
+                  title={!isAccessible ? 'Complete previous stages to unlock this stage' : ''}
                 >
                   {isCompleted && !isActive && (
                     <Check className="w-4 h-4 mr-2" />
                   )}
                   {stage.label}
+                  {!isAccessible && !isActive && (
+                    <span className="ml-2 text-xs">🔒</span>
+                  )}
                 </button>
               );
             })}
@@ -582,7 +700,7 @@ function PredictorPageContent() {
         </div>
 
         {/* Stage Content */}
-        <div className="bg-white rounded-lg shadow-sm border">
+        <div className="bg-white rounded-lg shadow-sm border transition-opacity duration-200">
           {currentStage === 'group' && (
             (groupsLoading || stagesLoading) ? (
               <div className="p-6 text-center">

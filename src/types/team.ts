@@ -28,13 +28,51 @@ export interface Fixture {
   date: string;
 }
 
+export type PlayerPosition = 'GK' | 'DEF' | 'MID' | 'FWD';
+export type PlayerRole = 'captain' | 'vice-captain' | 'free-kick-taker' | 'penalty-taker' | null;
+
 export interface Player {
   id: string;
   name: string;
-  position: 'GK' | 'DEF' | 'MID' | 'FWD';
-  team: string;
+  position: PlayerPosition;
+  country: string;
+  countryFlag?: string;
+  club?: string;
+  jerseyNumber?: number;
   price: number;
   points: number;
+  goals?: number;
+  assists?: number;
+  cards?: number;
+  age?: number;
+  height?: string;
+  weight?: string;
+  index?: number;
+  rating?: number;
   selected: boolean;
+  inSquad?: boolean;
+  inStarting11?: boolean;
+  onBench?: boolean;
+  role?: PlayerRole;
+}
+
+export interface SquadPlayer extends Player {
+  squadPosition?: 'starting' | 'bench';
+  formationPosition?: {
+    x: number;
+    y: number;
+  };
+}
+
+export interface Squad {
+  players: SquadPlayer[];
+  budget: number;
+  formation: string; // e.g., "4-3-3"
+}
+
+export interface SquadValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
 }
 
