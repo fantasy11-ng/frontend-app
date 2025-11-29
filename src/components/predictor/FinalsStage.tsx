@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Lightbulb, Loader2 } from 'lucide-react';
 import { useBracketSeed, useThirdPlaceMatchSeed, useBracketPredictions, useThirdPlaceMatchPrediction } from '@/lib/api';
-import type { BracketPrediction, BracketSeedFixture } from '@/types/predictorStage';
+import type { BracketPrediction, BracketSeedFixture, BracketSeedTeam } from '@/types/predictorStage';
 import Image from 'next/image';
 
 interface FinalsPredictions {
@@ -29,6 +29,28 @@ const determineWinnerName = (fixture: BracketSeedFixture | undefined, savedPred:
     }
     if (fixture.awayTeam.id === savedPred.predictedWinnerTeamId) {
       return fixture.awayTeam.name;
+    }
+  }
+
+  return null;
+};
+
+const getPredictedWinnerInfo = (
+  fixture: BracketSeedFixture | undefined,
+  savedPred: BracketPrediction
+): BracketSeedTeam | null => {
+  // If we have the predictedWinner object with full info, use it
+  if (savedPred.predictedWinner) {
+    return savedPred.predictedWinner;
+  }
+
+  // Otherwise, try to get it from the fixture using the team ID
+  if (fixture && savedPred.predictedWinnerTeamId) {
+    if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
+      return fixture.homeTeam;
+    }
+    if (fixture.awayTeam.id === savedPred.predictedWinnerTeamId) {
+      return fixture.awayTeam;
     }
   }
 
@@ -163,6 +185,23 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
   const seedLoading = thirdPlaceLoading || finalLoading;
   const seedError = thirdPlaceError || finalError;
 
+  // Use bracket seed fixtures
+  // Third place match - show if available, but don't require it
+  const thirdPlaceMatch = thirdPlaceFixture;
+
+  // Get predicted winner info (including logo) for third place match
+  // This must be before any early returns to satisfy React hooks rules
+  const thirdPlacePredictedWinner = useMemo(() => {
+    if (thirdPlaceSavedPredictions.length > 0 && thirdPlaceMatch) {
+      return getPredictedWinnerInfo(thirdPlaceMatch, thirdPlaceSavedPredictions[0]);
+    }
+    if (thirdPlaceSavedPredictions.length > 0) {
+      // Even if we don't have the match fixture, we might have the predictedWinner object
+      return thirdPlaceSavedPredictions[0].predictedWinner || null;
+    }
+    return null;
+  }, [thirdPlaceSavedPredictions, thirdPlaceMatch]);
+
   if (seedLoading) {
     return (
       <div className="p-6 text-center">
@@ -196,10 +235,8 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
     return null;
   }
 
-  // Use bracket seed fixtures
+  // At this point, finalFixture is guaranteed to be non-null
   const finalMatch = finalFixture;
-  // Third place match - show if available, but don't require it
-  const thirdPlaceMatch = thirdPlaceFixture;
 
   const handleTeamSelect = (match: 'thirdPlace' | 'champion', teamName: string) => {
     const newPredictions = { ...selectedPredictions, [match]: teamName };
@@ -338,6 +375,17 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
                 <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                {thirdPlacePredictedWinner?.logo && (
+                  <div className="w-6 h-6 mr-2 flex-shrink-0">
+                    <Image
+                      src={thirdPlacePredictedWinner.logo}
+                      alt={thirdPlacePredictedWinner.name}
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
+                )}
                 <span className="text-green-800 font-medium">
                   Winner: {selectedPredictions.thirdPlace}
                 </span>
@@ -361,6 +409,17 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center">
                 <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                {thirdPlacePredictedWinner?.logo && (
+                  <div className="w-6 h-6 mr-2 flex-shrink-0">
+                    <Image
+                      src={thirdPlacePredictedWinner.logo}
+                      alt={thirdPlacePredictedWinner.name}
+                      width={24}
+                      height={24}
+                      className="object-contain"
+                    />
+                  </div>
+                )}
                 <span className="text-green-800 font-medium">
                   Your Prediction: {selectedPredictions.thirdPlace}
                 </span>
@@ -400,6 +459,17 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
               <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center">
                   <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Bronze_j7v5qk.png" alt="Bronze Trophy" width={16} height={16} className="w-4 h-4 mr-2" />
+                  {thirdPlacePredictedWinner?.logo && (
+                    <div className="w-6 h-6 mr-2 flex-shrink-0">
+                      <Image
+                        src={thirdPlacePredictedWinner.logo}
+                        alt={thirdPlacePredictedWinner.name}
+                        width={24}
+                        height={24}
+                        className="object-contain"
+                      />
+                    </div>
+                  )}
                   <span className="text-green-800 font-medium">
                     Your Prediction: {selectedPredictions.thirdPlace}
                   </span>
