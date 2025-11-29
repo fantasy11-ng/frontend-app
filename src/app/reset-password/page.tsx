@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { PasswordRequirements } from '@/components/auth';
 import { useRequestPasswordReset, useResetPassword } from '@/lib/api/hooks/useAuth';
 import AuthLogo from '@/components/auth/AuthLogo';
@@ -287,8 +287,7 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md">
           <AuthLogo />
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-green-600" />
           </div>
         </div>
       </div>

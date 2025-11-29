@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, Suspense, useRef } from "react";
-import { Calendar, Check } from "lucide-react";
+import { Calendar, Check, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGroups, useStages, useStagePredictions, useBracketSeed, useBracketPredictions, useThirdPlaceMatchSeed, useThirdPlaceMatchPrediction, useThirdPlacedQualifiers } from "@/lib/api";
@@ -704,7 +704,7 @@ function PredictorPageContent() {
           {currentStage === 'group' && (
             (groupsLoading || stagesLoading) ? (
               <div className="p-6 text-center">
-                <p className="text-gray-500">Loading groups...</p>
+                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-gray-500" />
               </div>
             ) : (groupsError || stagesError || !groupStageId) ? (
               <div className="p-6 text-center">
@@ -849,10 +849,7 @@ export default function PredictorPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading predictor...</p>
-        </div>
+        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
       </div>
     }>
       <PredictorPageContent />

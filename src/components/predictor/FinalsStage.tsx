@@ -206,7 +206,6 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
     return (
       <div className="p-6 text-center">
         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-gray-500" />
-        <p className="text-gray-500">Loading finals matches...</p>
       </div>
     );
   }
@@ -270,10 +269,11 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
                 : 'hover:bg-green-700'
             }`}
           >
-            {isSubmitting && (
+            {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              'Submit Predictions'
             )}
-            {isSubmitting ? 'Submitting...' : 'Submit Predictions'}
           </button>
         </div>
       </div>
