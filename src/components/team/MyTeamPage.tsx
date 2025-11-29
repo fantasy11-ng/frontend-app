@@ -12,6 +12,7 @@ import SquadManagement from "./SquadManagement";
 import Transfers from "./Transfers";
 import PlayerRoleMenu from "./PlayerRoleMenu";
 import SubstitutionModal from "./SubstitutionModal";
+import ReverseSubstitutionModal from "./ReverseSubstitutionModal";
 
 interface MyTeamPageProps {
   team: Team;
@@ -24,7 +25,6 @@ type BoostTabType = "boosts" | "fixtures";
 
 const MyTeamPage: React.FC<MyTeamPageProps> = ({
   team,
-  onAppointStarting11,
   availablePlayers = [],
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("my-team");
@@ -35,6 +35,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const [showPlayerDetails, setShowPlayerDetails] = useState(false);
   const [showSubstitutionModal, setShowSubstitutionModal] = useState(false);
   const [substitutionPlayer, setSubstitutionPlayer] = useState<SquadPlayer | null>(null);
+  const [showReverseSubstitutionModal, setShowReverseSubstitutionModal] = useState(false);
+  const [reverseSubstitutionPlayer, setReverseSubstitutionPlayer] = useState<SquadPlayer | null>(null);
   const [roleMenuState, setRoleMenuState] = useState<{
     isOpen: boolean;
     player: SquadPlayer | null;
@@ -227,7 +229,13 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   }, [squadPlayers]);
 
   const bench = useMemo(() => {
-    return squadPlayers.filter((p) => p.onBench).slice(0, 4); // Ensure max 4 bench players
+    const benchPlayers = squadPlayers.filter((p) => p.onBench).slice(0, 4); // Ensure max 4 bench players
+    // Sort bench players: GK always first, then others maintain their order
+    return benchPlayers.sort((a, b) => {
+      if (a.position === 'GK' && b.position !== 'GK') return -1;
+      if (a.position !== 'GK' && b.position === 'GK') return 1;
+      return 0; // Maintain original order for non-GK players
+    });
   }, [squadPlayers]);
 
   const handlePlayerClick = (player: Player | SquadPlayer) => {
@@ -238,59 +246,19 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const handleSendToBench = () => {
     if (!selectedPlayer) return;
     
-    // Prevent moving the only GK from starting 11 to bench
-    if (selectedPlayer.position === 'GK' && selectedPlayer.inStarting11) {
-      const otherGK = squadPlayers.find(
-        (p) => p.position === 'GK' && p.id !== selectedPlayer.id && p.inStarting11
-      );
-      if (!otherGK) {
-        // This is the only GK in starting 11, check if there's a GK on bench
-        const benchGK = squadPlayers.find(
-          (p) => p.position === 'GK' && p.id !== selectedPlayer.id && p.onBench
-        );
-        if (benchGK) {
-          // Swap: move bench GK to starting 11, move this GK to bench
-          const updatedSquad = squadPlayers.map((p) => {
-            if (p.id === selectedPlayer.id) {
-              return { ...p, inStarting11: false, onBench: true, squadPosition: "bench" as const };
-            }
-            if (p.id === benchGK.id) {
-              return { ...p, inStarting11: true, onBench: false, squadPosition: "starting" as const };
-            }
-            return p;
-          });
-          setSquadPlayers(updatedSquad);
-          setShowPlayerDetails(false);
-          setSelectedPlayer(null);
-          return;
-        } else {
-          alert('Cannot move goalkeeper to bench. At least one goalkeeper must be in the starting 11.');
-          return;
-        }
+    // Only show substitution modal if player is in starting 11
+    if (selectedPlayer.inStarting11) {
+      // Convert Player to SquadPlayer if needed
+      const squadPlayer = squadPlayers.find(p => p.id === selectedPlayer.id);
+      if (squadPlayer) {
+        setReverseSubstitutionPlayer(squadPlayer);
+        setShowReverseSubstitutionModal(true);
+        setShowPlayerDetails(false);
       }
+      return;
     }
     
-    // Check bench limit before moving
-    const currentBench = squadPlayers.filter((p) => p.onBench);
-    if (currentBench.length >= 4 && !selectedPlayer.onBench) {
-      alert('Bench is full (4 players maximum). Move a player from bench to starting 11 first.');
-      return;
-    }
-
-    const updatedSquad = squadPlayers.map((p) =>
-      p.id === selectedPlayer.id
-        ? { ...p, inStarting11: false, onBench: true, squadPosition: "bench" as const }
-        : p
-    );
-
-    // Validate matchday 11 after moving to bench
-    const validation = validateMatchday11(updatedSquad);
-    if (!validation.isValid) {
-      alert(`Cannot move player to bench: ${validation.errors.join(', ')}`);
-      return;
-    }
-
-    setSquadPlayers(updatedSquad);
+    // If player is already on bench, just close the modal
     setShowPlayerDetails(false);
     setSelectedPlayer(null);
   };
@@ -483,9 +451,23 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   const handleAssignRole = (role: PlayerRole) => {
     if (!roleMenuState.player) return;
-    setSquadPlayers((prev) =>
-      prev.map((p) => (p.id === roleMenuState.player!.id ? { ...p, role } : p))
-    );
+    
+    setSquadPlayers((prev) => {
+      const targetPlayerId = roleMenuState.player!.id;
+      
+      return prev.map((p) => {
+        // If assigning a role (not null), remove it from any other player who has it
+        if (role !== null && p.role === role && p.id !== targetPlayerId) {
+          return { ...p, role: null };
+        }
+        // Assign role to target player
+        if (p.id === targetPlayerId) {
+          return { ...p, role };
+        }
+        return p;
+      });
+    });
+    
     setRoleMenuState({ isOpen: false, player: null, position: { x: 0, y: 0 } });
   };
 
@@ -541,7 +523,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">My Team</h1>
@@ -555,7 +537,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         </div>
 
         {/* Team Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="p-6 mb-6">
           <div className="flex items-center space-x-4 mb-4">
             {team.logo ? (
               <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
@@ -641,7 +623,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                   onCountryChange={setSelectedCountry}
                 />
                 {/* Football Pitch */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="">
                   <FootballPitch
                     starting11={starting11}
                     bench={bench}
@@ -655,7 +637,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
             {/* Right Column - Boosts and Fixtures */}
             <div className="space-y-6">
               {/* Boost/Fixture Tabs */}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex space-x-6 border-b border-gray-200 mb-4">
                   {(["boosts", "fixtures"] as BoostTabType[]).map((tab) => (
                     <button
@@ -736,18 +718,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
             roleMenuState.player?.inStarting11
               ? () => {
                   if (roleMenuState.player) {
-                    setSquadPlayers((prev) =>
-                      prev.map((p) =>
-                        p.id === roleMenuState.player!.id
-                          ? {
-                              ...p,
-                              inStarting11: false,
-                              onBench: true,
-                              squadPosition: "bench",
-                            }
-                          : p
-                      )
-                    );
+                    setReverseSubstitutionPlayer(roleMenuState.player);
+                    setShowReverseSubstitutionModal(true);
                   }
                   setRoleMenuState({
                     isOpen: false,
@@ -770,6 +742,19 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           starting11={starting11}
           onSubstitute={handleSubstitute}
           validateSubstitution={validateSubstitution}
+        />
+
+        <ReverseSubstitutionModal
+          isOpen={showReverseSubstitutionModal}
+          onClose={() => {
+            setShowReverseSubstitutionModal(false);
+            setReverseSubstitutionPlayer(null);
+          }}
+          playerOut={reverseSubstitutionPlayer}
+          benchPlayers={bench}
+          onSubstitute={handleSubstitute}
+          validateSubstitution={validateSubstitution}
+          currentStarting11={starting11}
         />
       </div>
     </div>
