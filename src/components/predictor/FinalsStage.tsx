@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Lightbulb, Loader2 } from 'lucide-react';
+import { Crown, Loader2 } from 'lucide-react';
 import { useBracketSeed, useThirdPlaceMatchSeed, useBracketPredictions, useThirdPlaceMatchPrediction } from '@/lib/api';
 import type { BracketPrediction, BracketSeedFixture, BracketSeedTeam } from '@/types/predictorStage';
 import Image from 'next/image';
@@ -65,6 +65,11 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
   const [selectedPredictions, setSelectedPredictions] = useState<FinalsPredictions>(predictions);
   const hasInitializedRef = useRef(false);
   const onUpdateRef = useRef(onUpdate);
+  // Track last loaded saved predictions to detect external changes
+  const lastLoadedSavedRef = useRef<{ thirdPlace: string | null; champion: string | null }>({ 
+    thirdPlace: null, 
+    champion: null 
+  });
 
   useEffect(() => {
     onUpdateRef.current = onUpdate;
@@ -104,14 +109,8 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
     : null;
 
   // Load saved predictions from API whenever they're available
+  // Only load when saved predictions or seed data changes externally, not when local state changes
   useEffect(() => {
-    // Start with current state to preserve existing selections
-    const loaded: FinalsPredictions = { 
-      thirdPlace: selectedPredictions.thirdPlace || '', 
-      champion: selectedPredictions.champion || '' 
-    };
-    let hasUpdates = false;
-
     // Filter valid matches inline to avoid dependency issues
     const validThirdPlace = thirdPlaceSeed.filter(fixture => 
       fixture.homeTeam && fixture.homeTeam.id && fixture.awayTeam && fixture.awayTeam.id
@@ -120,33 +119,58 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
       fixture.homeTeam && fixture.homeTeam.id && fixture.awayTeam && fixture.awayTeam.id
     );
 
-    // Load third-place match prediction
-    // Try to load from saved predictions if we have both seed and prediction data
+    // Extract current saved prediction values
+    let currentThirdPlaceWinner: string | null = null;
+    let currentChampionWinner: string | null = null;
+
     if (validThirdPlace.length > 0 && thirdPlaceSavedPredictions.length > 0) {
       const thirdPlaceFixture = validThirdPlace[0];
       const savedPred = thirdPlaceSavedPredictions[0];
-      const winnerName = determineWinnerName(thirdPlaceFixture ?? undefined, savedPred);
-      if (winnerName && loaded.thirdPlace !== winnerName) {
-        loaded.thirdPlace = winnerName;
-        hasUpdates = true;
-      }
+      currentThirdPlaceWinner = determineWinnerName(thirdPlaceFixture ?? undefined, savedPred);
     }
 
-    // Load final match prediction
     if (validFinal.length > 0 && finalSavedPredictions.length > 0) {
       const finalFixture = validFinal[0];
       const savedPred = finalSavedPredictions[0];
-      const winnerName = determineWinnerName(finalFixture ?? undefined, savedPred);
-      if (winnerName && loaded.champion !== winnerName) {
-        loaded.champion = winnerName;
-        hasUpdates = true;
-      }
+      currentChampionWinner = determineWinnerName(finalFixture ?? undefined, savedPred);
     }
 
-    if (hasUpdates) {
-      setSelectedPredictions(loaded);
-      syncParentPredictions(loaded);
-      hasInitializedRef.current = true;
+    // Only reload from saved predictions if:
+    // 1. We haven't initialized yet, OR
+    // 2. The saved predictions have changed externally (different from what we last loaded)
+    const savedPredictionsChanged = 
+      currentThirdPlaceWinner !== lastLoadedSavedRef.current.thirdPlace ||
+      currentChampionWinner !== lastLoadedSavedRef.current.champion;
+
+    if (!hasInitializedRef.current || savedPredictionsChanged) {
+      const loaded: FinalsPredictions = { 
+        thirdPlace: currentThirdPlaceWinner || selectedPredictions.thirdPlace || '', 
+        champion: currentChampionWinner || selectedPredictions.champion || '' 
+      };
+      let hasUpdates = false;
+
+      // Load third-place match prediction
+      if (currentThirdPlaceWinner && loaded.thirdPlace !== currentThirdPlaceWinner) {
+        loaded.thirdPlace = currentThirdPlaceWinner;
+        hasUpdates = true;
+      }
+
+      // Load final match prediction
+      if (currentChampionWinner && loaded.champion !== currentChampionWinner) {
+        loaded.champion = currentChampionWinner;
+        hasUpdates = true;
+      }
+
+      if (hasUpdates || !hasInitializedRef.current) {
+        setSelectedPredictions(loaded);
+        syncParentPredictions(loaded);
+        // Update ref to track what we've loaded
+        lastLoadedSavedRef.current = {
+          thirdPlace: currentThirdPlaceWinner,
+          champion: currentChampionWinner
+        };
+        hasInitializedRef.current = true;
+      }
     } else if (!hasInitializedRef.current) {
       // Only initialize from props if we haven't initialized yet and no saved predictions
       if (predictions.thirdPlace || predictions.champion) {
@@ -157,17 +181,18 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
         hasInitializedRef.current = true;
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     thirdPlaceSeed,
     finalSeed,
     thirdPlaceSavedPredictions,
     finalSavedPredictions,
-    selectedPredictions.thirdPlace,
-    selectedPredictions.champion,
     predictions.thirdPlace,
     predictions.champion,
     predictions,
     syncParentPredictions,
+    // Intentionally excluding selectedPredictions.thirdPlace and selectedPredictions.champion
+    // to prevent reloading from saved predictions when user changes selections locally
   ]);
 
   // Sync selectedPredictions with predictions prop when it changes (after initialization)
@@ -252,10 +277,10 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-base font-medium text-[#070A11]">
             Finals Predictions
           </h2>
-          <p className="text-gray-600">
+          <p className="text-[#656E81] text-sm">
             Make your final predictions for the AFCON 2025 tournament!
           </p>
         </div>
@@ -263,7 +288,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
           <button
             onClick={onSave}
             disabled={isSubmitting}
-            className={`px-6 py-2 bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2 ${
+            className={`px-6 py-2 bg-green-600 text-white rounded-full transition-colors flex items-center gap-2 font-semibold ${
               isSubmitting 
                 ? 'opacity-50 cursor-not-allowed' 
                 : 'hover:bg-green-700'
@@ -279,10 +304,10 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
       </div>
 
       {/* Tip Banner */}
-      <div className="bg-orange-100 border border-orange-200 rounded-lg p-4 mb-6">
+      <div className="bg-[#FFEDD9] border border-[#FE5E41] rounded-lg p-4 mb-6">
         <div className="flex items-center">
-          <Lightbulb className="w-5 h-5 text-orange-600 mr-2" />
-          <p className="text-orange-800 text-sm">
+          <Crown className="w-5 h-5 text-[#FE5E41] mr-2" />
+          <p className="text-[#FE5E41] text-sm">
             <strong>Tip:</strong> Complete all stages to unlock the full tournament prediction. Each stage unlocks after completing the previous one.
           </p>
         </div>

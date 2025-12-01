@@ -45,10 +45,10 @@ export default function UserDropdown() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-900 rounded-full"
+        className="flex items-center space-x-2 focus:outline-none focus:ring-offset-gray-900 rounded-full"
         aria-label="User menu"
       >
-        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+        <div className="w-8 h-8 border border-[#FFFFFF] rounded-full flex items-center justify-center">
           <span className="text-white text-xs font-semibold">
             {userInitials}
           </span>

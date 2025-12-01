@@ -29,10 +29,10 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
   return (
     <div className="mb-12">
       <Link href={`/news/${article.slug}`} className="block group">
-        <div className="relative bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <div className="relative bg-white rounded-4xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
           {/* Featured Badge */}
           <div className="absolute top-4 right-4 z-10">
-            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+            <span className="bg-[#F5EBEB] text-[#800000] px-3 py-1 rounded-full text-sm font-medium">
               Featured
             </span>
           </div>
@@ -59,7 +59,7 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
             {/* Article Content Overlay */}
             <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
               <div className="flex flex-col sm:flex-row justify-between sm:items-center">
-              <h2 className="text-xl md:text-4xl font-bold mb-4 group-hover:text-green-300 transition-colors max-w-[514px]">
+              <h2 className="max-w-[350px] lg:max-w-[514px] text-xl md:text-4xl font-bold mb-4 group-hover:text-green-300 transition-colors">
                 {article.title}
               </h2>
               

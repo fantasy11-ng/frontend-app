@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, Suspense, useRef } from "react";
-import { Calendar, Check, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGroups, useStages, useStagePredictions, useBracketSeed, useBracketPredictions, useThirdPlaceMatchSeed, useThirdPlaceMatchPrediction, useThirdPlacedQualifiers } from "@/lib/api";
@@ -10,6 +10,7 @@ import { predictorApi } from "@/lib/api";
 import { FinalsStage, GroupStage, KnockoutStage, ThirdBestTeams } from '@/components/predictor';
 import toast from 'react-hot-toast';
 import type { RoundCode, BracketPrediction } from '@/types/predictorStage';
+import Image from "next/image";
 
 
 export type PredictionStage = 'group' | 'thirdBest' | 'round16' | 'quarter' | 'semi' | 'finals';
@@ -587,7 +588,7 @@ function PredictorPageContent() {
         {/* Header with Progress */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl text-[#070A11]">
               Tournament Predictor
             </h1>
             <div className="text-right">
@@ -600,64 +601,79 @@ function PredictorPageContent() {
           {/* Progress Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Group Stage Progress */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="rounded-lg border border-[#F1F2F4] p-6">
               <div className="flex items-center mb-4">
-                <Calendar className="w-5 h-5 text-gray-500 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">Group Stage</h3>
+                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764592598/trophy_olvsvu.png" alt="Group Stage" width={24} height={24} className="w-6 h-6 mr-2" />
+                <h3 className="text-sm text-[#070A11]">Group Stage</h3>
               </div>
-              <div className="text-sm text-gray-600 mb-2">Groups Completed</div>
-              <div className="text-2xl font-bold text-gray-900 mb-2">
+              <div className="progress-card-gradient rounded-lg p-4">
+              <div className="flex items-center justify-between">
+              <div className="text-base text-[#800000] mb-2">Groups Completed</div>
+              <div className="text-2xl font-bold text-[#070A11] mb-2">
                 {groupProgress.completed}/{groupProgress.total}
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              </div>
+              <div className="w-full bg-[#DDBBBB] rounded-full h-2">
                 <div 
-                  className="bg-red-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-[#800000] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${(groupProgress.completed / groupProgress.total) * 100}%` }}
                 ></div>
               </div>
+              </div>
+            
             </div>
 
             {/* Knockout Stage Progress */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className=" rounded-lg border border-[#F1F2F4] p-6">
               <div className="flex items-center mb-4">
-                <Calendar className="w-5 h-5 text-gray-500 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">Knockout Stage</h3>
+                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764592598/trophy_olvsvu.png" alt="Group Stage" width={24} height={24} className="w-6 h-6 mr-2" />
+                <h3 className="text-sm text-[#070A11]">Knockout Stage</h3>
               </div>
-              <div className="text-sm text-gray-600 mb-2">Matches Predicted</div>
-              <div className="text-2xl font-bold text-gray-900 mb-2">
+              <div className="progress-card-gradient rounded-lg p-4">
+              <div className="flex items-center justify-between">
+              <div className="text-base text-[#800000] mb-2">Matches Predicted</div>
+              <div className="text-2xl font-bold text-[#070A11] mb-2">
                 {knockoutProgress.completed}/{knockoutProgress.total}
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              </div>
+              <div className="w-full bg-[#DDBBBB] rounded-full h-2">
                 <div 
-                  className="bg-red-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-[#800000] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${(knockoutProgress.completed / knockoutProgress.total) * 100}%` }}
                 ></div>
               </div>
+              </div>
+           
             </div>
 
             {/* Overall Progress */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="rounded-lg border border-[#F1F2F4] p-6">
               <div className="flex items-center mb-4">
-                <Calendar className="w-5 h-5 text-gray-500 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">Overall Progress</h3>
+                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764605960/progress-2_i4oump.png" alt="Overall Progress" width={24} height={24} className="w-6 h-6 mr-2" />
+                <h3 className="text-sm text-[#070A11]">Overall Progress</h3>
               </div>
-              <div className="text-sm text-gray-600 mb-2">Total Complete</div>
-              <div className="text-2xl font-bold text-gray-900 mb-2">
+              <div className="progress-card-gradient rounded-lg p-4">
+          <div className="flex items-center justify-between">
+          <div className="text-base text-[#800000] mb-2">Total Complete</div>
+              <div className="text-base text-[#800000] mb-2">
                 {overallProgress}%
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+          </div>
+              <div className="w-full bg-[#DDBBBB] rounded-full h-2">
                 <div 
-                  className="bg-red-600 h-2 rounded-full transition-all duration-300"
+                  className="bg-[#800000] h-2 rounded-full transition-all duration-300"
                   style={{ width: `${overallProgress}%` }}
                 ></div>
               </div>
+              </div>
+      
             </div>
           </div>
         </div>
 
         {/* Stage Navigation */}
-        <div className="bg-white rounded-lg shadow-sm border mb-8">
-          <div className="flex overflow-x-auto">
+        <div className="border-b mb-8">
+          <div className="flex overflow-x-auto scrollbar-thin">
             {[
               { id: 'group', label: 'Group Stage' },
               { id: 'thirdBest', label: '3rd Best Teams' },
@@ -675,9 +691,9 @@ function PredictorPageContent() {
                   key={stage.id}
                   onClick={() => updateStage(stage.id as PredictionStage)}
                   disabled={!isAccessible}
-                  className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-150 ${
+                  className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 w-full transition-all duration-150 ${
                     isActive
-                      ? 'border-green-500 text-green-600 bg-green-50'
+                      ? 'border-[#4AA96C] text-[#070A11]'
                       : isCompleted
                       ? 'border-gray-200 text-green-600 hover:border-gray-300'
                       : isAccessible
@@ -828,6 +844,10 @@ function PredictorPageContent() {
                       });
                     }
                   }
+                  
+                  // Invalidate and refetch saved predictions to sync state
+                  await queryClient.invalidateQueries({ queryKey: ['predictor', 'third-place-match', 'me'] });
+                  await queryClient.invalidateQueries({ queryKey: ['predictor', 'bracket', 'final', 'me'] });
                   
                   toast.success('Finals predictions submitted successfully!');
                 } catch (error: any) {

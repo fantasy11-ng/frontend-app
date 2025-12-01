@@ -78,15 +78,15 @@ export default function NewsPage() {
     "All Categories";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#FFFFFF]">
       <div className="max-w-[1440px] mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-[#070A11] mb-2">
               Latest News
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-[#656E81] mb-6">
               Stay updated with AFCON 2025 developments
             </p>
           </div>
@@ -96,14 +96,14 @@ export default function NewsPage() {
               {/* Search Bar */}
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-gray-900" />
+                  <Search className="h-4 w-4 text-[#070A11]" />
                 </div>
                 <input
                   type="text"
                   placeholder="Search news articles..."
                   value={searchQuery}
                   onChange={handleSearch}
-                  className="max-w-[268px] h-9 text-sm text-gray-900 block w-full pl-10 pr-14 border border-gray-300 rounded-lg focus:border-transparent"
+                  className="max-w-[268px] h-9 text-sm text-[#070A11] block w-full pl-10 pr-14 border border-gray-300 rounded-lg focus:border-transparent"
                 />
                 {searchQuery && (
                   <button
@@ -225,12 +225,14 @@ export default function NewsPage() {
         {/* Search Results */}
         {!isLoading && !error && debouncedSearchQuery && articles.length > 0 && (
           <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-[#070A11]">
               Search Results ({articles.length})
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex overflow-x-auto gap-6 pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
               {articles.map((article) => (
-                <NewsCard key={article.id} article={article} />
+                <div key={article.id} className="flex-shrink-0 w-full min-w-[280px] max-w-[300px]">
+                  <NewsCard article={article} />
+                </div>
               ))}
             </div>
           </div>

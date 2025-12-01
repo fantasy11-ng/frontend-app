@@ -1,36 +1,48 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Share2, Bookmark, Loader2 } from 'lucide-react';
-import RelatedNews from '@/components/news/RelatedNews';
-import { useBlogPost } from '@/lib/api';
-import Image from 'next/image';
+import { useState, use } from "react";
+import Link from "next/link";
+import { ArrowLeft, Share2, Bookmark, Loader2 } from "lucide-react";
+import RelatedNews from "@/components/news/RelatedNews";
+import { useBlogPost } from "@/lib/api";
+import Image from "next/image";
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'Just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 3600)
+    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400)
+    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 const formatReadingTime = (minutes: number): string => {
   return `${minutes} min read`;
 };
 
-export default function ArticlePage({ params }: { params: { id: string } }) {
+export default function ArticlePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const { data, isLoading, error } = useBlogPost(params.id);
+  const { id } = use(params);
+  const { data, isLoading, error } = useBlogPost(id);
 
   const handleShare = async () => {
     if (!data?.post) return;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -39,7 +51,7 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
           url: window.location.href,
         });
       } catch (error) {
-        console.log('Error sharing:', error);
+        console.log("Error sharing:", error);
       }
     } else {
       // Fallback: copy to clipboard
@@ -53,28 +65,30 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+      <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#656E81]" />
       </div>
     );
   }
 
   if (error || !data?.post) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#FFFFFF]">
         <div className="max-w-[1440px] mx-auto px-4 py-8">
           <div className="mb-6">
-            <Link 
+            <Link
               href="/news"
-              className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              className="inline-flex items-center text-[#656E81] hover:text-[#070A11] transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to News
             </Link>
           </div>
           <div className="text-center py-12">
-            <div className="text-red-600 text-md mb-2">
-              {error ? 'Error loading article. Please try again later.' : 'Article not found.'}
+            <div className="text-[#800000] text-md mb-2">
+              {error
+                ? "Error loading article. Please try again later."
+                : "Article not found."}
             </div>
           </div>
         </div>
@@ -85,104 +99,116 @@ export default function ArticlePage({ params }: { params: { id: string } }) {
   const { post, related } = data;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto px-4 py-8">
-        {/* Back Button */}
-        <div className="mb-6">
-          <Link 
-            href="/news"
-            className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to News
-          </Link>
+    <div className="min-h-screen bg-[#FFFFFF]">
+      {/* Header Section with Title and Meta */}
+      <div className="max-w-[1440px] mx-auto px-4 pt-8">
+        <div className="mb-6 flex sm:flex-row flex-col sm:items-center justify-between">
+          {/* Title and Featured Badge */}
+          <div className="flex items-start justify-between mb-3">
+            <h1 className="text-2xl md:text-3xl font-bold text-[#070A11] flex-1 pr-4 max-w-[350px] md:max-w-[514px]">
+              {post.title}
+            </h1>
+          </div>
+
+          {/* Date, Time Info and Actions */}
+          <div className="flex flex-col items-left justify-between gap-2">
+            <span className="w-fit px-3 py-1 bg-[#F5EBEB] text-[#800000] text-sm font-semibold rounded-full flex-shrink-0">
+              Featured
+            </span>
+            <div className="flex items-center text-sm text-[#656E81]">
+              <span>{formatDate(post.createdAt)}</span>
+              <span className="mx-2">•</span>
+              <span>{formatReadingTime(post.readingTimeMinutes)}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={handleShare}
+                className="w-8 h-8 rounded-full bg-[#D4D7DD] flex items-center justify-center text-[#656E81] hover:text-[#070A11] transition-colors"
+                title="Share article"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleBookmark}
+                className={`w-8 h-8 rounded-full bg-[#D4D7DD] flex items-center justify-center transition-colors ${
+                  isBookmarked
+                    ? "text-[#800000]"
+                    : "text-[#656E81] hover:text-[#070A11]"
+                }`}
+                title="Bookmark article"
+              >
+                <Bookmark
+                  className={`w-4 h-4 ${isBookmarked ? "fill-current" : ""}`}
+                />
+              </button>
+              <button
+                className="w-8 h-8 rounded-full bg-[#D4D7DD] flex items-center justify-center text-[#656E81] hover:text-[#070A11] transition-colors"
+                title="More options"
+              >
+                <span className="flex gap-1">
+                  <span className="w-1 h-1 rounded-full bg-[#656E81]"></span>
+                  <span className="w-1 h-1 rounded-full bg-[#656E81]"></span>
+                  <span className="w-1 h-1 rounded-full bg-[#656E81]"></span>
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Article */}
-          <div className="lg:col-span-2">
-            <article className="bg-white rounded-xl shadow-lg overflow-hidden">
-              {/* Article Header */}
-              <div className="p-8">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span>{formatDate(post.createdAt)}</span>
-                      <span className="mx-2">•</span>
-                      <span>{formatReadingTime(post.readingTimeMinutes)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={handleShare}
-                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
-                      title="Share article"
-                    >
-                      <Share2 className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={handleBookmark}
-                      className={`p-2 transition-colors ${
-                        isBookmarked ? 'text-yellow-500' : 'text-gray-400 hover:text-gray-600'
-                      }`}
-                      title="Bookmark article"
-                    >
-                      <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
-                    </button>
-                  </div>
-                </div>
+      {/* Full Width Cover Image */}
+      {post.coverImageUrl && (
+        <div className="relative h-[450px] md:h-[558px] rounded-4xl w-full xl:max-w-[1400px] mx-auto mb-8">
+          <Image
+            fill
+            src={post.coverImageUrl}
+            alt={post.title}
+            className="object-cover rounded-4xl"
+            priority
+          />
+        </div>
+      )}
 
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                  {post.title}
-                </h1>
-              </div>
-
-              {/* Article Image */}
-              <div className="relative h-96 bg-gradient-to-br from-green-400 to-green-600">
-                {post.coverImageUrl ? (
-                  <Image
-                    fill
-                    src={post.coverImageUrl}
-                    alt={post.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center">
-                    <div className="text-white text-6xl opacity-20">⚽</div>
-                  </div>
-                )}
-              </div>
+      {/* Content Area */}
+      <div className="max-w-[1440px] mx-auto px-4 pb-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main Article Content */}
+          <div className="flex-1 lg:max-w-[65%]">
+            <article className="rounded-xl border border-[#F1F2F4] p-6 md:p-8">
+              {/* Repeat Title */}
+              <h2 className="text-xl md:text-2xl font-bold text-[#070A11] mb-6">
+                {post.title}
+              </h2>
 
               {/* Article Content */}
-              <div className="p-8">
-                <div 
-                  className="prose prose-lg max-w-none text-[#070A11]"
-                  dangerouslySetInnerHTML={{ __html: post.content }}
-                />
+              <div
+                className="prose prose-lg max-w-none text-[#070A11]"
+                dangerouslySetInnerHTML={{ __html: post.content }}
+              />
 
-                {/* Article Tags */}
-                {post.tags && post.tags.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-gray-200">
-                    <div className="flex flex-wrap gap-2">
-                      {post.tags.map((tag) => (
-                        <span
-                          key={tag.id}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors cursor-pointer"
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
+              {/* Article Tags */}
+              {post.tags && post.tags.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-[#F1F2F4]">
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <span
+                        key={tag.id}
+                        className="px-3 py-1 bg-[#F5EBEB] text-[#800000] rounded-full text-sm font-medium hover:bg-[#800000] hover:text-white transition-colors cursor-pointer"
+                      >
+                        {tag.name}
+                      </span>
+                    ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </article>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            {related && related.length > 0 && <RelatedNews articles={related} />}
+          {/* Sidebar - Related News */}
+          <div className="lg:w-[35%]">
+            {related && related.length > 0 && (
+              <RelatedNews articles={related} />
+            )}
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { DndContext, DragEndEvent, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useQueryClient } from '@tanstack/react-query';
-import { Lightbulb, Loader2 } from 'lucide-react';
+import { Crown, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Group, Team } from '@/types/predictor';
 import { predictorApi } from '@/lib/api';
@@ -259,30 +259,30 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-start mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Group Stage Predictions</h2>
-          <p className="text-gray-600">Drag teams to rank them 1st to 4th in each group. Complete all groups to unlock 3rd Best Teams selection.</p>
+          <h2 className="text-base font-medium text-[#070A11]">Group Stage Predictions</h2>
+          <p className="text-[#656E81] text-sm mb-3">Drag teams to rank them 1st to 4th in each group. Complete all groups to unlock 3rd Best Teams selection.</p>
         </div>
         <div className="flex space-x-3">
           <button 
             onClick={handleSaveAllGroups} 
-            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            className="h-10 px-3 w-fit bg-[#4AA96C] text-sm text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold"
             disabled={completedGroups.length !== groups.length || savingGroupId !== null}
           >
             {savingGroupId !== null && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Save Predictions
           </button>
           {completedGroups.length === groups.length && (
-            <button onClick={onNextStage} className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Next Stage</button>
+            <button onClick={onNextStage} className="px-4 text-sm py-2 bg-[#4AA96C] text-white rounded-full transition-colors font-semibold">Next Stage</button>
           )}
         </div>
       </div>
 
-      <div className="bg-orange-100 border border-orange-200 rounded-lg p-4 mb-6">
+      <div className="bg-[#FFEDD9] border border-[#FE5E41] rounded-lg p-4 mb-6">
         <div className="flex items-center">
-          <Lightbulb className="w-5 h-5 text-orange-600 mr-2" />
-          <p className="text-orange-800 text-sm"><strong>Tip:</strong> Complete all stages to unlock the full tournament prediction. Each stage unlocks after completing the previous one.</p>
+          <Crown className="w-5 h-5 text-[#FE5E41] mr-2" />
+          <p className="text-[#FE5E41] text-sm"><strong>Tip:</strong> Complete all stages to unlock the full tournament prediction. Each stage unlocks after completing the previous one.</p>
         </div>
       </div>
 
@@ -292,12 +292,12 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
           const isComplete = isGroupComplete(group.name);
 
           return (
-            <div key={group.id} className="bg-white border border-gray-200 rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">{group.name}</h3>
+            <div key={group.id} className="border active:border-[#4AA96C] hover:border-[#4AA96C] rounded-xl p-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-[#070A11]">{group.name}</h3>
                 {isComplete && <div className="w-3 h-3 bg-green-500 rounded-full" />}
               </div>
-              <p className="text-sm text-gray-600 mb-4">Rank teams 1st to 4th place</p>
+              <p className="text-sm text-[#656E81] mb-4">Rank teams 1st to 4th place</p>
 
               <DndContext sensors={sensors} onDragEnd={onDragEnd(group.name)}>
                 <SortableContext items={items} strategy={verticalListSortingStrategy}>
@@ -324,14 +324,14 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
               <div className="flex space-x-2">
                 <button 
                   onClick={() => handleReset(group.name)} 
-                  className="flex-1 px-4 py-2 border border-green-500 text-green-600 rounded-lg hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-2 text-sm py-2 border border-[#4AA96C] text-[#4AA96C] rounded-full hover:bg-green-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                   disabled={savingGroupId === group.id}
                 >
                   Reset Group
                 </button>
                 <button 
                   onClick={() => handleSaveGroup(group.name)} 
-                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="flex-1 px-2 py-2 bg-green-500 text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-semibold text-sm"
                   disabled={savingGroupId === group.id || !isComplete || !hasUnsavedChanges(group.name)}
                 >
                   {savingGroupId === group.id ? (
