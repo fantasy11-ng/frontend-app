@@ -65,3 +65,11 @@ body {
   scrollbar-width: none;
   scrollbar-color: #d1d5db #f1f1f1;
 }
+
+/* Progress card gradient */
+.progress-card-gradient {
+  background: linear-gradient(110.51deg, rgba(128, 0, 0, 0) 0%, rgb(242, 230, 230) 100.12%),
+  linear-gradient(110.51deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100.12%),
+  linear-gradient(110.51deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.7) 100.12%);
+}
+

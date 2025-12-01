@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Lightbulb, Loader2, Check } from 'lucide-react';
+import { Loader2, Check, Crown } from 'lucide-react';
 import { useBracketSeedWithQualified, useBracketPredictions } from '@/lib/api';
 import type { RoundCode, BracketPrediction, BracketSeedFixture } from '@/types/predictorStage';
 import Image from 'next/image';
@@ -273,10 +273,10 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-base font-medium text-[#070A11]">
             {stageLabels[stage]}
           </h2>
-          <p className="text-gray-600">
+          <p className="text-[#656E81] text-sm">
             {stageInstructions[stage]}
           </p>
         </div>
@@ -285,7 +285,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
             <button
               onClick={onNextStage}
               disabled={isSubmitting}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold text-sm"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -298,10 +298,10 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
       </div>
 
       {/* Tip Banner */}
-      <div className="bg-orange-100 border border-orange-200 rounded-lg p-4 mb-6">
+      <div className="bg-[#FFEDD9] border border-[#FE5E41] rounded-lg p-4 mb-6">
         <div className="flex items-center">
-          <Lightbulb className="w-5 h-5 text-orange-600 mr-2" />
-          <p className="text-orange-800 text-sm">
+          <Crown className="w-5 h-5 text-[#FE5E41] mr-2" />
+          <p className="text-[#FE5E41] text-sm">
             <strong>Tip:</strong> Complete all stages to unlock the full tournament prediction. Each stage unlocks after completing the previous one.
           </p>
         </div>

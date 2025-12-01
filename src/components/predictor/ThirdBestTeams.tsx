@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Lightbulb, Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, Crown } from 'lucide-react';
 import { useThirdPlacedQualifiers } from '@/lib/api';
 import { predictorApi } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -194,10 +194,10 @@ export default function ThirdBestTeams({
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <h2 className="text-base font-medium text-[#070A11]">
             3rd Best Teams Selection
           </h2>
-          <p className="text-gray-600">
+          <p className="text-[#656E81] text-sm">
             Select 4 teams from the 3rd place finishers to complete the Round of 16 lineup.
           </p>
         </div>
@@ -205,7 +205,7 @@ export default function ThirdBestTeams({
           <button
             onClick={handleSave}
             disabled={isSubmitting}
-            className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2 bg-[#4AA96C] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-sm"
           >
             Save Predictions
           </button>
@@ -213,7 +213,7 @@ export default function ThirdBestTeams({
             <button
               onClick={handleNext}
               disabled={isSubmitting}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              className="px-6 py-2 bg-[#4AA96C] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold text-sm"
             >
               {isSubmitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -226,10 +226,10 @@ export default function ThirdBestTeams({
       </div>
 
       {/* Tip Banner */}
-      <div className="bg-orange-100 border border-orange-200 rounded-lg p-4 mb-6">
+      <div className="bg-[#FFEDD9] border border-[#FE5E41] rounded-lg p-4 mb-6">
         <div className="flex items-center">
-          <Lightbulb className="w-5 h-5 text-orange-600 mr-2" />
-          <p className="text-orange-800 text-sm">
+          <Crown className="w-5 h-5 text-[#FE5E41] mr-2" />
+          <p className="text-[#FE5E41] text-sm">
             <strong>Tip:</strong> Select exactly 4 teams from the 3rd place finishers. These teams will join the 12 group winners and runners-up to complete the 16-team Round of 16.
           </p>
         </div>
@@ -247,7 +247,7 @@ export default function ThirdBestTeams({
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
-            className="bg-green-500 h-2 rounded-full transition-all duration-300"
+            className="bg-[#4AA96C] h-2 rounded-full transition-all duration-300"
             style={{ width: `${(selectedTeams.length / 4) * 100}%` }}
           ></div>
         </div>
@@ -266,7 +266,7 @@ export default function ThirdBestTeams({
               disabled={!canSelect}
               className={`p-4 rounded-lg border-2 transition-all ${
                 isSelected
-                  ? 'border-green-500 bg-green-50'
+                  ? 'border-[#4AA96C] bg-green-50'
                   : canSelect
                   ? 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   : 'border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed'
