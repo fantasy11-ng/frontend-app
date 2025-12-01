@@ -219,7 +219,6 @@
 
 //   const handleLeaveLeague = () => {
 //     // API call to leave league
-//     console.log('Leaving league');
 //     setShowLeaveModal(false);
 //     setCurrentLeague(null);
 //     setCurrentView('championship');
