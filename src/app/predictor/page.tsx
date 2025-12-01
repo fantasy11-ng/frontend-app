@@ -829,6 +829,10 @@ function PredictorPageContent() {
                     }
                   }
                   
+                  // Invalidate and refetch saved predictions to sync state
+                  await queryClient.invalidateQueries({ queryKey: ['predictor', 'third-place-match', 'me'] });
+                  await queryClient.invalidateQueries({ queryKey: ['predictor', 'bracket', 'final', 'me'] });
+                  
                   toast.success('Finals predictions submitted successfully!');
                 } catch (error: any) {
                   console.error('Error submitting finals predictions:', error);

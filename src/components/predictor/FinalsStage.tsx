@@ -65,6 +65,11 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
   const [selectedPredictions, setSelectedPredictions] = useState<FinalsPredictions>(predictions);
   const hasInitializedRef = useRef(false);
   const onUpdateRef = useRef(onUpdate);
+  // Track last loaded saved predictions to detect external changes
+  const lastLoadedSavedRef = useRef<{ thirdPlace: string | null; champion: string | null }>({ 
+    thirdPlace: null, 
+    champion: null 
+  });
 
   useEffect(() => {
     onUpdateRef.current = onUpdate;
@@ -104,14 +109,8 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
     : null;
 
   // Load saved predictions from API whenever they're available
+  // Only load when saved predictions or seed data changes externally, not when local state changes
   useEffect(() => {
-    // Start with current state to preserve existing selections
-    const loaded: FinalsPredictions = { 
-      thirdPlace: selectedPredictions.thirdPlace || '', 
-      champion: selectedPredictions.champion || '' 
-    };
-    let hasUpdates = false;
-
     // Filter valid matches inline to avoid dependency issues
     const validThirdPlace = thirdPlaceSeed.filter(fixture => 
       fixture.homeTeam && fixture.homeTeam.id && fixture.awayTeam && fixture.awayTeam.id
@@ -120,33 +119,58 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
       fixture.homeTeam && fixture.homeTeam.id && fixture.awayTeam && fixture.awayTeam.id
     );
 
-    // Load third-place match prediction
-    // Try to load from saved predictions if we have both seed and prediction data
+    // Extract current saved prediction values
+    let currentThirdPlaceWinner: string | null = null;
+    let currentChampionWinner: string | null = null;
+
     if (validThirdPlace.length > 0 && thirdPlaceSavedPredictions.length > 0) {
       const thirdPlaceFixture = validThirdPlace[0];
       const savedPred = thirdPlaceSavedPredictions[0];
-      const winnerName = determineWinnerName(thirdPlaceFixture ?? undefined, savedPred);
-      if (winnerName && loaded.thirdPlace !== winnerName) {
-        loaded.thirdPlace = winnerName;
-        hasUpdates = true;
-      }
+      currentThirdPlaceWinner = determineWinnerName(thirdPlaceFixture ?? undefined, savedPred);
     }
 
-    // Load final match prediction
     if (validFinal.length > 0 && finalSavedPredictions.length > 0) {
       const finalFixture = validFinal[0];
       const savedPred = finalSavedPredictions[0];
-      const winnerName = determineWinnerName(finalFixture ?? undefined, savedPred);
-      if (winnerName && loaded.champion !== winnerName) {
-        loaded.champion = winnerName;
-        hasUpdates = true;
-      }
+      currentChampionWinner = determineWinnerName(finalFixture ?? undefined, savedPred);
     }
 
-    if (hasUpdates) {
-      setSelectedPredictions(loaded);
-      syncParentPredictions(loaded);
-      hasInitializedRef.current = true;
+    // Only reload from saved predictions if:
+    // 1. We haven't initialized yet, OR
+    // 2. The saved predictions have changed externally (different from what we last loaded)
+    const savedPredictionsChanged = 
+      currentThirdPlaceWinner !== lastLoadedSavedRef.current.thirdPlace ||
+      currentChampionWinner !== lastLoadedSavedRef.current.champion;
+
+    if (!hasInitializedRef.current || savedPredictionsChanged) {
+      const loaded: FinalsPredictions = { 
+        thirdPlace: currentThirdPlaceWinner || selectedPredictions.thirdPlace || '', 
+        champion: currentChampionWinner || selectedPredictions.champion || '' 
+      };
+      let hasUpdates = false;
+
+      // Load third-place match prediction
+      if (currentThirdPlaceWinner && loaded.thirdPlace !== currentThirdPlaceWinner) {
+        loaded.thirdPlace = currentThirdPlaceWinner;
+        hasUpdates = true;
+      }
+
+      // Load final match prediction
+      if (currentChampionWinner && loaded.champion !== currentChampionWinner) {
+        loaded.champion = currentChampionWinner;
+        hasUpdates = true;
+      }
+
+      if (hasUpdates || !hasInitializedRef.current) {
+        setSelectedPredictions(loaded);
+        syncParentPredictions(loaded);
+        // Update ref to track what we've loaded
+        lastLoadedSavedRef.current = {
+          thirdPlace: currentThirdPlaceWinner,
+          champion: currentChampionWinner
+        };
+        hasInitializedRef.current = true;
+      }
     } else if (!hasInitializedRef.current) {
       // Only initialize from props if we haven't initialized yet and no saved predictions
       if (predictions.thirdPlace || predictions.champion) {
@@ -157,17 +181,18 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
         hasInitializedRef.current = true;
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     thirdPlaceSeed,
     finalSeed,
     thirdPlaceSavedPredictions,
     finalSavedPredictions,
-    selectedPredictions.thirdPlace,
-    selectedPredictions.champion,
     predictions.thirdPlace,
     predictions.champion,
     predictions,
     syncParentPredictions,
+    // Intentionally excluding selectedPredictions.thirdPlace and selectedPredictions.champion
+    // to prevent reloading from saved predictions when user changes selections locally
   ]);
 
   // Sync selectedPredictions with predictions prop when it changes (after initialization)

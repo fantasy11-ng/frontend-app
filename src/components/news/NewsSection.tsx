@@ -14,18 +14,20 @@ export default function NewsSection({ title, articles, seeAllLink }: NewsSection
   return (
     <section>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <h2 className="text-2xl font-bold text-[#070A11]">{title}</h2>
         <Link 
           href={seeAllLink}
-          className="text-green-600 hover:text-green-700 font-medium transition-colors"
+          className="text-[#4AA96C] hover:text-[#070A11] font-medium transition-colors"
         >
           See all
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="flex overflow-x-auto gap-6 pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
         {articles.map((article) => (
-          <NewsCard key={article.id} article={article} />
+          <div key={article.id} className="flex-shrink-0 w-full min-w-[280px] max-w-[300px]">
+            <NewsCard article={article} />
+          </div>
         ))}
       </div>
     </section>
