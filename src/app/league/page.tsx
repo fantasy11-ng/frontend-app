@@ -294,6 +294,6 @@ import React from 'react'
 
 export default function LeaguePage() {
   return (
-    <div>Coming Soon</div>
+    <div className='h-screen flex justify-center items-center'>Coming Soon</div>
   )
 }

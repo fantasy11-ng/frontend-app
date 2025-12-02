@@ -18,8 +18,8 @@ const Navbar: React.FC = () => {
     { name: 'My Team', href: '/my-team' },
     { name: 'League', href: '/league' },
     { name: 'Ranking', href: '/ranking' },
-    { name: 'Predictor', href: '/predictor' },
     { name: 'Stats', href: '/stats' },
+    { name: 'Predictor', href: '/predictor' },
     { name: 'News', href: '/news' },
     { name: 'Prizes', href: '/prizes' },
   ];
