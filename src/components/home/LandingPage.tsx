@@ -98,7 +98,7 @@ export default function LandingPage() {
                   roles to maximize points.
                 </p>
                 <Link
-                  href="/sign-up"
+                  href="/team"
                   className="bg-[#4AA96C] text-sm inline-flex items-center px-3 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Build your team <ChevronRight className="w-4 h-4 ml-2" />
@@ -130,7 +130,7 @@ export default function LandingPage() {
                   predictions and climb the prediction leaderboard.
                 </p>
                 <Link
-                  href="/sign-up"
+                  href="/predictor"
                   className="bg-[#4AA96C] text-sm inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Start predicting <ChevronRight className="w-4 h-4 ml-2" />
@@ -162,8 +162,8 @@ export default function LandingPage() {
                   compete for amazing prizes.
                 </p>
                 <Link
-                  href="/sign-up"
-                  className="inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+                  href="/league"
+                  className="bg-[#4AA96C] text-sm inline-flex items-center px-3 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Join a league <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
@@ -192,10 +192,10 @@ export default function LandingPage() {
                   points. Make informed transfer decisions.
                 </p>
                 <Link
-                  href="/sign-up"
-                  className="inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+                  href="/stats"
+                  className="bg-[#4AA96C] text-sm inline-flex items-center px-3 py-2 text-white font-medium rounded-full transition-colors"
                 >
-                  View all stats <ChevronRight className="w-4 h-4 ml-2" />
+                  See statistics <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
               <div className="rounded-lg h-80 flex items-center justify-center">
