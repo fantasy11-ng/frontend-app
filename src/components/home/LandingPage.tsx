@@ -84,8 +84,8 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 gap-12 lg:gap-16">
             {/* Feature 1 */}
-            <div className="space-y-6">
-              <div>
+            <div className="space-y-6 border border-[#F1F2F4] rounded-2xl">
+              <div className="px-4 py-2">
                 <div className="flex items-center space-x-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
@@ -99,24 +99,25 @@ export default function LandingPage() {
                 </p>
                 <Link
                   href="/sign-up"
-                  className="inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+                  className="bg-[#4AA96C] text-sm inline-flex items-center px-3 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Build your team <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Container_fppxgt.png"
                   alt="Team Builder"
-                  width={500}
-                  height={300}
+                  width={758}
+                  height={384}
+                  className="object-contain w-full max-w-[758px] h-[384px]"
                 />
               </div>
             </div>
 
             {/* Feature 2 */}
-            <div className="space-y-6">
-              <div>
+            <div className="space-y-6 border border-[#F1F2F4] rounded-2xl md:max-w-[530px]">
+              <div className="px-4 py-2">
                 <div className="flex items-center space-x-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
@@ -130,17 +131,18 @@ export default function LandingPage() {
                 </p>
                 <Link
                   href="/sign-up"
-                  className="inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+                  className="bg-[#4AA96C] text-sm inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Start predicting <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Frame_jygnal.png"
                   alt="Team Builder"
-                  width={500}
-                  height={300}
+                  width={530}
+                  height={360}
+                  className="object-contain w-full max-w-[530px] h-[360px]"
                 />
               </div>
             </div>
@@ -166,7 +168,7 @@ export default function LandingPage() {
                   Join a league <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Container_1_yivji1.png"
                   alt="Team Builder"
@@ -196,7 +198,7 @@ export default function LandingPage() {
                   View all stats <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267173/Background_ekx6eu.png"
                   alt="Team Builder"
@@ -433,7 +435,7 @@ export default function LandingPage() {
             ].map((faq, index) => (
               <details
                 key={index}
-                className="bg-gray-50 rounded-lg p-6 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="bg-gray-50 rounded-lg p-6 cursor-pointer transition-colors"
               >
                 <summary className="font-semibold text-gray-900 text-lg list-none flex items-center justify-between">
                   <span>{faq.question}</span>
