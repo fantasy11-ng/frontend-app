@@ -578,6 +578,20 @@ export default function HomePage() {
                     subtitle: "Global ranking",
                     badge: "Achieved",
                     badgeColor: "bg-[#F5EBEB]"
+                  },
+                  {
+                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
+                    title: "Top 1000",
+                    subtitle: "Global ranking",
+                    badge: "Achieved",
+                    badgeColor: "bg-[#F5EBEB]"
+                  },  
+                  {
+                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
+                    title: "Top 1000",
+                    subtitle: "Global ranking",
+                    badge: "Achieved",
+                    badgeColor: "bg-[#F5EBEB]"
                   }
                 ].map((item, index) => (
                   <div
@@ -652,6 +666,16 @@ export default function HomePage() {
                     avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
                     title: "You transferred in Sadio Mané",
                     time: "1 day ago"
+                  },
+                  {
+                    avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
+                    title: "Your rank improved by 523 points",
+                    time: "3 days ago"
+                  },
+                  {
+                    avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
+                    title: "Your rank improved by 523 points",
+                    time: "3 days ago"
                   },
                   {
                     avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
