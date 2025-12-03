@@ -75,7 +75,7 @@ export default function LandingPage() {
       </section>
 
       <section id="features" className="py-20 bg-white">
-        <div className="max-w-[1440px] mx-auto">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-5xl font-medium text-[#070A11] mb-4 max-w-[684px] mx-auto">
               We&apos;ve got all the tools you need to dominate AFCON 2025
@@ -212,7 +212,7 @@ export default function LandingPage() {
       </section>
 
       <section id="prizes" className="py-20 bg-[#1A0000] text-white">
-        <div className="max-w-[1440px] mx-auto">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
               $1M Prize Pool
@@ -318,7 +318,7 @@ export default function LandingPage() {
       </section>
 
       <section className="py-20 bg-[#1A0000] text-white">
-        <div className="max-w-[1440px] mx-auto">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold mb-2">
               AFCON News & Fantasy Tips
@@ -455,7 +455,7 @@ export default function LandingPage() {
           className="absolute inset-0 opacity-20 bg-cover bg-center"
           style={{ backgroundImage: "url(/images/home.png)" }}
         ></div>
-        <div className="relative max-w-[1440px] mx-auto text-left">
+        <div className="relative max-w-[1440px] mx-auto px-4 md:px-12 text-left">
           <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-9xl font-bold mb-6">
             Ready to Dominate?
           </h2>
@@ -484,7 +484,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="bg-gray-900 text-white py-8">
-        <div className="max-w-[1440px] mx-auto">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
               <Link href="/" className="flex items-center">

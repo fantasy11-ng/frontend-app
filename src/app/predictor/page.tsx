@@ -584,7 +584,7 @@ function PredictorPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto py-8">
+      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Header with Progress */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">

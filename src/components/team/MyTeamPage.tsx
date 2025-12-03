@@ -523,7 +523,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto py-8">
+      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">My Team</h1>
