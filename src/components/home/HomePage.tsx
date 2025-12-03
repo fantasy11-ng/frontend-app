@@ -52,7 +52,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF]">
-      <div className="max-w-[1440px] mx-auto px-4 py-8">
+      <div className="max-w-[1440px] mx-auto py-8">
         {/* Welcome Section */}
 
         <div className="flex items-center justify-between">

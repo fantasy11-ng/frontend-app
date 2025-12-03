@@ -19,11 +19,11 @@ interface FinalsStageProps {
 }
 
 const determineWinnerName = (fixture: BracketSeedFixture | undefined, savedPred: BracketPrediction) => {
-  if (savedPred.predictedWinner?.name) {
+  if (savedPred?.predictedWinner?.name) {
     return savedPred.predictedWinner.name;
   }
 
-  if (fixture && savedPred.predictedWinnerTeamId) {
+  if (fixture && savedPred?.predictedWinnerTeamId) {
     if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
       return fixture.homeTeam.name;
     }
@@ -40,12 +40,12 @@ const getPredictedWinnerInfo = (
   savedPred: BracketPrediction
 ): BracketSeedTeam | null => {
   // If we have the predictedWinner object with full info, use it
-  if (savedPred.predictedWinner) {
+  if (savedPred?.predictedWinner) {
     return savedPred.predictedWinner;
   }
 
   // Otherwise, try to get it from the fixture using the team ID
-  if (fixture && savedPred.predictedWinnerTeamId) {
+  if (fixture && savedPred?.predictedWinnerTeamId) {
     if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
       return fixture.homeTeam;
     }

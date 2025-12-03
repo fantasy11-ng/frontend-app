@@ -21,11 +21,11 @@ const determineWinnerName = (
     | undefined,
   savedPred: BracketPrediction,
 ) => {
-  if (savedPred.predictedWinner?.name) {
+  if (savedPred?.predictedWinner?.name) {
     return savedPred.predictedWinner.name;
   }
 
-  if (fixture && savedPred.predictedWinnerTeamId) {
+  if (fixture && savedPred?.predictedWinnerTeamId) {
     if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
       return fixture.homeTeam.name;
     }
@@ -584,7 +584,7 @@ function PredictorPageContent() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto px-4 py-8">
+      <div className="max-w-[1440px] mx-auto py-8">
         {/* Header with Progress */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
