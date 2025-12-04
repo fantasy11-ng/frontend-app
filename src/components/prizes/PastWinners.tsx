@@ -201,7 +201,7 @@ export default function PastWinners() {
 
         {/* Pagination */}
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 hidden md:block">
             Showing {startIndex + 1} to {Math.min(endIndex, pastWinners.length)} of {pastWinners.length}
           </div>
           <div className="flex items-center space-x-4">

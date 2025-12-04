@@ -207,7 +207,7 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
 
           {/* Pagination */}
           <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 hidden md:block">
               Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredMembers.length)} of {filteredMembers.length} teams
             </div>
             <div className="flex items-center space-x-2">
