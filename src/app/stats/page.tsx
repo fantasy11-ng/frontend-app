@@ -232,10 +232,8 @@
 // }
 
 
-import React from 'react'
+import { redirect } from "next/navigation";
 
 export default function StatsPage() {
-  return (
-    <div className='h-screen flex justify-center items-center'>Coming Soon</div>
-  )
+  redirect("/");
 }
