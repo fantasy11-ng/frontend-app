@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
-import { Gift } from 'lucide-react';
-import PrizeCard from './PrizeCard';
-import PastWinners from './PastWinners';
+import { Gift, Trophy } from "lucide-react";
+import PastWinners from "./PastWinners";
+import PredictorPrizes from "./PredictorPrizes";
+import GlobalPrizeCard from "./GlobalPrizeCard";
 
 export default function PrizesContent() {
   const globalLeaguePrizes = [
@@ -49,102 +50,76 @@ export default function PrizesContent() {
 
   const predictorPrizes = [
     {
-      id: 'p1',
+      id: "p1",
       place: 1,
-      title: 'Perfect Predictor',
-      cashPrize: 'N1,000,000',
+      title: "Perfect Predictor",
+      cashPrize: "₦1,000,000",
       rewards: [
-        'AFCON 2025 VIP Experience',
-        'Signed Jersey Collection',
-        'Trophy & Medal'
+        "AFCON 2025 VIP Experience",
+        "Signed Jersey Collection",
+        "Trophy & Medal",
       ],
-      color: 'blue' as const,
-      icon: Gift
+      color: "gold" as const,
+      icon: Trophy,
     },
     {
-      id: 'p2',
+      id: "p2",
       place: 2,
-      title: 'Second Place Champion',
-      cashPrize: 'N1,000,000',
+      title: "Second Place Champion",
+      cashPrize: "₦1,000,000",
       rewards: [
-        'AFCON 2025 Premium Tickets',
-        'Signed Football',
-        'Medal'
+        "AFCON 2025 Premium Tickets",
+        "Signed Football",
+        "Medal",
       ],
-      color: 'orange' as const,
-      icon: Gift
+      color: "silver" as const,
+      icon: Trophy,
     },
     {
-      id: 'p3',
+      id: "p3",
       place: 3,
-      title: 'Third Place Champion',
-      cashPrize: 'N1,000,000',
+      title: "Third Place Champion",
+      cashPrize: "₦1,000,000",
       rewards: [
-        'AFCON 2025 Standard Tickets',
-        'Team Merchandise',
-        'Medal'
+        "AFCON 2025 Standard Tickets",
+        "Team Merchandise",
+        "Medal",
       ],
-      color: 'blue' as const,
-      icon: Gift
+      color: "bronze" as const,
+      icon: Trophy,
     },
-    {
-      id: 'p4',
-      place: 3,
-      title: 'Third Place Champion',
-      cashPrize: 'N1,000,000',
-      rewards: [
-        'AFCON 2025 Standard Tickets',
-        'Team Merchandise',
-        'Medal'
-      ],
-      color: 'purple' as const,
-      icon: Gift
-    },
-    {
-      id: 'p5',
-      place: 3,
-      title: 'Third Place Champion',
-      cashPrize: 'N1,000,000',
-      rewards: [
-        'AFCON 2025 Standard Tickets',
-        'Team Merchandise',
-        'Medal'
-      ],
-      color: 'orange' as const,
-      icon: Gift
-    }
   ];
 
   return (
     <div className="space-y-12">
       {/* Fantasy11 Global League Prizes */}
       <section>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-medium text-[#070A11] mb-1">
           Fantasy11 Global League Prizes
         </h2>
-        <p className="text-gray-600 mb-8">
+        <p className="text-[#656E81] mb-36 text-sm">
           Compete against managers worldwide for these incredible rewards.
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 space-y-30 lg:space-y-0">
           {globalLeaguePrizes.map((prize) => (
-            <PrizeCard key={prize.id} prize={prize} />
+            <GlobalPrizeCard key={prize.id} prize={prize} />
           ))}
         </div>
       </section>
 
       {/* AFCON 2025 Predictor Prizes */}
       <section>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-medium text-[#070A11] mb-1">
           AFCON 2025 Predictor Prizes
         </h2>
-        <p className="text-gray-600 mb-8">
+        <p className="text-[#656E81] text-sm mb-6">
           Predict tournament outcomes for a chance to win the N25,000,000 grand prize
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {predictorPrizes.map((prize) => (
-            <PrizeCard key={prize.id} prize={prize} />
+            <PredictorPrizes key={prize.id} prize={prize} />
           ))}
         </div>
       </section>

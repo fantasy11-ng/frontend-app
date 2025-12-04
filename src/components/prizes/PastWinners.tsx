@@ -8,7 +8,7 @@ interface PastWinner {
   id: string;
   rank: number;
   name: string;
-  accuracy: number;
+  teamName: string;
   points: number;
   prize: string;
 }
@@ -33,7 +33,7 @@ export default function PastWinners() {
       id: '1',
       rank: 1,
       name: 'Amadou Diallo',
-      accuracy: 94,
+      teamName: "Desert Fox",
       points: 847,
       prize: 'N1,000,000'
     },
@@ -41,7 +41,7 @@ export default function PastWinners() {
       id: '2',
       rank: 2,
       name: 'Amadou Diallo',
-      accuracy: 94,
+      teamName: "Black Angels",
       points: 847,
       prize: 'N1,000,000'
     },
@@ -49,7 +49,7 @@ export default function PastWinners() {
       id: '3',
       rank: 3,
       name: 'Amadou Diallo',
-      accuracy: 94,
+      teamName: "Desert Fox",
       points: 847,
       prize: 'N1,000,000'
     },
@@ -57,7 +57,7 @@ export default function PastWinners() {
       id: '4',
       rank: 4,
       name: 'Amadou Diallo',
-      accuracy: 94,
+      teamName: "Golden Eagles",
       points: 847,
       prize: 'N1,000,000'
     },
@@ -65,7 +65,7 @@ export default function PastWinners() {
       id: '5',
       rank: 5,
       name: 'Amadou Diallo',
-      accuracy: 94,
+      teamName: "Golden Eagles",
       points: 847,
       prize: 'N1,000,000'
     }
@@ -127,20 +127,28 @@ export default function PastWinners() {
   const currentWinners = pastWinners.slice(startIndex, endIndex);
 
   return (
-    <section>
-      <h2 className="text-3xl font-bold text-gray-900 mb-8">Past Winners</h2>
+    <section className="space-y-10">
+      <div>
+        <h2 className="text-[32px] font-semibold text-[#070A11]">
+          Past Winners
+        </h2>
+        <p className="mt-2 text-sm text-[#656E81]">
+          A look back at Fantasy11 champions from recent tournaments.
+        </p>
+      </div>
 
       {/* Winner Photo Carousels - Side by Side */}
-      <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="mb-4">
+        <div
+          className="mx-auto flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:max-w-5xl sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:pb-0 sm:snap-none [&::-webkit-scrollbar]:hidden"
+        >
           {winnerEvents.map((event) => (
-            <div key={event.id}>
-              <WinnerCarousel
-                title={event.title}
-                photos={event.photos}
-                year={event.year}
-              />
-            </div>
+            <WinnerCarousel
+              key={event.id}
+              title={event.title}
+              photos={event.photos}
+              year={event.year}
+            />
           ))}
         </div>
       </div>
@@ -157,7 +165,7 @@ export default function PastWinners() {
                 {/* Left: Rank Indicator and Winner Info */}
                 <div className="flex items-center space-x-4">
                   {/* Rank Badge */}
-                  <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-[#800000] rounded-full flex items-center justify-center flex-shrink-0">
                     {winner.rank === 1 ? (
                       <span className="text-white text-xl">👑</span>
                     ) : (
@@ -167,17 +175,17 @@ export default function PastWinners() {
 
                   {/* Winner Details */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 className="text-sm text-[#070A11] mb-1">
                       {winner.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      {winner.accuracy}% accuracy – {winner.points} points
+                    <p className="text-xs text-[#656E81]">
+                      {winner.teamName} – {winner.points} points
                     </p>
                   </div>
                 </div>
 
                 {/* Right: Prize Badge */}
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+                <div className="bg-[#F5EBEB] text-[#800000] px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap">
                   {winner.rank === 1 && '1st Place'}
                   {winner.rank === 2 && '2nd Place'}
                   {winner.rank === 3 && '3rd Place'}

@@ -29,7 +29,7 @@ export default function WinnersList({ winners, type }: WinnersListProps) {
             {/* Left: Rank Indicator and Winner Info */}
             <div className="flex items-center space-x-4">
               {/* Rank Badge */}
-              <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-[#800000] rounded-full flex items-center justify-center flex-shrink-0">
                 {winner.rank === 1 ? (
                   <Crown className="w-6 h-6 text-white" />
                 ) : (
@@ -39,15 +39,15 @@ export default function WinnersList({ winners, type }: WinnersListProps) {
 
               {/* Winner Details */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                <h3 className="text-sm text-[#070A11] mb-1">
                   {winner.name}
                 </h3>
                 {type === 'globalLeague' ? (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-[#656E81]">
                     {winner.team} – {winner.points} points
                   </p>
                 ) : (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-gray-500">
                     {winner.accuracy}% accuracy – {winner.points} points
                   </p>
                 )}
@@ -55,7 +55,7 @@ export default function WinnersList({ winners, type }: WinnersListProps) {
             </div>
 
             {/* Right: Prize Badge */}
-            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+            <div className="bg-[#F5EBEB] text-[#800000] px-4 py-2 rounded-full text-sm font-medium">
               {winner.rank === 1 && '1st Place'}
               {winner.rank === 2 && '2nd Place'}
               {winner.rank === 3 && '3rd Place'}
