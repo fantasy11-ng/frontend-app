@@ -1,6 +1,6 @@
 "use client";
 
-import { Gift, Trophy } from "lucide-react";
+import { Gift } from "lucide-react";
 import PastWinners from "./PastWinners";
 import PredictorPrizes from "./PredictorPrizes";
 import GlobalPrizeCard from "./GlobalPrizeCard";
@@ -60,7 +60,7 @@ export default function PrizesContent() {
         "Trophy & Medal",
       ],
       color: "gold" as const,
-      icon: Trophy,
+      src: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764859524/trophy_1_hu6rne.png",
     },
     {
       id: "p2",
@@ -73,7 +73,7 @@ export default function PrizesContent() {
         "Medal",
       ],
       color: "silver" as const,
-      icon: Trophy,
+      src:"https://res.cloudinary.com/dmfsyau8s/image/upload/v1764859525/trophy_2_cvgbys.png"
     },
     {
       id: "p3",
@@ -86,7 +86,7 @@ export default function PrizesContent() {
         "Medal",
       ],
       color: "bronze" as const,
-      icon: Trophy,
+      src: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764859525/trophy_3_ijo5si.png"
     },
   ];
 
@@ -101,10 +101,23 @@ export default function PrizesContent() {
           Compete against managers worldwide for these incredible rewards.
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 space-y-30 lg:space-y-0">
-          {globalLeaguePrizes.map((prize) => (
-            <GlobalPrizeCard key={prize.id} prize={prize} />
-          ))}
+        <div className="flex flex-col gap-6 md:grid md:grid-cols-3 md:gap-6 space-y-30 lg:space-y-0">
+          {globalLeaguePrizes.map((prize) => {
+            const mobileOrderClasses: Record<string, string> = {
+              gold: "order-1",
+              silver: "order-2",
+              bronze: "order-3",
+            };
+
+            return (
+              <div
+                key={prize.id}
+                className={`${mobileOrderClasses[prize.color] ?? "order-none"} md:order-none`}
+              >
+                <GlobalPrizeCard prize={prize} />
+              </div>
+            );
+          })}
         </div>
       </section>
 

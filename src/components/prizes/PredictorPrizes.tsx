@@ -1,6 +1,5 @@
 "use client";
 
-import { LucideIcon } from "lucide-react";
 import Image from "next/image";
 
 interface PrizeCardProps {
@@ -11,7 +10,7 @@ interface PrizeCardProps {
     cashPrize: string;
     rewards: string[];
     color: "gold" | "silver" | "bronze" | "blue" | "purple" | "orange";
-    icon: LucideIcon;
+    src: string;
   };
 }
 
@@ -102,7 +101,7 @@ export default function PredictorPrizes({ prize }: PrizeCardProps) {
       <div className="relative z-[1] flex flex-col gap-6">
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-white/70 p-2 shadow-inner">
-            <prize.icon className={`h-5 w-5 ${colors.accent}`} />
+            <Image src={prize.src} alt={prize.title} width={20} height={20} />
           </div>
           <p className="text-sm text-[#070A11]">
             {prize.title}

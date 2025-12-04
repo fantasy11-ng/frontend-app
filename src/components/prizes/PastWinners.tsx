@@ -80,7 +80,7 @@ export default function PastWinners() {
       photos: [
         {
           id: 'fifa2022-1',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764274554/Image_Container_kqd6mo.png',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764860176/Image_Container_suog7b.png',
           alt: 'FIFA 2022 Winner - Photo 1'
         },
         {
@@ -97,7 +97,7 @@ export default function PastWinners() {
       photos: [
         {
           id: 'afcon2021-1',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764274554/Image_Container_kqd6mo.png',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764860176/Image_Container_suog7b.png',
           alt: 'AFCON 2021 Winner - Photo 1'
         },
         {
@@ -161,7 +161,7 @@ export default function PastWinners() {
               key={winner.id}
               className="p-6 hover:bg-gray-50 transition-colors"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex md:items-center justify-between flex-col md:flex-row gap-4">
                 {/* Left: Rank Indicator and Winner Info */}
                 <div className="flex items-center space-x-4">
                   {/* Rank Badge */}

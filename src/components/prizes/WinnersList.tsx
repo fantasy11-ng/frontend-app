@@ -25,7 +25,7 @@ export default function WinnersList({ winners, type }: WinnersListProps) {
           key={winner.id}
           className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex md:items-center justify-between flex-col md:flex-row gap-4">
             {/* Left: Rank Indicator and Winner Info */}
             <div className="flex items-center space-x-4">
               {/* Rank Badge */}

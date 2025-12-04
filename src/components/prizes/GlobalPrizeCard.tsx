@@ -71,7 +71,7 @@ export default function GlobalPrizeCard({ prize }: PrizeCardProps) {
               alt="Gold Trophy"
               width={489}
               height={266}
-              className="!w-[489px] !h-[266px] max-w-[1000px]"
+              className="!w-[489px] !h-[266px] max-w-[1000px] order-1 -mt-10"
             />
           ) : prize.color === "silver" ? (
             <Image
@@ -79,7 +79,7 @@ export default function GlobalPrizeCard({ prize }: PrizeCardProps) {
               alt="Silver Trophy"
               width={417}
               height={227}
-              className="!w-[417px] !h-[227px] max-w-[1000px]"
+              className="!w-[417px] !h-[227px] max-w-[1000px] order-2"
             />
           ) : prize.color === "bronze" ? (
             <Image
@@ -87,7 +87,7 @@ export default function GlobalPrizeCard({ prize }: PrizeCardProps) {
               alt="Bronze Trophy"
               width={379}
               height={206}
-              className="!w-[379px] !h-[206px] max-w-[1000px]"
+              className="!w-[379px] !h-[206px] max-w-[1000px] mt-4"
             />
           ) : null}
         </div>
