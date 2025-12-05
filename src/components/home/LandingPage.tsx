@@ -11,13 +11,20 @@ const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'Just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 3600)
+    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400)
+    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 const formatReadingTime = (minutes: number): string => {
@@ -26,7 +33,7 @@ const formatReadingTime = (minutes: number): string => {
 
 export default function LandingPage() {
   // Fetch latest news posts
-  const { data: newsData } = useBlogPosts({ status: 'published', limit: 3 });
+  const { data: newsData } = useBlogPosts({ status: "published", limit: 3 });
   const newsArticles = newsData?.items || [];
 
   return (
@@ -214,9 +221,7 @@ export default function LandingPage() {
       <section id="prizes" className="py-20 bg-[#1A0000] text-white">
         <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              $1M Prize Pool
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Play To Win</h2>
             <p className="text-xl text-red-200">
               Compete for incredible prizes throughout the tournament.
             </p>
@@ -238,20 +243,20 @@ export default function LandingPage() {
                 Ultimate Fantasy11 Champion
               </h3>
               <p className="text-3xl font-bold text-yellow-400 mb-4">
-                N1,000,000
+                Playstation 5
               </p>
               <ul className="text-left space-y-2 text-red-100">
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  AFCON 2025 VIP Experience
+                  EA Sports FC 26
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Trophy Collection
+                  Bluetooth Speakers
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Medal
+                  F11 merchandise (shirt, rug sack, and more)
                 </li>
               </ul>
             </div>
@@ -268,19 +273,19 @@ export default function LandingPage() {
                 />
               </div>
               <h3 className="text-2xl font-bold mb-2">Second Place Champion</h3>
-              <p className="text-3xl font-bold text-gray-300 mb-4">N750,000</p>
+              <p className="text-3xl font-bold text-gray-300 mb-4 invisible">.</p>
               <ul className="text-left space-y-2 text-red-100">
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  AFCON 2025 Premium Tickets
+                  EA Sports FC 26 (any platform)
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Signed Football
+                  Bluetooth Speakers
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Medal
+                  F11 merchandise (shirt, rug sack, and more)
                 </li>
               </ul>
             </div>
@@ -296,20 +301,16 @@ export default function LandingPage() {
                   className=""
                 />
               </div>
-              <h3 className="text-2xl font-bold mb-2">Third Place Champion</h3>
-              <p className="text-3xl font-bold text-amber-400 mb-4">N500,000</p>
+              <h3 className="text-2xl font-bold mb-2">Top 3 Predictor Winners</h3>
+              <p className="text-3xl font-bold text-amber-400 mb-4 invisible">.</p>
               <ul className="text-left space-y-2 text-red-100">
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  AFCON 2025 Standard Tickets
+                  EA Sports FC 26 (any platform)
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Team Merchandise
-                </li>
-                <li className="flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Medal
+                  F11 merchandise (shirt, rug sack, and more)
                 </li>
               </ul>
             </div>
@@ -365,7 +366,9 @@ export default function LandingPage() {
                     <div className="flex items-center text-sm text-red-200">
                       <span>{formatDate(article.createdAt)}</span>
                       <span className="mx-2">•</span>
-                      <span>{formatReadingTime(article.readingTimeMinutes)}</span>
+                      <span>
+                        {formatReadingTime(article.readingTimeMinutes)}
+                      </span>
                     </div>
                   </div>
                 </Link>
@@ -425,7 +428,7 @@ export default function LandingPage() {
               {
                 question: "About the Prize Pool?",
                 answer:
-                  "We have a $1M prize pool with cash prizes, VIP experiences, tickets, and exclusive merchandise for top performers throughout the tournament.",
+                  "We have a prize pool with games, gadgets, and exclusive merchandise for top performers throughout the tournament.",
               },
               {
                 question: "How do I win?",

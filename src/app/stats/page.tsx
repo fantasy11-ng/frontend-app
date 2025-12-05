@@ -231,9 +231,26 @@
 //   );
 // }
 
-
-import { redirect } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function StatsPage() {
-  redirect("/");
+  return (
+    <div className="h-screen flex justify-center items-center">
+      <div className="flex flex-col items-center justify-center">
+        <Image
+          src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/CominSoonBlue_b9r5cs.png"
+          alt="Coming Soon"
+          width={350}
+          height={350}
+        />
+        <Link
+          href="/predictor"
+          className="bg-[#4AA96C] text-sm inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+        >
+          Play Our Predictor Now
+        </Link>
+      </div>
+    </div>
+  );
 }

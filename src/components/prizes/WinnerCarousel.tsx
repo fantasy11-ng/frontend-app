@@ -59,7 +59,7 @@ export default function WinnerCarousel({
                   src={photo.image}
                   alt={photo.alt || `${title} - Photo ${index + 1}`}
                   fill
-                  className="object-cover"
+                  className="object-cover object-[50%_25%]"
                   sizes="(max-width: 768px) 100vw, 45vw"
                   priority={index === 0}
                 />

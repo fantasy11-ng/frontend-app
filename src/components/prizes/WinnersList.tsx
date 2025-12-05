@@ -18,6 +18,15 @@ interface WinnersListProps {
 }
 
 export default function WinnersList({ winners, type }: WinnersListProps) {
+
+  if (winners.length === 0) {
+    return (
+      <div className="text-center text-gray-500 text-lg py-10">
+        Not Available Yet
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {winners.map((winner) => (

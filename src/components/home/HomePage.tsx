@@ -51,6 +51,26 @@ export default function HomePage() {
   const hasTeamUpdates = true; // Set to false to show empty state
 
   return (
+    <div className="h-screen flex justify-center items-center">
+      <div className="flex flex-col items-center justify-center">
+        <Image
+          src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/CominSoonBlue_b9r5cs.png"
+          alt="Coming Soon"
+          width={350}
+          height={350}
+        />
+        <Link
+          href="/predictor"
+          className="bg-[#4AA96C] text-sm inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+        >
+          Play Our Predictor Now
+        </Link>
+      </div>
+    </div>
+  );
+
+  // Ignored for Now Until the API is ready
+  return (
     <div className="min-h-screen bg-[#FFFFFF]">
       <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Welcome Section */}
@@ -165,7 +185,9 @@ export default function HomePage() {
               </svg>
               {/* Content */}
               <div className="p-6 relative z-10">
-                <p className="text-base text-[#800000] mb-1">Players selected</p>
+                <p className="text-base text-[#800000] mb-1">
+                  Players selected
+                </p>
                 <p className="text-3xl text-[#800000]">0/11</p>
               </div>
             </div>
@@ -516,7 +538,9 @@ export default function HomePage() {
                           {match.home}
                         </span>
                       </div>
-                      <div className="text-[#070A11] text-sm font-medium">vs</div>
+                      <div className="text-[#070A11] text-sm font-medium">
+                        vs
+                      </div>
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 bg-[#800000] rounded-full flex items-center justify-center text-white text-xs font-bold">
                           B
@@ -532,7 +556,7 @@ export default function HomePage() {
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="ml-4">
                     {match.status === "LIVE" ? (
                       <span className="px-2 py-1 bg-[#FE5E41] text-white text-xs font-medium rounded-full flex items-center gap-1">
@@ -563,36 +587,36 @@ export default function HomePage() {
                     title: "Game week Winner",
                     subtitle: "Week 3",
                     badge: "+ 5pts",
-                    badgeColor: "bg-[#F5EBEB]"
+                    badgeColor: "bg-[#F5EBEB]",
                   },
                   {
                     icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
                     title: "Perfect Prediction",
                     subtitle: "Nigeria vs Egypt",
                     badge: "+ 25pts",
-                    badgeColor: "bg-[#F5EBEB]"
+                    badgeColor: "bg-[#F5EBEB]",
                   },
                   {
                     icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
                     title: "Top 1000",
                     subtitle: "Global ranking",
                     badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]"
+                    badgeColor: "bg-[#F5EBEB]",
                   },
                   {
                     icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
                     title: "Top 1000",
                     subtitle: "Global ranking",
                     badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]"
-                  },  
+                    badgeColor: "bg-[#F5EBEB]",
+                  },
                   {
                     icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
                     title: "Top 1000",
                     subtitle: "Global ranking",
                     badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]"
-                  }
+                    badgeColor: "bg-[#F5EBEB]",
+                  },
                 ].map((item, index) => (
                   <div
                     key={index}
@@ -610,7 +634,9 @@ export default function HomePage() {
                         <p className="font-medium text-[#070A11] text-sm">
                           {item.title}
                         </p>
-                        <p className="text-xs text-[#656E81]">{item.subtitle}</p>
+                        <p className="text-xs text-[#656E81]">
+                          {item.subtitle}
+                        </p>
                       </div>
                     </div>
                     <span
@@ -658,30 +684,35 @@ export default function HomePage() {
               <div className="space-y-3">
                 {[
                   {
-                    avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-1_fapyuy.png",
+                    avatar:
+                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-1_fapyuy.png",
                     title: "Mohamed Salah scored 12 points",
-                    time: "3 hours ago"
+                    time: "3 hours ago",
                   },
                   {
-                    avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
+                    avatar:
+                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
                     title: "You transferred in Sadio Mané",
-                    time: "1 day ago"
+                    time: "1 day ago",
                   },
                   {
-                    avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
+                    avatar:
+                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
                     title: "Your rank improved by 523 points",
-                    time: "3 days ago"
+                    time: "3 days ago",
                   },
                   {
-                    avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
+                    avatar:
+                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
                     title: "Your rank improved by 523 points",
-                    time: "3 days ago"
+                    time: "3 days ago",
                   },
                   {
-                    avatar: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
+                    avatar:
+                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
                     title: "Your rank improved by 523 points",
-                    time: "3 days ago"
-                  }
+                    time: "3 days ago",
+                  },
                 ].map((update, index) => (
                   <div
                     key={index}
@@ -772,31 +803,19 @@ export default function HomePage() {
 
             {/* Bottom Navigation Flow */}
             <div className="flex flex-wrap items-center gap-2 text-sm">
-              <Link
-                href="/predictor"
-                className="text-[#070A11] font-medium"
-              >
+              <Link href="/predictor" className="text-[#070A11] font-medium">
                 Make Predictions
               </Link>
               <span className="text-[#4AA96C]">→</span>
-              <Link
-                href="/prizes"
-                className="text-[#070A11] font-medium"
-              >
+              <Link href="/prizes" className="text-[#070A11] font-medium">
                 Upcoming Prizes
               </Link>
               <span className="text-[#4AA96C]">→</span>
-              <Link
-                href="/my-team"
-                className="text-[#070A11] font-medium"
-              >
+              <Link href="/my-team" className="text-[#070A11] font-medium">
                 Create a Team
               </Link>
               <span className="text-[#4AA96C]">→</span>
-              <Link
-                href="/league"
-                className="text-[#070A11] font-medium"
-              >
+              <Link href="/league" className="text-[#070A11] font-medium">
                 Join a League
               </Link>
               <span className="text-[#4AA96C]">→</span>
@@ -867,9 +886,7 @@ export default function HomePage() {
                         </div>
                       )}
                       <div>
-                        <p className="text-[#070A11] text-sm">
-                          {player.name}
-                        </p>
+                        <p className="text-[#070A11] text-sm">{player.name}</p>
                         <p className="text-xs text-[#656E81]">
                           {player.country} • {player.position || player.value}
                         </p>
@@ -889,10 +906,7 @@ export default function HomePage() {
         <div className="mt-8 rounded-xl p-6 border border-[#F1F2F4]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-[#070A11]">Latest News</h2>
-            <Link
-              href="/news"
-              className="text-[#4AA96C] font-medium"
-            >
+            <Link href="/news" className="text-[#4AA96C] font-medium">
               See all
             </Link>
           </div>

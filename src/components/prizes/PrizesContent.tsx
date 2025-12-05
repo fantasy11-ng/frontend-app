@@ -1,8 +1,8 @@
 "use client";
 
-import { Gift } from "lucide-react";
+import { Bluetooth, Gift } from "lucide-react";
 import PastWinners from "./PastWinners";
-import PredictorPrizes from "./PredictorPrizes";
+// import PredictorPrizes from "./PredictorPrizes";
 import GlobalPrizeCard from "./GlobalPrizeCard";
 
 export default function PrizesContent() {
@@ -11,11 +11,10 @@ export default function PrizesContent() {
       id: '1',
       place: 1,
       title: 'Second Place Champion',
-      cashPrize: '₦750,000',
       rewards: [
-        'AFCON 2025 Premium Tickets',
-        'Signed Football',
-        'Medal'
+        'EA Sports FC 26 (any platform)',
+        'Bluetooth Speakers',
+        'F11 merchandise (shirt, rug sack, and more)'
       ],
       color: 'silver' as const,
       icon: Gift
@@ -24,11 +23,11 @@ export default function PrizesContent() {
       id: '2',
       place: 2,
       title: 'Ultimate Fantasy11 Champion',
-      cashPrize: '₦1,000,000',
       rewards: [
-        'AFCON 2025 VIP Experience',
-        'Signed Jersey Collection',
-        'Trophy & Medal'
+        'PlayStation 5',
+        'EA Sports FC 26',
+        'Bluetooth Speakers',
+        'F11 merchandise (shirt, rug sack, and more)'
       ],
       color: 'gold' as const,
       icon: Gift
@@ -36,12 +35,10 @@ export default function PrizesContent() {
     {
       id: '3',
       place: 3,
-      title: 'Third Place Champion',
-      cashPrize: '₦500,000',
+      title: 'Top 3 Predictor Winners',
       rewards: [
-        'AFCON 2025 Standard Tickets',
-        'Team Merchandise',
-        'Medal'
+        'EA Sports FC 26 (any platform)',
+        'F11 merchandise (shirt, rug sack, and more)'
       ],
       color: 'bronze' as const,
       icon: Gift
@@ -53,7 +50,6 @@ export default function PrizesContent() {
       id: "p1",
       place: 1,
       title: "Perfect Predictor",
-      cashPrize: "₦1,000,000",
       rewards: [
         "AFCON 2025 VIP Experience",
         "Signed Jersey Collection",
@@ -66,7 +62,6 @@ export default function PrizesContent() {
       id: "p2",
       place: 2,
       title: "Second Place Champion",
-      cashPrize: "₦1,000,000",
       rewards: [
         "AFCON 2025 Premium Tickets",
         "Signed Football",
@@ -79,7 +74,6 @@ export default function PrizesContent() {
       id: "p3",
       place: 3,
       title: "Third Place Champion",
-      cashPrize: "₦1,000,000",
       rewards: [
         "AFCON 2025 Standard Tickets",
         "Team Merchandise",
@@ -118,22 +112,6 @@ export default function PrizesContent() {
               </div>
             );
           })}
-        </div>
-      </section>
-
-      {/* AFCON 2025 Predictor Prizes */}
-      <section>
-        <h2 className="text-2xl font-medium text-[#070A11] mb-1">
-          AFCON 2025 Predictor Prizes
-        </h2>
-        <p className="text-[#656E81] text-sm mb-6">
-          Predict tournament outcomes for a chance to win the N25,000,000 grand prize
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {predictorPrizes.map((prize) => (
-            <PredictorPrizes key={prize.id} prize={prize} />
-          ))}
         </div>
       </section>
 

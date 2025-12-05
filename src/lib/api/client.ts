@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { tokenCookies } from '../utils/cookies';
 
-const baseURL = 'https://backend-app-5srm.onrender.com/';
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export const apiClient = axios.create({
   baseURL,
