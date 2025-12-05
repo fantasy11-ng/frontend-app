@@ -8,7 +8,6 @@ interface PrizeCardProps {
     id: string;
     place: number;
     title: string;
-    cashPrize: string;
     rewards: string[];
     color: "gold" | "silver" | "bronze" | "blue" | "purple" | "orange";
     icon: LucideIcon;

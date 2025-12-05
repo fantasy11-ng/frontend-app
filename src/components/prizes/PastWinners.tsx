@@ -10,7 +10,7 @@ interface PastWinner {
   name: string;
   teamName: string;
   points: number;
-  prize: string;
+  prize?: string;
 }
 
 interface WinnerEvent {
@@ -32,42 +32,74 @@ export default function PastWinners() {
     {
       id: '1',
       rank: 1,
-      name: 'Amadou Diallo',
+      name: 'Sammy',
       teamName: "Desert Fox",
-      points: 847,
-      prize: 'N1,000,000'
+      points: 283,
+      prize: 'Winner'
     },
     {
       id: '2',
       rank: 2,
-      name: 'Amadou Diallo',
+      name: 'Mubby Fc',
       teamName: "Black Angels",
-      points: 847,
-      prize: 'N1,000,000'
+      points: 182,
+      prize: 'Runner Up'
     },
     {
       id: '3',
       rank: 3,
-      name: 'Amadou Diallo',
+      name: 'Esther FC',
       teamName: "Desert Fox",
-      points: 847,
-      prize: 'N1,000,000'
+      points: 161,
     },
     {
       id: '4',
       rank: 4,
-      name: 'Amadou Diallo',
+      name: 'Aaron united',
       teamName: "Golden Eagles",
-      points: 847,
-      prize: 'N1,000,000'
+      points: 147,
     },
     {
       id: '5',
       rank: 5,
-      name: 'Amadou Diallo',
+      name: 'Testown city',
       teamName: "Golden Eagles",
-      points: 847,
-      prize: 'N1,000,000'
+      points: 144,
+    },
+    {
+      id: '6',
+      rank: 6,
+      name: 'Damolalar',
+      teamName: "Golden Eagles",
+      points: 139,
+    },
+    {
+      id: '7',
+      rank: 7,
+      name: 'Phlexybull fc',
+      teamName: "Golden Eagles",
+      points: 139,
+    },
+    {
+      id: '8',
+      rank: 8,
+      name: 'Adedayo10',
+      teamName: "Golden Eagles",
+      points: 131,
+    },
+    {
+      id: '9',
+      rank: 9,
+      name: 'Dgreatgiants',
+      teamName: "Golden Eagles",
+      points: 130,
+    },
+    {
+      id: '10',
+      rank: 10,
+      name: 'SMG',
+      teamName: "Golden Eagles",
+      points: 128,
     }
   ];
 
@@ -80,12 +112,12 @@ export default function PastWinners() {
       photos: [
         {
           id: 'fifa2022-1',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764860176/Image_Container_suog7b.png',
+          image: '/images/fifaWinner01.jpeg',
           alt: 'FIFA 2022 Winner - Photo 1'
         },
         {
           id: 'fifa2022-2',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764274554/Image_Container_1_m97wo9.png',
+          image: '/images/fifaWinner02.jpeg',
           alt: 'FIFA 2022 Winner - Photo 2'
         }
       ]
@@ -96,14 +128,14 @@ export default function PastWinners() {
       year: '2021',
       photos: [
         {
-          id: 'afcon2021-1',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764860176/Image_Container_suog7b.png',
-          alt: 'AFCON 2021 Winner - Photo 1'
+          id: 'afcon2021-2',
+          image: '/images/afconWinner01.jpeg',
+          alt: 'AFCON 2021 Winner - Photo 2'
         },
         {
-          id: 'afcon2021-2',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764274554/Image_Container_1_m97wo9.png',
-          alt: 'AFCON 2021 Winner - Photo 2'
+          id: 'afcon2021-3',
+          image: '/images/afconWinner02.jpeg',
+          alt: 'AFCON 2021 Winner - Photo 3'
         }
       ]
     }
@@ -179,7 +211,7 @@ export default function PastWinners() {
                       {winner.name}
                     </h3>
                     <p className="text-xs text-[#656E81]">
-                      {winner.teamName} – {winner.points} points
+                      {winner.points} points
                     </p>
                   </div>
                 </div>
@@ -191,8 +223,12 @@ export default function PastWinners() {
                   {winner.rank === 3 && '3rd Place'}
                   {winner.rank === 4 && '4th Place'}
                   {winner.rank === 5 && '5th Place'}
-                  {' – '}
-                  {winner.prize}
+                  {winner.rank === 6 && '6th Place'}
+                  {winner.rank === 7 && '7th Place'}
+                  {winner.rank === 8 && '8th Place'}
+                  {winner.rank === 9 && '9th Place'}
+                  {winner.rank === 10 && '10th Place'}
+                  {winner.prize && ' – ' + winner.prize}
                 </div>
               </div>
             </div>
