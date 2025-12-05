@@ -112,12 +112,12 @@ export default function PastWinners() {
       photos: [
         {
           id: 'fifa2022-1',
-          image: '/images/fifaWinner01.jpeg',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/fifaWinner01_axxcnv.jpg',
           alt: 'FIFA 2022 Winner - Photo 1'
         },
         {
           id: 'fifa2022-2',
-          image: '/images/fifaWinner02.jpeg',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/fifaWinner02_j0llfo.jpg',
           alt: 'FIFA 2022 Winner - Photo 2'
         }
       ]
@@ -129,12 +129,12 @@ export default function PastWinners() {
       photos: [
         {
           id: 'afcon2021-2',
-          image: '/images/afconWinner01.jpeg',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/afconWinner02_asus6y.jpg',
           alt: 'AFCON 2021 Winner - Photo 2'
         },
         {
           id: 'afcon2021-3',
-          image: '/images/afconWinner02.jpeg',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/afconWinner02_asus6y.jpg',
           alt: 'AFCON 2021 Winner - Photo 3'
         }
       ]

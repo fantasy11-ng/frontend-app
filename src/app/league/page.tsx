@@ -297,7 +297,7 @@ export default function LeaguePage() {
     <div className="h-screen flex justify-center items-center">
       <div className="flex flex-col items-center justify-center">
         <Image
-          src="/images/CominSoonBlue.png"
+          src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/CominSoonBlue_b9r5cs.png"
           alt="Coming Soon"
           width={350}
           height={350}
