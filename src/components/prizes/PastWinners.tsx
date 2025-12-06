@@ -134,8 +134,13 @@ export default function PastWinners() {
         },
         {
           id: 'afcon2021-3',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/afconWinner02_asus6y.jpg',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1765017217/afconWinner03_ilyjm7.jpg',
           alt: 'AFCON 2021 Winner - Photo 3'
+        },
+        {
+          id: 'afcon2021-3',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1765017217/afconWinner02_q6m1ay.jpg',
+        alt: 'AFCON 2021 Winner - Photo 4'
         }
       ]
     }
