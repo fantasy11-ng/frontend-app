@@ -1,12 +1,16 @@
-import axios from 'axios';
-import { tokenCookies } from '../utils/cookies';
+import axios from "axios";
+import { tokenCookies } from "../utils/cookies";
 
+<<<<<<< Updated upstream
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+=======
+const baseURL = "http://localhost:3000/"; // 'https://backend-app-5srm.onrender.com/';
+>>>>>>> Stashed changes
 
 export const apiClient = axios.create({
   baseURL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -14,7 +18,7 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     // Get token from cookies
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const token = tokenCookies.getAccessToken();
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -46,39 +50,43 @@ apiClient.interceptors.response.use(
             { refreshToken },
             {
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
             }
           );
 
           // Handle different response structures
           // Could be response.data.accessToken or response.data.data.accessToken
-          const accessToken = response.data?.accessToken || response.data?.data?.accessToken;
-          
+          const accessToken =
+            response.data?.accessToken || response.data?.data?.accessToken;
+
           if (!accessToken) {
-            console.error('Refresh token response structure:', response.data);
-            throw new Error('No access token in refresh response');
+            console.error("Refresh token response structure:", response.data);
+            throw new Error("No access token in refresh response");
           }
 
           // Set the access token in cookies
-          if (typeof window !== 'undefined') {
+          if (typeof window !== "undefined") {
             try {
               tokenCookies.setAccessToken(accessToken);
-              
+
               // Small delay to ensure cookie is persisted
-              await new Promise(resolve => setTimeout(resolve, 10));
-              
+              await new Promise((resolve) => setTimeout(resolve, 10));
+
               // Verify the cookie was set
               const verifyToken = tokenCookies.getAccessToken();
               if (!verifyToken || verifyToken !== accessToken) {
-                console.error('Failed to set access token cookie after refresh', {
-                  expected: accessToken,
-                  actual: verifyToken,
-                });
-                throw new Error('Failed to persist access token');
+                console.error(
+                  "Failed to set access token cookie after refresh",
+                  {
+                    expected: accessToken,
+                    actual: verifyToken,
+                  }
+                );
+                throw new Error("Failed to persist access token");
               }
             } catch (cookieError) {
-              console.error('Error setting access token cookie:', cookieError);
+              console.error("Error setting access token cookie:", cookieError);
               throw cookieError;
             }
           }
@@ -89,7 +97,7 @@ apiClient.interceptors.response.use(
         }
       } catch (refreshError) {
         // Refresh failed, clear tokens and redirect to login
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           tokenCookies.removeAll();
           // You might want to redirect to login page here
         }
@@ -100,4 +108,3 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
