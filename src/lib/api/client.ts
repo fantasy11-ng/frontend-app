@@ -1,11 +1,7 @@
 import axios from "axios";
 import { tokenCookies } from "../utils/cookies";
 
-<<<<<<< Updated upstream
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
-=======
-const baseURL = "http://localhost:3000/"; // 'https://backend-app-5srm.onrender.com/';
->>>>>>> Stashed changes
 
 export const apiClient = axios.create({
   baseURL,
