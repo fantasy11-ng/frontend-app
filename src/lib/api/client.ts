@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
         if (refreshToken) {
           // Use a fresh axios instance without interceptors to avoid infinite loop
           const response = await axios.post(
-            `${baseURL}auth/refresh`,
+            `${baseURL}/auth/refresh`,
             { refreshToken },
             {
               headers: {
