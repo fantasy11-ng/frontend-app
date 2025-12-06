@@ -8,7 +8,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useGroups,
   useStages,
-  useStagePredictions,
   useBracketSeed,
   useBracketPredictions,
   useThirdPlaceMatchSeed,
@@ -23,6 +22,8 @@ import {
   ThirdBestTeams,
 } from "@/components/predictor";
 import toast from "react-hot-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Group } from "@/types/predictor";
 import type { RoundCode, BracketPrediction } from "@/types/predictorStage";
 import Image from "next/image";
 
@@ -83,6 +84,7 @@ function PredictorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const {
     data: groups = [],
     isLoading: groupsLoading,
@@ -103,11 +105,6 @@ function PredictorPageContent() {
     );
     return groupStage?.id;
   }, [stages]);
-
-  const { data: groupStagePredictions } = useStagePredictions(
-    groupStageId ?? 0,
-    !!groupStageId
-  );
 
   // Get initial stage from URL params or default to 'group'
   const getInitialStage = (): PredictionStage => {
@@ -151,26 +148,40 @@ function PredictorPageContent() {
 
   // When we have both groups and saved predictions for the group stage,
   // initialize the local predictions state so the UI reflects saved data.
-  useEffect(() => {
-    if (!groups.length || !groupStagePredictions?.length) return;
+  const getSavedGroupOrder = (
+    savedPrediction: Group["myPrediction"]
+  ): string[] | null => {
+    if (!savedPrediction) {
+      return null;
+    }
 
-    const groupIdToNameMap = new Map<number, string>();
-    groups.forEach((group) => {
-      groupIdToNameMap.set(group.id, group.name);
-    });
+    if (Array.isArray(savedPrediction) && savedPrediction.length === 4) {
+      return savedPrediction;
+    }
+
+    if (
+      typeof savedPrediction === "object" &&
+      "teams" in savedPrediction &&
+      Array.isArray(savedPrediction.teams)
+    ) {
+      const orderedTeams = [...savedPrediction.teams]
+        .sort((a, b) => a.index - b.index)
+        .map((team) => team.name);
+      return orderedTeams.length === 4 ? orderedTeams : null;
+    }
+
+    return null;
+  };
+
+  useEffect(() => {
+    if (!groups.length) return;
 
     const nextGroupStage: TournamentPredictions["groupStage"] = {};
 
-    groupStagePredictions.forEach((prediction) => {
-      const groupName = groupIdToNameMap.get(prediction.groupId);
-      if (!groupName) return;
-
-      const orderedTeams = [...prediction.teams]
-        .sort((a, b) => a.index - b.index)
-        .map((t) => t.name);
-
-      if (orderedTeams.length === 4) {
-        nextGroupStage[groupName] = orderedTeams;
+    groups.forEach((group) => {
+      const savedOrder = getSavedGroupOrder(group.myPrediction);
+      if (savedOrder) {
+        nextGroupStage[group.name] = savedOrder;
       }
     });
 
@@ -178,13 +189,12 @@ function PredictorPageContent() {
       setPredictions((prev) => ({
         ...prev,
         groupStage: {
-          // keep any existing predictions, override with API-loaded ones
           ...prev.groupStage,
           ...nextGroupStage,
         },
       }));
     }
-  }, [groups, groupStagePredictions]);
+  }, [groups]);
 
   // Fetch saved predictions for all stages to check completion status
   // This allows us to determine which stages are unlocked
@@ -368,39 +378,109 @@ function PredictorPageContent() {
   }, [isFinalsStage, thirdPlaceWinner, finalWinner]);
 
   // Calculate progress
-  const getGroupStageProgress = () => {
-    const totalGroups = groups.length;
-    const completedGroups = Object.values(predictions.groupStage).filter(
-      (group) => group.length === 4
-    ).length;
-    return { completed: completedGroups, total: totalGroups };
+  const GROUP_STAGE_TOTAL = 6;
+  const KNOCKOUT_TOTAL = 16;
+  const hasSavedWinner = (prediction?: BracketPrediction) =>
+    Boolean(
+      prediction?.predictedWinnerTeamId ?? prediction?.predictedWinner?.id
+    );
+  const getSavedGroupCount = () => {
+    return groups.reduce((count, group) => {
+      const savedPrediction = group.myPrediction;
+      if (Array.isArray(savedPrediction) && savedPrediction.length === 4) {
+        return count + 1;
+      }
+      if (
+        savedPrediction &&
+        typeof savedPrediction === "object" &&
+        "teams" in savedPrediction &&
+        Array.isArray(savedPrediction.teams) &&
+        savedPrediction.teams.length === 4
+      ) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
   };
 
-  const getThirdBestProgress = () => {
-    return { completed: predictions.thirdBestTeams.length, total: 4 };
+  const getProgressPercentage = (completed: number, total: number) => {
+    if (total === 0) {
+      return 0;
+    }
+    return (completed / total) * 100;
+  };
+
+  const getGroupStageProgress = () => {
+    const localCompleted = Object.values(predictions.groupStage).filter(
+      (group) => group.length === 4
+    ).length;
+    const savedCompleted = getSavedGroupCount();
+    const total = groups.length > 0 ? groups.length : GROUP_STAGE_TOTAL;
+    return {
+      completed: Math.min(Math.max(localCompleted, savedCompleted), total),
+      total,
+    };
   };
 
   const getKnockoutStageProgress = () => {
-    const totalMatches = 16;
+    const totalMatches = KNOCKOUT_TOTAL;
+
+    const localRound16 = Math.min(
+      Object.keys(predictions.round16).filter((key) => predictions.round16[key])
+        .length,
+      8
+    );
+    const savedRound16 = Math.min(
+      savedRound16Predictions.filter(hasSavedWinner).length,
+      8
+    );
+
+    const localQuarter = Math.min(
+      Object.keys(predictions.quarterFinals).filter(
+        (key) => predictions.quarterFinals[key]
+      ).length,
+      4
+    );
+    const savedQuarter = Math.min(
+      savedQuarterPredictions.filter(hasSavedWinner).length,
+      4
+    );
+
+    const localSemi = Math.min(
+      Object.keys(predictions.semiFinals).filter(
+        (key) => predictions.semiFinals[key]
+      ).length,
+      2
+    );
+    const savedSemi = Math.min(
+      savedSemiPredictions.filter(hasSavedWinner).length,
+      2
+    );
+
+    const localThirdPlace = predictions.finals.thirdPlace ? 1 : 0;
+    const savedThirdPlace = savedThirdPlaceMatch.some(hasSavedWinner) ? 1 : 0;
+
+    const localChampion = predictions.finals.champion ? 1 : 0;
+    const savedChampion = savedFinalPredictions.some(hasSavedWinner) ? 1 : 0;
+
     const completedMatches =
-      Object.keys(predictions.round16).length +
-      Object.keys(predictions.quarterFinals).length +
-      Object.keys(predictions.semiFinals).length +
-      (predictions.finals.thirdPlace ? 1 : 0) +
-      (predictions.finals.champion ? 1 : 0);
+      Math.max(localRound16, savedRound16) +
+      Math.max(localQuarter, savedQuarter) +
+      Math.max(localSemi, savedSemi) +
+      Math.max(localThirdPlace, savedThirdPlace) +
+      Math.max(localChampion, savedChampion);
+
     return { completed: completedMatches, total: totalMatches };
   };
 
   const getOverallProgress = () => {
     const groupProgress = getGroupStageProgress();
-    const thirdBestProgress = getThirdBestProgress();
     const knockoutProgress = getKnockoutStageProgress();
-    const totalTasks =
-      groupProgress.total + thirdBestProgress.total + knockoutProgress.total;
-    const completedTasks =
-      groupProgress.completed +
-      thirdBestProgress.completed +
-      knockoutProgress.completed;
+    const totalTasks = groupProgress.total + knockoutProgress.total;
+    const completedTasks = groupProgress.completed + knockoutProgress.completed;
+    if (totalTasks === 0) {
+      return 0;
+    }
     return Math.round((completedTasks / totalTasks) * 100);
   };
 
@@ -577,11 +657,9 @@ function PredictorPageContent() {
         const localGroupCompleted =
           Object.values(predictions.groupStage).filter(
             (group) => group.length === 4
-          ).length === groups.length;
+          ).length === (groups.length || GROUP_STAGE_TOTAL);
         const savedGroupCompleted =
-          groupStagePredictions &&
-          groupStagePredictions.length > 0 &&
-          groupStagePredictions.every((pred) => pred.teams.length === 4);
+          getSavedGroupCount() === (groups.length || GROUP_STAGE_TOTAL);
         return localGroupCompleted || savedGroupCompleted;
       case "thirdBest":
         // Check both local state and saved API predictions
@@ -594,7 +672,8 @@ function PredictorPageContent() {
           (key) => predictions.round16[key]
         );
         const localRound16Completed = localRound16Keys.length >= 8;
-        const savedRound16Completed = savedRound16Predictions.length >= 8;
+        const savedRound16Completed =
+          savedRound16Predictions.filter(hasSavedWinner).length >= 8;
         return localRound16Completed || savedRound16Completed;
       case "quarter":
         // Check both local state and saved API predictions
@@ -602,7 +681,8 @@ function PredictorPageContent() {
           (key) => predictions.quarterFinals[key]
         );
         const localQuarterCompleted = localQuarterKeys.length >= 4;
-        const savedQuarterCompleted = savedQuarterPredictions.length >= 4;
+        const savedQuarterCompleted =
+          savedQuarterPredictions.filter(hasSavedWinner).length >= 4;
         return localQuarterCompleted || savedQuarterCompleted;
       case "semi":
         // Check both local state and saved API predictions
@@ -610,7 +690,8 @@ function PredictorPageContent() {
           (key) => predictions.semiFinals[key]
         );
         const localSemiCompleted = localSemiKeys.length >= 2;
-        const savedSemiCompleted = savedSemiPredictions.length >= 2;
+        const savedSemiCompleted =
+          savedSemiPredictions.filter(hasSavedWinner).length >= 2;
         return localSemiCompleted || savedSemiCompleted;
       case "finals":
         // Check both local state and saved API predictions
@@ -618,7 +699,8 @@ function PredictorPageContent() {
           predictions.finals.thirdPlace !== "" &&
           predictions.finals.champion !== "";
         const savedFinalsCompleted =
-          savedThirdPlaceMatch.length > 0 && savedFinalPredictions.length > 0;
+          savedThirdPlaceMatch.some(hasSavedWinner) &&
+          savedFinalPredictions.some(hasSavedWinner);
         return localFinalsCompleted || savedFinalsCompleted;
       default:
         return false;
@@ -782,9 +864,10 @@ function PredictorPageContent() {
                   <div
                     className="bg-[#800000] h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${
-                        (groupProgress.completed / groupProgress.total) * 100
-                      }%`,
+                      width: `${getProgressPercentage(
+                        groupProgress.completed,
+                        groupProgress.total
+                      )}%`,
                     }}
                   ></div>
                 </div>
@@ -816,10 +899,10 @@ function PredictorPageContent() {
                   <div
                     className="bg-[#800000] h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${
-                        (knockoutProgress.completed / knockoutProgress.total) *
-                        100
-                      }%`,
+                      width: `${getProgressPercentage(
+                        knockoutProgress.completed,
+                        knockoutProgress.total
+                      )}%`,
                     }}
                   ></div>
                 </div>
@@ -917,9 +1000,15 @@ function PredictorPageContent() {
               </div>
             ) : groupsError || stagesError || !groupStageId ? (
               <div className="p-6 text-center">
-                <p className="text-red-500">
-                  Error loading groups/stages. Please try again.
-                </p>
+                <p className="text-red-500">Error loading groups/stages.</p>
+                {!isAuthenticated && (
+                  <button
+                    onClick={() => router.push("/sign-in")}
+                    className="cursor-pointer mt-4 px-6 py-2 bg-[#4AA96C] hover:bg-[#3d9a5c] text-white text-sm font-medium rounded-full transition-colors"
+                  >
+                    Log in
+                  </button>
+                )}
               </div>
             ) : (
               <GroupStage
