@@ -26,18 +26,16 @@ export default function SortableTeamItem({ id, position, teamName, badge, highli
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center p-3 rounded-xl border ${
+      className={`flex items-center p-3 rounded-xl border cursor-grab active:cursor-grabbing touch-none select-none ${
         highlight ? 'border-[#D4D7DD]' : 'border-gray-200'
-      } ${isDragging ? 'opacity-70 shadow-md' : ''}`}
+      } ${isDragging ? 'opacity-70 shadow-md cursor-grabbing' : ''}`}
+      {...attributes}
+      {...listeners}
+      aria-label={`Drag ${teamName}`}
     >
-      <button
-        className="mr-3 cursor-grab active:cursor-grabbing text-gray-400"
-        {...attributes}
-        {...listeners}
-        aria-label={`Drag ${teamName}`}
-      >
+      <div className="mr-3 text-gray-400">
         <GripVertical className="w-4 h-4" />
-      </button>
+      </div>
 
       <div className="w-8 h-8 bg-[#800000] text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
         {position}
