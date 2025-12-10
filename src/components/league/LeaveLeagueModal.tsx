@@ -23,7 +23,7 @@ const LeaveLeagueModal: React.FC<LeaveLeagueModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#656E81CC] bg-opacity-50 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 relative">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-[514px] mx-4 relative">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -33,28 +33,28 @@ const LeaveLeagueModal: React.FC<LeaveLeagueModalProps> = ({
         </button>
 
         {/* Header */}
-        <div className="px-6 pt-6 pb-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <div className="px-6 pt-6 pb-6">
+          <h2 className="text-2xl font-bold text-[#070A11] mb-2">
             Leave {isGlobal ? 'Global' : ''} League
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-[#656E81]">
             Are you sure you want to leave the {leagueName}? You&apos;ll lose your current ranking and won&apos;t be eligible for prizes.
           </p>
         </div>
 
         {/* Buttons */}
-        <div className="px-6 pb-6 space-y-3">
-          <button
-            onClick={onConfirmLeave}
-            className="w-full py-3 rounded-lg font-semibold text-white bg-green-500 hover:bg-green-600 transition-colors"
-          >
-            Leave League
-          </button>
-          <button
+        <div className="px-6 pb-6 flex gap-3">
+        <button
             onClick={onClose}
-            className="w-full py-3 rounded-lg font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors"
+            className="w-full h-10 rounded-full font-semibold text-[#656E81] bg-white border border-[#D4D7DD]"
           >
             Cancel
+          </button>
+          <button
+            onClick={onConfirmLeave}
+            className="w-full h-10 rounded-full font-medium text-white bg-[#4AA96C]"
+          >
+            Leave League
           </button>
         </div>
       </div>

@@ -36,6 +36,7 @@ export interface Player {
   name: string;
   position: PlayerPosition;
   country: string;
+  image?: string;
   countryFlag?: string;
   club?: string;
   jerseyNumber?: number;
@@ -62,6 +63,11 @@ export interface SquadPlayer extends Player {
     x: number;
     y: number;
   };
+  /**
+   * Unique identifier for the squad entry (not the player id).
+   * Use this for role/lineup updates when the API expects the squad row id.
+   */
+  squadEntryId?: string;
 }
 
 export interface Squad {

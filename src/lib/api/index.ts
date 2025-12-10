@@ -10,6 +10,12 @@ export * from './predictor';
 // Export blog API functions
 export * from './blog';
 
+// Export league API functions
+export * from './league';
+
+// Export team API functions
+export * from './team';
+
 // Export hooks
 export * from './hooks/useAuth';
 export * from './hooks/useOAuth';

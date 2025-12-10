@@ -51,7 +51,7 @@ const ChooseLeagueModal: React.FC<ChooseLeagueModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#656E81CC] bg-opacity-50 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 relative">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-[358px] md:max-w-[514px] mx-4 relative">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -62,8 +62,8 @@ const ChooseLeagueModal: React.FC<ChooseLeagueModalProps> = ({
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Choose your League</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className="text-2xl font-semibold text-[#070A11]">Choose your League</h2>
+          <p className="text-sm text-[#656E81] max-w-[310px]">
             Create a new league or join an existing one with friends
           </p>
         </div>
@@ -78,35 +78,31 @@ const ChooseLeagueModal: React.FC<ChooseLeagueModalProps> = ({
               <button
                 key={option.id}
                 onClick={() => onSelectOption(option.id)}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                className={`w-full text-left p-4 rounded-lg border transition-all ${
                   isSelected
-                    ? 'border-green-500 bg-green-50'
+                    ? 'border-green-500'
                     : 'border-gray-200 hover:border-gray-300 bg-white'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      isSelected ? 'bg-green-500' : 'bg-gray-100'
-                    }`}>
-                      {option.id === 'join' && 'customIcon' in option && option.customIcon ? (
-                        <div className={isSelected ? 'text-white' : 'text-green-500'}>
-                          <option.customIcon />
-                        </div>
+                    <div className='w-5 h-5 rounded-full flex items-center justify-center'>
+                      {option.id === 'join' ? (
+                        <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1765279850/medal_1_vf9u2k.png" alt="Trophy" width={20} height={20} className="w-5 h-5" />
                       ) : option.id === 'championship' ? (
-                        <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />
+                        <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1765279850/trophy_1_xpatmf.png" alt="Trophy" width={20} height={20} className="w-5 h-5" />
                       ) : Icon ? (
-                        <Icon className={`w-6 h-6 ${isSelected ? 'text-white' : 'text-green-500'}`} />
+                        <Icon className='text-[#4AA96C]' width={20} height={20} />
                       ) : null}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{option.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{option.description}</p>
+                      <h3 className="text-sm text-[#070A11]">{option.title}</h3>
+                      <p className="text-sm text-[#656E81] mt-1 max-w-[234px]">{option.description}</p>
                     </div>
                   </div>
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                     isSelected
-                      ? 'border-green-500 bg-green-500'
+                      ? 'border-[#4AA96C] bg-[#4AA96C]'
                       : 'border-gray-300 bg-white'
                   }`}>
                     {isSelected && (
@@ -126,9 +122,9 @@ const ChooseLeagueModal: React.FC<ChooseLeagueModalProps> = ({
           <button
             onClick={onContinue}
             disabled={!selectedOption}
-            className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
+            className={`w-full py-2 rounded-full font-semibold text-white transition-colors ${
               selectedOption
-                ? 'bg-green-500 hover:bg-green-600'
+                ? 'bg-[#4AA96C] hover:bg-[#4AA96C]'
                 : 'bg-gray-300 cursor-not-allowed'
             }`}
           >

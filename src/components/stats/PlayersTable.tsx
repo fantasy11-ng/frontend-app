@@ -66,173 +66,177 @@ export default function PlayersTable({ players }: PlayersTableProps) {
     setSearchQuery('');
   };
 
+  const positionLabel = selectedPosition === 'All Positions' ? 'Position' : selectedPosition;
+  const countryLabel = selectedCountry === 'All Countries' ? 'Country' : selectedCountry;
+  const pointsLabel = selectedPointsFilter === 'Points' ? 'Points' : selectedPointsFilter;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-6">
       {/* Title and Subtitle */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        <h2 className="text-2xl font-medium text-[#070A11] mb-1">
           Top 10 Players of the season
         </h2>
-        <p className="text-gray-600">
+        <p className="text-sm text-[#656E81]">
           Comprehensive performance statistics for AFCON 2025&apos;s top performers
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-gray-200">
-        <div className="flex space-x-8">
+      {/* Tabs + Controls */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex space-x-8 border-b-2 border-[#F1F2F4]">
           <button
             onClick={() => setActiveTab('performance')}
-            className={`pb-4 px-1 text-sm font-medium transition-colors ${
+            className={`pb-2 text-sm font-medium transition-colors ${
               activeTab === 'performance'
-                ? 'text-gray-900 border-b-2 border-green-500'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-[#070A11] border-b-4 border-[#4AA96C]'
+                : 'text-[#656E81] hover:text-[#070A11]'
             }`}
           >
             Performance Stats
           </button>
           <button
             onClick={() => setActiveTab('details')}
-            className={`pb-4 px-1 text-sm font-medium transition-colors ${
+            className={`pb-2 text-sm font-medium transition-colors ${
               activeTab === 'details'
-                ? 'text-gray-900 border-b-2 border-green-500'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-[#070A11] border-b-4 border-[#4AA96C]'
+                : 'text-[#656E81] hover:text-[#070A11]'
             }`}
           >
             Players Details
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative flex-1 max-w-md ml-8">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search players or teams..."
-            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          {searchQuery && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
+        {/* Search + Filters */}
+        <div className="flex w-full flex-col md:flex-row gap-3 sm:w-auto sm:items-center sm:justify-end sm:gap-3 xl:gap-4">
+          <div className="relative w-full lg:w-72 flex items-center">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A0A6B1]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search players or teams..."
+              className="rounded-lg border border-[#D4D7DD] bg-white py-2.5 pl-11 pr-11 text-sm text-[#070A11] placeholder:text-[#A0A6B1] focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A0A6B1] hover:text-[#070A11]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
-      {/* Filters */}
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <button
-            onClick={() => {
-              setShowPositionFilter(!showPositionFilter);
-              setShowCountryFilter(false);
-              setShowPointsFilter(false);
-            }}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <span className="text-sm text-gray-700">{selectedPosition}</span>
-            <ChevronDown className="w-4 h-4 ml-2 text-gray-500" />
-          </button>
-          {showPositionFilter && (
-            <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48">
-              <div className="p-2">
-                {positions.map((position) => (
-                  <button
-                    key={position}
-                    onClick={() => {
-                      setSelectedPosition(position);
-                      setShowPositionFilter(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                  >
-                    {position}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="relative">
-          <button
-            onClick={() => {
-              setShowCountryFilter(!showCountryFilter);
-              setShowPositionFilter(false);
-              setShowPointsFilter(false);
-            }}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <span className="text-sm text-gray-700">{selectedCountry}</span>
-            <ChevronDown className="w-4 h-4 ml-2 text-gray-500" />
-          </button>
-          {showCountryFilter && (
-            <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-64 max-h-96 overflow-y-auto">
-              <div className="p-2 border-b border-gray-200">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search countries..."
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
+          <div className="flex w-full gap-2 sm:flex-row flex-wrap sm:justify-end sm:gap-3">
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowPositionFilter(!showPositionFilter);
+                  setShowCountryFilter(false);
+                  setShowPointsFilter(false);
+                }}
+                className="flex items-center rounded-lg border border-[#D4D7DD] px-4 py-2 text-sm text-[#070A11] transition hover:border-[#4AA96C]"
+              >
+                <span>{positionLabel}</span>
+                <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
+              </button>
+              {showPositionFilter && (
+                <div className="absolute top-full mt-2 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
+                  <div className="p-2">
+                    {positions.map((position) => (
+                      <button
+                        key={position}
+                        onClick={() => {
+                          setSelectedPosition(position);
+                          setShowPositionFilter(false);
+                        }}
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        {position}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="p-2">
-                {countries.map((country) => (
-                  <button
-                    key={country}
-                    onClick={() => {
-                      setSelectedCountry(country);
-                      setShowCountryFilter(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                  >
-                    {country}
-                  </button>
-                ))}
-              </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className="relative">
-          <button
-            onClick={() => {
-              setShowPointsFilter(!showPointsFilter);
-              setShowPositionFilter(false);
-              setShowCountryFilter(false);
-            }}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <span className="text-sm text-gray-700">{selectedPointsFilter}</span>
-            <ChevronDown className="w-4 h-4 ml-2 text-gray-500" />
-          </button>
-          {showPointsFilter && (
-            <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48">
-              <div className="p-2">
-                {['Points', 'Goals', 'Assists', 'Cards'].map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => {
-                      setSelectedPointsFilter(filter);
-                      setShowPointsFilter(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowCountryFilter(!showCountryFilter);
+                  setShowPositionFilter(false);
+                  setShowPointsFilter(false);
+                }}
+                className="flex items-center rounded-lg border border-[#D4D7DD] px-4 py-2 text-sm text-[#070A11] transition hover:border-[#4AA96C]"
+              >
+                <span>{countryLabel}</span>
+                <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
+              </button>
+              {showCountryFilter && (
+                <div className="absolute top-full mt-2 w-64 max-h-96 overflow-y-auto rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
+                  <div className="border-b border-gray-200 p-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search countries..."
+                        className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
+                      />
+                    </div>
+                  </div>
+                  <div className="p-2">
+                    {countries.map((country) => (
+                      <button
+                        key={country}
+                        onClick={() => {
+                          setSelectedCountry(country);
+                          setShowCountryFilter(false);
+                        }}
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        {country}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowPointsFilter(!showPointsFilter);
+                  setShowPositionFilter(false);
+                  setShowCountryFilter(false);
+                }}
+                className="flex items-center rounded-lg border border-[#D4D7DD] px-4 py-2 text-sm text-[#070A11] transition hover:border-[#4AA96C]"
+              >
+                <span>{pointsLabel}</span>
+                <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
+              </button>
+              {showPointsFilter && (
+                <div className="absolute top-full mt-2 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
+                  <div className="p-2">
+                    {['Points', 'Goals', 'Assists', 'Cards'].map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => {
+                          setSelectedPointsFilter(filter);
+                          setShowPointsFilter(false);
+                        }}
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        {filter}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-
       {/* No Results Message */}
       {filteredPlayers.length === 0 && searchQuery && (
         <div className="text-center py-12">
@@ -244,7 +248,7 @@ export default function PlayersTable({ players }: PlayersTableProps) {
 
       {/* Table */}
       {filteredPlayers.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border border-[#F1F2F4] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -304,62 +308,61 @@ export default function PlayersTable({ players }: PlayersTableProps) {
                 {filteredPlayers.map((player) => (
                   <tr key={player.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center">
-                        <span className="text-white font-bold">{player.rank}</span>
+                      <div className="w-4 h-4 rounded-full bg-[#800000] flex items-center justify-center">
+                        <span className="text-white font-semibold text-[10px]">{player.rank}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="font-semibold text-gray-900">{player.name}</div>
-                        <div className="text-sm text-gray-500">{player.country}</div>
+                        <div className="text-[#070A11] text-sm">{player.name}</div>
                       </div>
                     </td>
                     {activeTab === 'performance' ? (
                       <>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                          <span className="px-3 py-1 border border-[#D4D7DD] text-[#656E81] rounded-full text-sm">
                             {player.position}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#070A11]">
                           {player.country}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#070A11]">
                           {player.price}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-red-700 text-white rounded-full text-xs font-bold">
+                          <span className="px-3 py-1 bg-[#F5EBEB] text-[#800000] rounded-full text-sm">
                             {player.points}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#FE5E41]">
                           {player.goals}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#4961B9]">
                           {player.assists}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-medium">
+                          <span className="px-3 py-1 text-[#0EC76A] text-sm font-medium">
                             {player.cards}
                           </span>
                         </td>
                       </>
                     ) : (
                       <>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#070A11]">
                           {player.club}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#070A11]">
                           {player.age}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#070A11]">
                           {player.height}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#070A11]">
                           {player.weight}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                          <span className="px-3 py-1 bg-[#F5EBEB] text-[#800000] rounded-full text-sm">
                             {player.index}
                           </span>
                         </td>

@@ -19,14 +19,19 @@ export interface Fixture {
 
 interface UpcomingFixturesProps {
   fixtures: Fixture[];
+  isLoading?: boolean;
 }
 
-const UpcomingFixtures: React.FC<UpcomingFixturesProps> = ({ fixtures }) => {
+const UpcomingFixtures: React.FC<UpcomingFixturesProps> = ({ fixtures, isLoading = false }) => {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Fixtures</h3>
 
-      {fixtures.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center py-8 text-gray-500">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4AA96C]" />
+        </div>
+      ) : fixtures.length > 0 ? (
         fixtures.map((fixture) => (
           <div
             key={fixture.id}

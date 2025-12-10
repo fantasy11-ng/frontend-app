@@ -165,16 +165,10 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                 <div className="relative flex flex-col items-center">
                   {/* Country flag icon - positioned above card, slightly to the left */}
                   <div className="absolute -top-2 z-10">
-                    <div className="w-5 h-5 bg-white rounded-full border-2 border-gray-300 flex items-center justify-center shadow-md relative overflow-hidden">
-                      {player.countryFlag ? (
+                    <div className="w-5 h-5 flex items-center justify-center shadow-md relative overflow-hidden">
+                      {player.image && (
                         <div className="flex items-center justify-center w-full h-full text-xs">
-                          {player.countryFlag}
-                        </div>
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-xs text-gray-600">
-                            {player.name.charAt(0).toUpperCase()}
-                          </span>
+                          <Image src={player.image} alt={player.name} width={20} height={20} className="w-5 h-5" />
                         </div>
                       )}
                     </div>

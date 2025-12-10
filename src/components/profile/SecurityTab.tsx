@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { useUpdatePassword } from '@/lib/api/hooks/useAuth';
+import toast from 'react-hot-toast';
 
 interface PasswordRequirements {
   lowercase: boolean;
@@ -37,17 +38,17 @@ export default function SecurityTab() {
 
   const handleChangePassword = async () => {
     if (!allRequirementsMet) {
-      alert('Please meet all password requirements');
+      toast.error('Please meet all password requirements');
       return;
     }
 
     if (!passwordsMatch) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (!currentPassword) {
-      alert('Please enter your current password');
+      toast.error('Please enter your current password');
       return;
     }
 

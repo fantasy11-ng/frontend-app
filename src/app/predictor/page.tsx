@@ -942,7 +942,7 @@ function PredictorPageContent() {
         </div>
 
         {/* Stage Navigation */}
-        <div className="border-b mb-8">
+        <div className="mb-8">
           <div className="flex overflow-x-auto scrollbar-thin">
             {[
               { id: "group", label: "Group Stage" },
@@ -992,7 +992,7 @@ function PredictorPageContent() {
         </div>
 
         {/* Stage Content */}
-        <div className="bg-white rounded-lg shadow-sm border transition-opacity duration-200">
+        <div className="bg-white rounded-lg shadow-sm transition-opacity duration-200">
           {currentStage === "group" &&
             (groupsLoading || stagesLoading ? (
               <div className="p-6 text-center">
