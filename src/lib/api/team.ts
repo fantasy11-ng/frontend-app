@@ -1,6 +1,28 @@
 import { apiClient } from "./client";
 import { Team } from "@/types/team";
 
+export type TransferRequest = {
+  fixtureId: number;
+  transfers: Array<{
+    playerOutId: number | string;
+    playerInId: number | string;
+  }>;
+};
+
+export type TransferHistoryItem = {
+  id: string;
+  teamId?: string;
+  playerOutId?: number | string;
+  playerInId?: number | string;
+  amountOut?: number;
+  amountIn?: number;
+  netAmount?: number;
+  type?: string;
+  fixtureId?: number | string;
+  triggeredByUserId?: string;
+  createdAt?: string;
+};
+
 export interface CreateTeamPayload {
   name: string;
   logoUrl?: string;
@@ -177,5 +199,21 @@ export const teamApi = {
     }>("/fantasy/fixtures/upcoming", { params });
 
     return response.data?.data ?? [];
+  },
+
+  makeTransfers: async (payload: TransferRequest) => {
+    await apiClient.post("/fantasy/team/transfers", payload);
+  },
+
+  getTransferHistory: async (): Promise<TransferHistoryItem[]> => {
+    const response = await apiClient.get<{ data?: TransferHistoryItem[] }>("/fantasy/team/transfers");
+    const raw = response.data;
+    const items = Array.isArray(raw)
+      ? (raw as TransferHistoryItem[])
+      : raw?.data ?? [];
+    return items.map((item, index) => ({
+      ...item,
+      id: item.id ?? `${item.teamId ?? "transfer"}-${index}`,
+    }));
   },
 };

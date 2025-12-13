@@ -120,9 +120,35 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
   };
 
   const getRoleIcon = (role?: PlayerRole) => {
-    if (role === "captain") return "©";
+    if (role === "captain") return "C";
     if (role === "vice-captain") return "VC";
     return null;
+  };
+
+  const renderRoleBadges = (player: SquadPlayer) => {
+    const badges: Array<{ label: string; bg: string; text?: string }> = [];
+
+    const roleIcon = getRoleIcon(player.role);
+    if (roleIcon) badges.push({ label: roleIcon, bg: "bg-[#800000]", text: "text-white" });
+    if (player.isFreeKickTaker) badges.push({ label: "FK", bg: "bg-[#800000]", text: "text-white" });
+    if (player.isPenaltyTaker) badges.push({ label: "PK", bg: "bg-[#800000]", text: "text-white" });
+
+    if (!badges.length) return null;
+
+    return (
+      <div className="absolute -top-2 -right-2 flex gap-1 z-10">
+        {badges.map((badge, idx) => (
+          <div
+            key={`${badge.label}-${idx}`}
+            className={`w-6 h-6 rounded-full ${badge.bg} flex items-center justify-center shadow-md`}
+          >
+            <span className={`text-[10px] font-semibold ${badge.text ?? "text-gray-900"}`}>
+              {badge.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const getPlayerDisplayName = (player: SquadPlayer) => {
@@ -195,14 +221,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                       </div>
                     </div>
 
-                    {/* Role indicator */}
-                    {player.role && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center shadow-md z-10">
-                        <span className="text-[10px] text-gray-900">
-                          {getRoleIcon(player.role)}
-                        </span>
-                      </div>
-                    )}
+                    {renderRoleBadges(player)}
                   </div>
 
                   {/* Role menu button */}

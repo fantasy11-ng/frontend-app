@@ -10,6 +10,8 @@ interface PlayerDetailsModalProps {
   player: Player | null;
   onSendToBench?: () => void;
   onAssignRole?: (role: PlayerRole) => void;
+  onTogglePenalty?: () => void;
+  onToggleFreeKick?: () => void;
   isOnBench?: boolean;
 }
 
@@ -19,6 +21,8 @@ const PlayerDetailsModal: React.FC<PlayerDetailsModalProps> = ({
   player,
   onSendToBench,
   onAssignRole,
+  onTogglePenalty,
+  onToggleFreeKick,
   isOnBench = false,
 }) => {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -170,18 +174,28 @@ const PlayerDetailsModal: React.FC<PlayerDetailsModalProps> = ({
                   >
                     Set as Vice Captain
                   </button>
-                  <button
-                    onClick={() => handleRoleSelect('free-kick-taker')}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Set as Free Kick Taker
-                  </button>
-                  <button
-                    onClick={() => handleRoleSelect('penalty-taker')}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Set as Penalty Kick Taker
-                  </button>
+                  {onToggleFreeKick && (
+                    <button
+                      onClick={() => {
+                        onToggleFreeKick();
+                        setShowRoleDropdown(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Toggle Free Kick Taker
+                    </button>
+                  )}
+                  {onTogglePenalty && (
+                    <button
+                      onClick={() => {
+                        onTogglePenalty();
+                        setShowRoleDropdown(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      Toggle Penalty Kick Taker
+                    </button>
+                  )}
                 </div>
               </div>
             )}

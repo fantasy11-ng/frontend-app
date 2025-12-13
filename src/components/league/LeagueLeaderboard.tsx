@@ -187,10 +187,10 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
         <div className="bg-white rounded-2xl shadow-sm border border-[#F1F2F4] p-6">
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-[#070A11] mb-1">
-              Global Leaderboard
+              Leaderboard
             </h2>
             <p className="text-sm text-[#656E81]">
-              Fantasy Global League - {members.length} teams
+              Fantasy League - {members.length} teams
             </p>
           </div>
 

@@ -81,8 +81,6 @@ export default function TeamPage() {
     const role: PlayerRole =
       sp.isCaptain ? 'captain' :
       sp.isViceCaptain ? 'vice-captain' :
-      sp.isPenaltyTaker ? 'penalty-taker' :
-      sp.isFreeKickTaker ? 'free-kick-taker' :
       null;
 
     return {
@@ -101,6 +99,8 @@ export default function TeamPage() {
       onBench: !sp.isStarting,
       squadPosition: sp.isStarting ? 'starting' : 'bench',
       role,
+      isPenaltyTaker: Boolean(sp.isPenaltyTaker),
+      isFreeKickTaker: Boolean(sp.isFreeKickTaker),
     };
   };
 

@@ -10,6 +10,8 @@ interface PlayerRoleMenuProps {
   onClose: () => void;
   onSendToBench?: () => void;
   onAssignRole?: (role: PlayerRole) => void;
+  onTogglePenalty?: () => void;
+  onToggleFreeKick?: () => void;
 }
 
 const PlayerRoleMenu: React.FC<PlayerRoleMenuProps> = ({
@@ -18,6 +20,8 @@ const PlayerRoleMenu: React.FC<PlayerRoleMenuProps> = ({
   onClose,
   onSendToBench,
   onAssignRole,
+  onTogglePenalty,
+  onToggleFreeKick,
 }) => {
   if (!isOpen) return null;
 
@@ -72,18 +76,28 @@ const PlayerRoleMenu: React.FC<PlayerRoleMenuProps> = ({
           >
             Set as Vice Captain
           </button>
-          <button
-            onClick={() => handleRoleSelect('free-kick-taker')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-          >
-            Set as Free Kick Taker
-          </button>
-          <button
-            onClick={() => handleRoleSelect('penalty-taker')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-          >
-            Set as Penalty Kick Taker
-          </button>
+          {onTogglePenalty && (
+            <button
+              onClick={() => {
+                onTogglePenalty();
+                onClose();
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            >
+              Toggle Penalty Taker
+            </button>
+          )}
+          {onToggleFreeKick && (
+            <button
+              onClick={() => {
+                onToggleFreeKick();
+                onClose();
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            >
+              Toggle Free Kick Taker
+            </button>
+          )}
         </div>
       </div>
     </>

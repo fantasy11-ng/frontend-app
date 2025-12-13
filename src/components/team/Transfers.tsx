@@ -1,27 +1,47 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Search, ArrowRight, ArrowLeft, X } from 'lucide-react';
 import { Player } from '@/types/team';
 
 interface TransfersProps {
   squadPlayers: Player[];
   availablePlayers: Player[];
   budget: number;
+  pendingOut?: Player | null;
+  onClearPendingOut?: () => void;
   onTransferIn: (player: Player) => void;
   onTransferOut: (player: Player) => void;
+  transfersUsed?: number;
+  transferLimit?: number;
+  isLoadingAvailable?: boolean;
+  onLoadMoreAvailable?: () => void;
+  onSearchAvailable?: (term: string) => void;
+  pendingQueue?: Array<{ out: Player; in?: Player }>;
+  onConfirmQueue?: () => void;
 }
 
 const Transfers: React.FC<TransfersProps> = ({
   squadPlayers,
   availablePlayers,
   budget,
+  pendingOut,
+  onClearPendingOut,
   onTransferIn,
   onTransferOut,
+  transfersUsed = 0,
+  transferLimit = 4,
+  isLoadingAvailable = false,
+  onLoadMoreAvailable,
+  onSearchAvailable,
+  pendingQueue = [],
+  onConfirmQueue,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPosition, setSelectedPosition] = useState<string>('All');
   const [selectedCountry, setSelectedCountry] = useState<string>('All');
+
+  const limitReached = transfersUsed >= transferLimit;
 
   const positions: (Player['position'] | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'FWD'];
 
@@ -71,13 +91,40 @@ const Transfers: React.FC<TransfersProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Budget Display */}
+      {/* Budget & Pending */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600">Remaining Budget:</span>
-          <span className={`text-lg font-semibold ${getRemainingBudget() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {formatPrice(getRemainingBudget())}
-          </span>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center justify-between sm:justify-start sm:gap-3">
+            <span className="text-gray-600">Remaining Budget:</span>
+            <span className={`text-lg font-semibold ${getRemainingBudget() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatPrice(getRemainingBudget())}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            {pendingOut ? (
+              <div className="flex items-center gap-2 bg-yellow-50 border border-yellow-200 rounded-full px-3 py-1">
+                <span className="text-xs text-gray-800">
+                  Pending out: {pendingOut.name} ({pendingOut.position})
+                </span>
+                <button
+                  onClick={onClearPendingOut}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Clear pending transfer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs text-gray-500">Select a squad player to transfer out</span>
+            )}
+
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-gray-600">Transfers left this gameweek:</span>
+              <span className={`font-semibold ${limitReached ? 'text-red-600' : 'text-green-600'}`}>
+                {Math.max(transferLimit - transfersUsed, 0)} / {transferLimit}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -89,7 +136,10 @@ const Transfers: React.FC<TransfersProps> = ({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                onSearchAvailable?.(e.target.value);
+              }}
               placeholder="Search players or teams..."
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             />
@@ -146,7 +196,7 @@ const Transfers: React.FC<TransfersProps> = ({
                   <button
                     onClick={() => onTransferOut(player)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Transfer out"
+                    title="Mark for transfer out"
                   >
                     <ArrowRight className="w-5 h-5" />
                   </button>
@@ -158,7 +208,10 @@ const Transfers: React.FC<TransfersProps> = ({
 
         {/* Available Players */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Available Players</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-semibold text-gray-900">Available Players</h3>
+            {isLoadingAvailable && <span className="text-xs text-gray-500">Loading...</span>}
+          </div>
           {filteredAvailablePlayers.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No players available</p>
@@ -166,12 +219,13 @@ const Transfers: React.FC<TransfersProps> = ({
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {filteredAvailablePlayers.map((player) => {
-                const canAfford = getRemainingBudget() + (squadPlayers.find((p) => p.id === player.id)?.price || 0) >= player.price;
+                const canAfford = getRemainingBudget() + (pendingOut?.price || 0) >= player.price;
+                const positionAllowed = pendingOut ? pendingOut.position === player.position : true;
                 return (
                   <div
                     key={player.id}
                     className={`flex items-center justify-between p-3 border rounded-lg ${
-                      canAfford
+                      canAfford && positionAllowed && !limitReached
                         ? 'border-gray-200 hover:bg-gray-50'
                         : 'border-red-200 bg-red-50 opacity-60'
                     }`}
@@ -184,23 +238,57 @@ const Transfers: React.FC<TransfersProps> = ({
                     </div>
                     <button
                       onClick={() => onTransferIn(player)}
-                      disabled={!canAfford}
+                      disabled={!canAfford || !positionAllowed || !pendingOut || limitReached}
                       className={`p-2 rounded-lg transition-colors ${
-                        canAfford
+                        canAfford && positionAllowed && pendingOut && !limitReached
                           ? 'text-green-600 hover:bg-green-50'
                           : 'text-gray-400 cursor-not-allowed'
                       }`}
-                      title={canAfford ? 'Transfer in' : 'Insufficient budget'}
+                      title={
+                        limitReached
+                          ? 'Transfer limit reached'
+                          : !pendingOut
+                            ? 'Select a player to transfer out first'
+                            : !positionAllowed
+                              ? 'Must match position of player out'
+                              : 'Insufficient budget'
+                      }
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </button>
                   </div>
                 );
               })}
+              {onLoadMoreAvailable && (
+                <div className="flex justify-center pt-2">
+                  <button
+                    onClick={onLoadMoreAvailable}
+                    disabled={isLoadingAvailable}
+                    className="text-xs px-3 py-1 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  >
+                    {isLoadingAvailable ? 'Loading...' : 'Load more'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Pending batch summary */}
+      {pendingQueue && pendingQueue.length > 0 && onConfirmQueue && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Pending batch transfers: {pendingQueue.length} (max {transferLimit - transfersUsed} remaining)
+          </div>
+          <button
+            onClick={onConfirmQueue}
+            className="px-4 py-2 rounded-full bg-[#4AA96C] text-white text-sm font-semibold hover:bg-[#3c8b58] transition-colors"
+          >
+            Confirm Transfers
+          </button>
+        </div>
+      )}
     </div>
   );
 };

@@ -12,57 +12,28 @@ interface LeagueDetails {
 interface JoinLeagueModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onJoinLeague: (code: string) => void;
+  onJoinLeague: (code: string) => Promise<void> | void;
   leagueDetails?: LeagueDetails | null;
+  isSubmitting?: boolean;
+  errorMessage?: string | null;
 }
 
 const JoinLeagueModal: React.FC<JoinLeagueModalProps> = ({
   isOpen,
   onClose,
   onJoinLeague,
-  leagueDetails: initialLeagueDetails,
+  isSubmitting = false,
+  errorMessage,
 }) => {
   const [invitationCode, setInvitationCode] = useState('');
-  const [leagueDetails, setLeagueDetails] = useState<LeagueDetails | null>(initialLeagueDetails || null);
 
-  // Simulate fetching league details when code is entered
-  React.useEffect(() => {
-    if (invitationCode.length >= 10) {
-      // Simulate API call - in real app, this would be an actual API call
-      // For demo, show details if code matches a pattern
-      if (invitationCode.startsWith('FL11-')) {
-        setLeagueDetails({
-          name: 'Lion Champs',
-          members: '12/50',
-          admin: 'Ahmed Hassan',
-        });
-      } else {
-        setLeagueDetails(null);
-      }
-    } else {
-      setLeagueDetails(null);
-    }
-  }, [invitationCode]);
 
-  React.useEffect(() => {
-    if (initialLeagueDetails) {
-      setLeagueDetails(initialLeagueDetails);
-    }
-  }, [initialLeagueDetails]);
-
-  // Reset form when modal closes
-  React.useEffect(() => {
-    if (!isOpen) {
-      setInvitationCode('');
-      setLeagueDetails(null);
-    }
-  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (invitationCode.trim()) {
-      onJoinLeague(invitationCode);
+      await onJoinLeague(invitationCode);
     }
   };
 
@@ -101,24 +72,12 @@ const JoinLeagueModal: React.FC<JoinLeagueModalProps> = ({
             />
           </div>
 
-          {/* League Details */}
-          {leagueDetails && (
-            <div className="pt-2">
-              <h3 className="font-semibold text-gray-900 mb-3">League Details</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">League Name:</span>
-                  <span className="font-medium text-gray-900">{leagueDetails.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Members:</span>
-                  <span className="font-medium text-gray-900">{leagueDetails.members}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Admin:</span>
-                  <span className="font-medium text-gray-900">{leagueDetails.admin}</span>
-                </div>
-              </div>
+
+
+          {/* Error */}
+          {errorMessage && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {errorMessage}
             </div>
           )}
 
@@ -132,14 +91,14 @@ const JoinLeagueModal: React.FC<JoinLeagueModalProps> = ({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!invitationCode.trim()}
+              disabled={!invitationCode.trim() || isSubmitting}
               className={`flex-1 py-3 rounded-lg font-semibold text-white transition-colors ${
-                invitationCode.trim()
+                invitationCode.trim() && !isSubmitting
                   ? 'bg-green-500 hover:bg-green-600'
                   : 'bg-gray-300 cursor-not-allowed'
               }`}
             >
-              Join League
+              {isSubmitting ? 'Joining...' : 'Join League'}
             </button>
           </div>
         </div>

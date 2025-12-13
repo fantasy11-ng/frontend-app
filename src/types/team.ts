@@ -29,7 +29,7 @@ export interface Fixture {
 }
 
 export type PlayerPosition = 'GK' | 'DEF' | 'MID' | 'FWD';
-export type PlayerRole = 'captain' | 'vice-captain' | 'free-kick-taker' | 'penalty-taker' | null;
+export type PlayerRole = 'captain' | 'vice-captain' | null;
 
 export interface Player {
   id: string;
@@ -55,6 +55,8 @@ export interface Player {
   inStarting11?: boolean;
   onBench?: boolean;
   role?: PlayerRole;
+  isPenaltyTaker?: boolean;
+  isFreeKickTaker?: boolean;
 }
 
 export interface SquadPlayer extends Player {
