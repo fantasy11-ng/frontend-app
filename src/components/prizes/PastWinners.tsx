@@ -8,9 +8,9 @@ interface PastWinner {
   id: string;
   rank: number;
   name: string;
-  accuracy: number;
+  teamName: string;
   points: number;
-  prize: string;
+  prize?: string;
 }
 
 interface WinnerEvent {
@@ -32,42 +32,74 @@ export default function PastWinners() {
     {
       id: '1',
       rank: 1,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
+      name: 'Sammy',
+      teamName: "Desert Fox",
+      points: 283,
+      prize: 'Winner'
     },
     {
       id: '2',
       rank: 2,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
+      name: 'Mubby Fc',
+      teamName: "Black Angels",
+      points: 182,
+      prize: 'Runner Up'
     },
     {
       id: '3',
       rank: 3,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
+      name: 'Esther FC',
+      teamName: "Desert Fox",
+      points: 161,
     },
     {
       id: '4',
       rank: 4,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
+      name: 'Aaron united',
+      teamName: "Golden Eagles",
+      points: 147,
     },
     {
       id: '5',
       rank: 5,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
+      name: 'Testown city',
+      teamName: "Golden Eagles",
+      points: 144,
+    },
+    {
+      id: '6',
+      rank: 6,
+      name: 'Damolalar',
+      teamName: "Golden Eagles",
+      points: 139,
+    },
+    {
+      id: '7',
+      rank: 7,
+      name: 'Phlexybull fc',
+      teamName: "Golden Eagles",
+      points: 139,
+    },
+    {
+      id: '8',
+      rank: 8,
+      name: 'Adedayo10',
+      teamName: "Golden Eagles",
+      points: 131,
+    },
+    {
+      id: '9',
+      rank: 9,
+      name: 'Dgreatgiants',
+      teamName: "Golden Eagles",
+      points: 130,
+    },
+    {
+      id: '10',
+      rank: 10,
+      name: 'SMG',
+      teamName: "Golden Eagles",
+      points: 128,
     }
   ];
 
@@ -80,12 +112,12 @@ export default function PastWinners() {
       photos: [
         {
           id: 'fifa2022-1',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764274554/Image_Container_kqd6mo.png',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/fifaWinner01_axxcnv.jpg',
           alt: 'FIFA 2022 Winner - Photo 1'
         },
         {
           id: 'fifa2022-2',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764274554/Image_Container_1_m97wo9.png',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/fifaWinner02_j0llfo.jpg',
           alt: 'FIFA 2022 Winner - Photo 2'
         }
       ]
@@ -96,14 +128,19 @@ export default function PastWinners() {
       year: '2021',
       photos: [
         {
-          id: 'afcon2021-1',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764274554/Image_Container_kqd6mo.png',
-          alt: 'AFCON 2021 Winner - Photo 1'
+          id: 'afcon2021-2',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/afconWinner02_asus6y.jpg',
+          alt: 'AFCON 2021 Winner - Photo 2'
         },
         {
-          id: 'afcon2021-2',
-          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1764274554/Image_Container_1_m97wo9.png',
-          alt: 'AFCON 2021 Winner - Photo 2'
+          id: 'afcon2021-3',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1765017217/afconWinner03_ilyjm7.jpg',
+          alt: 'AFCON 2021 Winner - Photo 3'
+        },
+        {
+          id: 'afcon2021-3',
+          image: 'https://res.cloudinary.com/dmfsyau8s/image/upload/v1765017217/afconWinner02_q6m1ay.jpg',
+        alt: 'AFCON 2021 Winner - Photo 4'
         }
       ]
     }
@@ -127,20 +164,28 @@ export default function PastWinners() {
   const currentWinners = pastWinners.slice(startIndex, endIndex);
 
   return (
-    <section>
-      <h2 className="text-3xl font-bold text-gray-900 mb-8">Past Winners</h2>
+    <section className="space-y-10">
+      <div>
+        <h2 className="text-[32px] font-semibold text-[#070A11]">
+          Past Winners
+        </h2>
+        <p className="mt-2 text-sm text-[#656E81]">
+          A look back at Fantasy11 champions from recent tournaments.
+        </p>
+      </div>
 
       {/* Winner Photo Carousels - Side by Side */}
-      <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <div className="mb-4">
+        <div
+          className="mx-auto flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:max-w-5xl sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:pb-0 sm:snap-none [&::-webkit-scrollbar]:hidden"
+        >
           {winnerEvents.map((event) => (
-            <div key={event.id}>
-              <WinnerCarousel
-                title={event.title}
-                photos={event.photos}
-                year={event.year}
-              />
-            </div>
+            <WinnerCarousel
+              key={event.id}
+              title={event.title}
+              photos={event.photos}
+              year={event.year}
+            />
           ))}
         </div>
       </div>
@@ -153,11 +198,11 @@ export default function PastWinners() {
               key={winner.id}
               className="p-6 hover:bg-gray-50 transition-colors"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex md:items-center justify-between flex-col md:flex-row gap-4">
                 {/* Left: Rank Indicator and Winner Info */}
                 <div className="flex items-center space-x-4">
                   {/* Rank Badge */}
-                  <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 bg-[#800000] rounded-full flex items-center justify-center flex-shrink-0">
                     {winner.rank === 1 ? (
                       <span className="text-white text-xl">👑</span>
                     ) : (
@@ -167,24 +212,28 @@ export default function PastWinners() {
 
                   {/* Winner Details */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    <h3 className="text-sm text-[#070A11] mb-1">
                       {winner.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      {winner.accuracy}% accuracy – {winner.points} points
+                    <p className="text-xs text-[#656E81]">
+                      {winner.points} points
                     </p>
                   </div>
                 </div>
 
                 {/* Right: Prize Badge */}
-                <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+                <div className="bg-[#F5EBEB] text-[#800000] px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap">
                   {winner.rank === 1 && '1st Place'}
                   {winner.rank === 2 && '2nd Place'}
                   {winner.rank === 3 && '3rd Place'}
                   {winner.rank === 4 && '4th Place'}
                   {winner.rank === 5 && '5th Place'}
-                  {' – '}
-                  {winner.prize}
+                  {winner.rank === 6 && '6th Place'}
+                  {winner.rank === 7 && '7th Place'}
+                  {winner.rank === 8 && '8th Place'}
+                  {winner.rank === 9 && '9th Place'}
+                  {winner.rank === 10 && '10th Place'}
+                  {winner.prize && ' – ' + winner.prize}
                 </div>
               </div>
             </div>
@@ -193,7 +242,7 @@ export default function PastWinners() {
 
         {/* Pagination */}
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 hidden md:block">
             Showing {startIndex + 1} to {Math.min(endIndex, pastWinners.length)} of {pastWinners.length}
           </div>
           <div className="flex items-center space-x-4">

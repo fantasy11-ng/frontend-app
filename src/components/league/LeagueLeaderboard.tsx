@@ -1,9 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Search, ChevronLeft, ChevronRight, Crown } from 'lucide-react';
-import Image from 'next/image';
-import { LeagueMember, LeagueStats } from '@/types/league';
+import React, { useMemo, useState } from "react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  ChevronDown,
+  Crown,
+} from "lucide-react";
+import Image from "next/image";
+import { LeagueMember, LeagueStats } from "@/types/league";
 
 interface LeagueLeaderboardProps {
   leagueName: string;
@@ -12,144 +19,259 @@ interface LeagueLeaderboardProps {
   onLeaveLeague: () => void;
 }
 
+const statIcons = {
+  rank: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
+  points:
+    "https://res.cloudinary.com/dmfsyau8s/image/upload/v1765286001/star_gnslsb.png",
+  budget:
+    "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764597186/wallet-2_eawcda.png",
+};
+
+const positionOptions = ["All Positions"];
+const countryOptions = ["All Countries"];
+const pointsOptions = ["Points", "Goals", "Assists", "Cards"];
+
 const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
   leagueName,
   stats,
   members,
   onLeaveLeague,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [positionFilter, setPositionFilter] = useState<string>('all');
-  const [countryFilter, setCountryFilter] = useState<string>('all');
-  const [pointsFilter, setPointsFilter] = useState<string>('points');
+  const [selectedPosition, setSelectedPosition] =
+    useState<string>("All Positions");
+  const [selectedCountry, setSelectedCountry] =
+    useState<string>("All Countries");
+  const [pointsFilter, setPointsFilter] = useState<string>("Points");
 
   const itemsPerPage = 10;
   const totalPages = Math.ceil(members.length / itemsPerPage);
 
-  const filteredMembers = members.filter((member) => {
-    const matchesSearch =
-      member.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      member.manager.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  const statCards = useMemo(
+    () => [
+      {
+        label: "Global Rank",
+        value: `#${stats.globalRank}`,
+        icon: statIcons.rank,
+      },
+      {
+        label: "Total Points",
+        value: stats.totalPoints.toLocaleString(),
+        icon: statIcons.points,
+      },
+      {
+        label: "Budget Left",
+        value: stats.budgetLeft,
+        icon: statIcons.budget,
+      },
+    ],
+    [stats]
+  );
+
+  const filteredMembers = useMemo(() => {
+    const matches = members.filter((member) => {
+      const matchesSearch =
+        member.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        member.manager.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+
+    const sorted = [...matches].sort((a, b) => {
+      switch (pointsFilter) {
+        case "Goals":
+          return b.goals - a.goals;
+        case "Assists":
+          return b.assists - a.assists;
+        case "Cards":
+          return b.cards - a.cards;
+        case "Points":
+        default:
+          return b.totalPoints - a.totalPoints;
+      }
+    });
+
+    return sorted;
+  }, [members, pointsFilter, searchQuery]);
 
   const paginatedMembers = filteredMembers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  const getRankIcon = (rank: number) => {
-    if (rank <= 3) {
+  const clearSearch = () => {
+    setSearchQuery("");
+  };
+
+  const renderRankBadge = (rank: number) => {
+    const isTopThree = rank <= 3;
+    const baseClasses =
+      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold";
+
+    if (isTopThree) {
+      const colors = ["bg-[#800000]", "bg-[#A23B3B]", "bg-[#C25C5C]"];
       return (
-        <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white font-bold text-sm">
+        <div
+          className={`${baseClasses} text-white ${
+            colors[rank - 1] ?? colors[2]
+          }`}
+        >
           {rank}
         </div>
       );
     }
+
     return (
-      <div className="w-8 h-8 flex items-center justify-center">
-        <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center">
-          <Crown className="w-4 h-4 text-white" />
-        </div>
+      <div
+        className={`${baseClasses} bg-[#F5EBEB] text-[#800000] border border-[#F1F2F4]`}
+      >
+        <Crown className="w-4 h-4" />
       </div>
     );
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto px-4 py-8">
+      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">League - {leagueName}</h1>
+        <div className="flex items-start justify-between gap-3 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 h-8 w-8 rounded-full bg-[#800000] text-white flex items-center justify-center text-xs font-semibold">
+              {leagueName.slice(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <h1 className="text-2xl font-medium text-[#070A11] leading-tight">
+                {leagueName}
+              </h1>
+            </div>
+          </div>
           <button
             onClick={onLeaveLeague}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+            className="rounded-full h-6 bg-[#4AA96C] px-5 text-sm font-semibold text-white transition hover:bg-[#3c8b58]"
           >
             Leave League
           </button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-6 border border-pink-200">
-            <div className="flex items-center space-x-3 mb-2">
-              <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Trophy" width={24} height={24} className="w-6 h-6" />
-              <span className="text-sm font-medium text-gray-700">Global Rank</span>
-            </div>
-            <div className="text-3xl font-bold text-red-500">#{stats.globalRank}</div>
-          </div>
-
-          <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-6 border border-pink-200">
-            <div className="flex items-center space-x-3 mb-2">
-              <div className="w-6 h-6 flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+        <div className="mb-8">
+          <div className="flex gap-8 overflow-x-auto pb-3 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            {statCards.map((card) => (
+              <div
+                key={card.label}
+                className="border border-[#F1F2F4] p-2 rounded-2xl w-[432px]"
+              >
+                <div className="flex items-center gap-3 p-3">
+                  <Image
+                    src={card.icon}
+                    alt={card.label}
+                    width={24}
+                    height={24}
+                    className="h-6 w-6"
+                  />
+                  <span className="text-sm text-[#656E81]">{card.label}</span>
+                </div>
+                <div className="relative min-w-[280px] max-w-[420px] flex-1 overflow-hidden rounded-2xl bg-gradient-to-br from-[#F5EBEB] via-white to-[#F5EBEB] shadow-sm">
+                  <div className="relative flex items-center justify-between px-5 py-6">
+                    <span className="text-3xl font-medium text-[#800000]">
+                      {card.value}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <span className="text-sm font-medium text-gray-700">Total Points</span>
-            </div>
-            <div className="text-3xl font-bold text-red-500">{stats.totalPoints.toLocaleString()}</div>
-          </div>
-
-          <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-lg p-6 border border-pink-200">
-            <div className="flex items-center space-x-3 mb-2">
-              <div className="w-6 h-6 flex items-center justify-center">
-                <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span className="text-sm font-medium text-gray-700">Budget Left</span>
-            </div>
-            <div className="text-3xl font-bold text-red-500">{stats.budgetLeft}</div>
+            ))}
           </div>
         </div>
 
         {/* Leaderboard Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-[#F1F2F4] p-6">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-1">Global Leaderboard</h2>
-            <p className="text-sm text-gray-600">Fantasy Global League - {members.length} teams</p>
+            <h2 className="text-2xl font-semibold text-[#070A11] mb-1">
+              Leaderboard
+            </h2>
+            <p className="text-sm text-[#656E81]">
+              Fantasy League - {members.length} teams
+            </p>
           </div>
 
           {/* Search and Filters */}
-          <div className="mb-6 space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search players or teams..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                />
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between mb-6">
+            <div className="relative w-full lg:max-w-md">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A0A6B1]" />
+              <input
+                type="text"
+                placeholder="Search players or teams..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full rounded-lg border border-[#D4D7DD] bg-white py-2.5 pl-11 pr-11 text-sm text-[#070A11] placeholder:text-[#A0A6B1] focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A0A6B1] hover:text-[#070A11]"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex w-full flex-wrap gap-2 sm:flex-row sm:justify-end sm:gap-3">
+              <div className="relative w-full sm:w-40">
+                <select
+                  value={selectedPosition}
+                  onChange={(e) => {
+                    setSelectedPosition(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full appearance-none rounded-lg border border-[#D4D7DD] bg-white py-2.5 pl-4 pr-10 text-sm text-[#070A11] focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
+                >
+                  {positionOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C8395]" />
               </div>
-              <div className="flex gap-2">
+
+              <div className="relative w-full sm:w-40">
                 <select
-                  value={positionFilter}
-                  onChange={(e) => setPositionFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                  value={selectedCountry}
+                  onChange={(e) => {
+                    setSelectedCountry(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full appearance-none rounded-lg border border-[#D4D7DD] bg-white py-2.5 pl-4 pr-10 text-sm text-[#070A11] focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
                 >
-                  <option value="all">Position</option>
+                  {countryOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C8395]" />
+              </div>
+
+              <div className="relative w-full sm:w-40">
                 <select
-                  value={countryFilter}
-                  onChange={(e) => setCountryFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
-                >
-                  <option value="all">Country</option>
-                </select>
-                <select
+                  aria-label="Sort by"
                   value={pointsFilter}
-                  onChange={(e) => setPointsFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                  onChange={(e) => {
+                    setPointsFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full appearance-none rounded-lg border border-[#D4D7DD] bg-white py-2.5 pl-4 pr-10 text-sm text-[#070A11] focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
                 >
-                  <option value="points">Points</option>
-                  <option value="goals">Goals</option>
-                  <option value="assists">Assists</option>
-                  <option value="cards">Cards</option>
+                  {pointsOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
                 </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7C8395]" />
               </div>
             </div>
           </div>
@@ -157,48 +279,77 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Rank</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Team</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Manager</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Total Points</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Match Day Points</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Budget</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Cleansheet</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Goals</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Assists</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Cards</th>
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Rank
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Team
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Manager
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Total Points
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Match Day Points
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Budget
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Cleansheet
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Goals
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Assists
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
+                    Cards
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {paginatedMembers.map((member, index) => (
-                  <tr 
-                    key={member.id} 
-                    className={`border-b border-gray-100 hover:bg-gray-50 ${
-                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                    }`}
-                  >
-                    <td className="py-4 px-4">
-                      {getRankIcon(member.rank)}
+              <tbody className="divide-y divide-[#F1F2F4]">
+                {paginatedMembers.map((member) => (
+                  <tr key={member.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {renderRankBadge(member.rank)}
                     </td>
-                    <td className="py-4 px-4 text-sm font-medium text-gray-900">{member.team}</td>
-                    <td className="py-4 px-4 text-sm text-gray-600">{member.manager}</td>
-                    <td className="py-4 px-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[#070A11]">
+                      {member.team}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-[#656E81]">
+                      {member.manager}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#F5EBEB] text-sm font-medium text-[#800000]">
                         {member.totalPoints}
                       </span>
                     </td>
-                    <td className="py-4 px-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#F1F2F4] text-sm font-medium text-[#070A11]">
                         {member.matchDayPoints}
                       </span>
                     </td>
-                    <td className="py-4 px-4 text-sm text-gray-900">{member.budget}</td>
-                    <td className="py-4 px-4 text-sm text-gray-900">{member.cleansheet}</td>
-                    <td className="py-4 px-4 text-sm text-red-600 font-medium">{member.goals}</td>
-                    <td className="py-4 px-4 text-sm text-blue-600 font-medium">{member.assists}</td>
-                    <td className="py-4 px-4 text-sm text-green-600 font-medium">{member.cards}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-[#070A11]">
+                      {member.budget}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-[#070A11]">
+                      {member.cleansheet}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[#FE5E41]">
+                      {member.goals}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[#4961B9]">
+                      {member.assists}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[#0EC76A]">
+                      {member.cards}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -206,26 +357,30 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-            <div className="text-sm text-gray-600">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredMembers.length)} of {filteredMembers.length} teams
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-6 pt-4 border-t border-[#F1F2F4]">
+            <div className="text-sm text-[#656E81]">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, filteredMembers.length)} of{" "}
+              {filteredMembers.length} teams
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                className="px-4 py-2 text-sm font-medium text-[#070A11] bg-white border border-[#D4D7DD] rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous</span>
               </button>
-              <span className="px-4 py-2 text-sm text-gray-700">
+              <span className="px-4 py-2 text-sm text-[#070A11]">
                 Page {currentPage} of {totalPages}
               </span>
               <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage === totalPages}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                className="px-4 py-2 text-sm font-medium text-[#070A11] bg-white border border-[#D4D7DD] rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
                 <span>Next</span>
                 <ChevronRight className="w-4 h-4" />
@@ -239,4 +394,3 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
 };
 
 export default LeagueLeaderboard;
-

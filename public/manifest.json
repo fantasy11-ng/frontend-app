@@ -1,0 +1,22 @@
+{
+  "name": "Fantasy11",
+  "short_name": "Fantasy11",
+  "description": "Fantasy11 is the ultimate fantasy sports platform for football fans. Create teams, join contests, track live scores and compete for prizes.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff0000",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
+

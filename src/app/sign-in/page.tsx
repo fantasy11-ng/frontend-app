@@ -13,7 +13,7 @@ export default function SignInPage() {
   const { signin, isLoading } = useAuth();
   const googleOAuth = useGoogleOAuth();
   // const facebookOAuth = useFacebookOAuth();
-  const [email, setEmail] = useState('feyisayo@blklabs.co');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState('');

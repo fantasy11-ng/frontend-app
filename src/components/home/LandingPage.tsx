@@ -11,13 +11,20 @@ const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
-  if (diffInSeconds < 60) return 'Just now';
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-  
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 3600)
+    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400)
+    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
 
 const formatReadingTime = (minutes: number): string => {
@@ -26,7 +33,7 @@ const formatReadingTime = (minutes: number): string => {
 
 export default function LandingPage() {
   // Fetch latest news posts
-  const { data: newsData } = useBlogPosts({ status: 'published', limit: 3 });
+  const { data: newsData } = useBlogPosts({ status: "published", limit: 3 });
   const newsArticles = newsData?.items || [];
 
   return (
@@ -42,7 +49,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-black/10"></div>
 
         <div className="relative min-h-screen flex flex-col">
-          <div className="flex-1 flex flex-col justify-end max-w-[1440px] mx-auto px-4 py-24 sm:py-32">
+          <div className="flex-1 flex flex-col justify-end max-w-[1440px] mx-auto py-24 sm:py-32">
             <div className="">
               <div className="flex items-start space-x-4 max-w-2xl mt-32 sm:mt-40 md:mt-48">
                 <div className="flex-shrink-0">
@@ -75,7 +82,7 @@ export default function LandingPage() {
       </section>
 
       <section id="features" className="py-20 bg-white">
-        <div className="max-w-[1440px] mx-auto px-4">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-5xl font-medium text-[#070A11] mb-4 max-w-[684px] mx-auto">
               We&apos;ve got all the tools you need to dominate AFCON 2025
@@ -84,8 +91,8 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 gap-12 lg:gap-16">
             {/* Feature 1 */}
-            <div className="space-y-6">
-              <div>
+            <div className="space-y-6 border border-[#F1F2F4] rounded-2xl">
+              <div className="px-4 py-2">
                 <div className="flex items-center space-x-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
@@ -98,25 +105,26 @@ export default function LandingPage() {
                   roles to maximize points.
                 </p>
                 <Link
-                  href="/sign-up"
-                  className="inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+                  href="/team"
+                  className="bg-[#4AA96C] text-sm inline-flex items-center px-3 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Build your team <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Container_fppxgt.png"
                   alt="Team Builder"
-                  width={500}
-                  height={300}
+                  width={758}
+                  height={384}
+                  className="object-contain w-full max-w-[758px] h-[384px]"
                 />
               </div>
             </div>
 
             {/* Feature 2 */}
-            <div className="space-y-6">
-              <div>
+            <div className="space-y-6 border border-[#F1F2F4] rounded-2xl md:max-w-[530px]">
+              <div className="px-4 py-2">
                 <div className="flex items-center space-x-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
@@ -129,18 +137,19 @@ export default function LandingPage() {
                   predictions and climb the prediction leaderboard.
                 </p>
                 <Link
-                  href="/sign-up"
-                  className="inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+                  href="/predictor"
+                  className="bg-[#4AA96C] text-sm inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Start predicting <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Frame_jygnal.png"
                   alt="Team Builder"
-                  width={500}
-                  height={300}
+                  width={530}
+                  height={360}
+                  className="object-contain w-full max-w-[530px] h-[360px]"
                 />
               </div>
             </div>
@@ -160,13 +169,13 @@ export default function LandingPage() {
                   compete for amazing prizes.
                 </p>
                 <Link
-                  href="/sign-up"
-                  className="inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+                  href="/league"
+                  className="bg-[#4AA96C] text-sm inline-flex items-center px-3 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Join a league <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Container_1_yivji1.png"
                   alt="Team Builder"
@@ -190,13 +199,13 @@ export default function LandingPage() {
                   points. Make informed transfer decisions.
                 </p>
                 <Link
-                  href="/sign-up"
-                  className="inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+                  href="/stats"
+                  className="bg-[#4AA96C] text-sm inline-flex items-center px-3 py-2 text-white font-medium rounded-full transition-colors"
                 >
-                  View all stats <ChevronRight className="w-4 h-4 ml-2" />
+                  See statistics <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267173/Background_ekx6eu.png"
                   alt="Team Builder"
@@ -210,11 +219,9 @@ export default function LandingPage() {
       </section>
 
       <section id="prizes" className="py-20 bg-[#1A0000] text-white">
-        <div className="max-w-[1440px] mx-auto px-4">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              $1M Prize Pool
-            </h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Play To Win</h2>
             <p className="text-xl text-red-200">
               Compete for incredible prizes throughout the tournament.
             </p>
@@ -236,20 +243,20 @@ export default function LandingPage() {
                 Ultimate Fantasy11 Champion
               </h3>
               <p className="text-3xl font-bold text-yellow-400 mb-4">
-                N1,000,000
+                Playstation 5
               </p>
               <ul className="text-left space-y-2 text-red-100">
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  AFCON 2025 VIP Experience
+                  EA Sports FC 26
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Trophy Collection
+                  Bluetooth Speakers
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Medal
+                  F11 merchandise (shirt, rug sack, and more)
                 </li>
               </ul>
             </div>
@@ -266,19 +273,19 @@ export default function LandingPage() {
                 />
               </div>
               <h3 className="text-2xl font-bold mb-2">Second Place Champion</h3>
-              <p className="text-3xl font-bold text-gray-300 mb-4">N750,000</p>
+              <p className="text-3xl font-bold text-gray-300 mb-4 invisible">.</p>
               <ul className="text-left space-y-2 text-red-100">
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  AFCON 2025 Premium Tickets
+                  EA Sports FC 26 (any platform)
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Signed Football
+                  Bluetooth Speakers
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Medal
+                  F11 merchandise (shirt, rug sack, and more)
                 </li>
               </ul>
             </div>
@@ -294,20 +301,16 @@ export default function LandingPage() {
                   className=""
                 />
               </div>
-              <h3 className="text-2xl font-bold mb-2">Third Place Champion</h3>
-              <p className="text-3xl font-bold text-amber-400 mb-4">N500,000</p>
+              <h3 className="text-2xl font-bold mb-2">Top 3 Predictor Winners</h3>
+              <p className="text-3xl font-bold text-amber-400 mb-4 invisible">.</p>
               <ul className="text-left space-y-2 text-red-100">
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  AFCON 2025 Standard Tickets
+                  EA Sports FC 26 (any platform)
                 </li>
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
-                  Team Merchandise
-                </li>
-                <li className="flex items-center">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Medal
+                  F11 merchandise (shirt, rug sack, and more)
                 </li>
               </ul>
             </div>
@@ -316,7 +319,7 @@ export default function LandingPage() {
       </section>
 
       <section className="py-20 bg-[#1A0000] text-white">
-        <div className="max-w-[1440px] mx-auto px-4">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold mb-2">
               AFCON News & Fantasy Tips
@@ -363,7 +366,9 @@ export default function LandingPage() {
                     <div className="flex items-center text-sm text-red-200">
                       <span>{formatDate(article.createdAt)}</span>
                       <span className="mx-2">•</span>
-                      <span>{formatReadingTime(article.readingTimeMinutes)}</span>
+                      <span>
+                        {formatReadingTime(article.readingTimeMinutes)}
+                      </span>
                     </div>
                   </div>
                 </Link>
@@ -423,7 +428,7 @@ export default function LandingPage() {
               {
                 question: "About the Prize Pool?",
                 answer:
-                  "We have a $1M prize pool with cash prizes, VIP experiences, tickets, and exclusive merchandise for top performers throughout the tournament.",
+                  "We have a prize pool with games, gadgets, and exclusive merchandise for top performers throughout the tournament.",
               },
               {
                 question: "How do I win?",
@@ -433,7 +438,7 @@ export default function LandingPage() {
             ].map((faq, index) => (
               <details
                 key={index}
-                className="bg-gray-50 rounded-lg p-6 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="bg-gray-50 rounded-lg p-6 cursor-pointer transition-colors"
               >
                 <summary className="font-semibold text-gray-900 text-lg list-none flex items-center justify-between">
                   <span>{faq.question}</span>
@@ -453,7 +458,7 @@ export default function LandingPage() {
           className="absolute inset-0 opacity-20 bg-cover bg-center"
           style={{ backgroundImage: "url(/images/home.png)" }}
         ></div>
-        <div className="relative max-w-[1440px] mx-auto px-4 text-left">
+        <div className="relative max-w-[1440px] mx-auto px-4 md:px-12 text-left">
           <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-9xl font-bold mb-6">
             Ready to Dominate?
           </h2>
@@ -482,7 +487,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="bg-gray-900 text-white py-8">
-        <div className="max-w-[1440px] mx-auto px-4">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
               <Link href="/" className="flex items-center">

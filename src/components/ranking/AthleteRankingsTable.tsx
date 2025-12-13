@@ -78,7 +78,7 @@ export default function AthleteRankingsTable({ rankings }: AthleteRankingsTableP
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-[#F1F2F4] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50">
@@ -95,7 +95,7 @@ export default function AthleteRankingsTable({ rankings }: AthleteRankingsTableP
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Points
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                 <button
                   onClick={() => handleSort('cleansheet')}
                   className="flex items-center justify-end space-x-1 hover:text-gray-700"
@@ -138,36 +138,36 @@ export default function AthleteRankingsTable({ rankings }: AthleteRankingsTableP
               <tr key={ranking.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   {ranking.rank <= 3 ? (
-                    <div className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center">
-                      <span className="text-white font-bold">{ranking.rank}</span>
+                    <div className="w-5 h-5 rounded-full bg-[#800000] flex items-center justify-center">
+                      <span className="text-white text-[10px] font-semibold">{ranking.rank}</span>
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-white" />
+                    <div className="w-5 h-5 rounded-full bg-[#800000] flex items-center justify-center">
+                      <Crown className="w-3 h-3 text-white" />
                     </div>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="font-semibold text-gray-900">{ranking.player}</div>
+                  <div className="text-[#070A11] text-sm">{ranking.player}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{ranking.country}</div>
+                  <div className="text-sm text-[#070A11]">{ranking.country}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold">
+                  <span className="px-3 py-1 bg-[#F5EBEB] text-[#800000] rounded-full text-sm">
                     {ranking.points}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-[#070A11]">
                   {ranking.cleansheet}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-red-600 font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-[#FE5E41]">
                   {ranking.goals}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-blue-600 font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-[#4961B9]">
                   {ranking.assists}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-green-600 font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-[#0EC76A]">
                   {ranking.cards}
                 </td>
               </tr>

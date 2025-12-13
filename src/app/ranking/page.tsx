@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import GlobalRankingsTable from '@/components/ranking/GlobalRankingsTable';
 import AthleteRankingsTable from '@/components/ranking/AthleteRankingsTable';
 import { GlobalRanking, AthleteRanking } from '@/types/ranking';
@@ -236,52 +238,70 @@ type TabType = 'global' | 'athlete';
 
 export default function RankingPage() {
   const [activeTab, setActiveTab] = useState<TabType>('global');
+  const ready = true;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Ranking</h1>
-        </div>
+    <>
+      {ready ? (
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-[1440px] mx-auto px-4 py-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Ranking</h1>
+            </div>
 
-        {/* Tabs */}
-        <div className="mb-8">
-          <div className="flex space-x-8 border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('global')}
-              className={`pb-4 px-1 text-sm font-medium transition-colors ${
-                activeTab === 'global'
-                  ? 'text-gray-900 border-b-2 border-green-500'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Global Rankings
-            </button>
-            <button
-              onClick={() => setActiveTab('athlete')}
-              className={`pb-4 px-1 text-sm font-medium transition-colors ${
-                activeTab === 'athlete'
-                  ? 'text-gray-900 border-b-2 border-green-500'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Athlete Rankings
-            </button>
+            <div className="mb-8">
+              <div className="flex space-x-8 border-b border-gray-200">
+                <button
+                  onClick={() => setActiveTab('global')}
+                  className={`pb-4 px-1 text-sm font-medium transition-colors ${
+                    activeTab === 'global'
+                      ? 'text-gray-900 border-b-2 border-green-500'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Global Rankings
+                </button>
+                <button
+                  onClick={() => setActiveTab('athlete')}
+                  className={`pb-4 px-1 text-sm font-medium transition-colors ${
+                    activeTab === 'athlete'
+                      ? 'text-gray-900 border-b-2 border-green-500'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  Athlete Rankings
+                </button>
+              </div>
+            </div>
+
+            <div>
+              {activeTab === 'global' && (
+                <GlobalRankingsTable rankings={mockGlobalRankings} />
+              )}
+              {activeTab === 'athlete' && (
+                <AthleteRankingsTable rankings={mockAthleteRankings} />
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Content */}
-        <div>
-          {activeTab === 'global' && (
-            <GlobalRankingsTable rankings={mockGlobalRankings} />
-          )}
-          {activeTab === 'athlete' && (
-            <AthleteRankingsTable rankings={mockAthleteRankings} />
-          )}
+      ) : (
+        <div className="h-screen flex justify-center items-center">
+          <div className="flex flex-col items-center justify-center">
+            <Image
+              src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/CominSoonBlue_b9r5cs.png"
+              alt="Coming Soon"
+              width={350}
+              height={350}
+            />
+            <Link
+              href="/predictor"
+              className="bg-[#4AA96C] text-sm inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+            >
+              Play Our Predictor Now
+            </Link>
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
-

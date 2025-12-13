@@ -74,7 +74,7 @@ export default function ArticlePage({
   if (error || !data?.post) {
     return (
       <div className="min-h-screen bg-[#FFFFFF]">
-        <div className="max-w-[1440px] mx-auto px-4 py-8">
+        <div className="max-w-[1440px] mx-auto px-4 md:px-12 py-8">
           <div className="mb-6">
             <Link
               href="/news"
@@ -101,7 +101,7 @@ export default function ArticlePage({
   return (
     <div className="min-h-screen bg-[#FFFFFF]">
       {/* Header Section with Title and Meta */}
-      <div className="max-w-[1440px] mx-auto px-4 pt-8">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-12 pt-8">
         <div className="mb-6 flex sm:flex-row flex-col sm:items-center justify-between">
           {/* Title and Featured Badge */}
           <div className="flex items-start justify-between mb-3">
@@ -158,7 +158,7 @@ export default function ArticlePage({
 
       {/* Full Width Cover Image */}
       {post.coverImageUrl && (
-        <div className="relative h-[450px] md:h-[558px] rounded-4xl w-full xl:max-w-[1400px] mx-auto mb-8">
+        <div className="relative h-[450px] md:h-[558px] rounded-4xl w-full max-w-[1344px] mx-auto mb-8">
           <Image
             fill
             src={post.coverImageUrl}
@@ -170,7 +170,7 @@ export default function ArticlePage({
       )}
 
       {/* Content Area */}
-      <div className="max-w-[1440px] mx-auto px-4 pb-8">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-12 pb-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Article Content */}
           <div className="flex-1 lg:max-w-[65%]">

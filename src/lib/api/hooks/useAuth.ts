@@ -90,8 +90,8 @@ export function useSignout() {
     onError: (error: unknown) => {
       const axiosError = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
       const errorMessage = axiosError?.response?.data?.message || axiosError?.message || 'Failed to sign out';
-      toast.error(errorMessage);
       tokenCookies.removeAll();
+      console.error(errorMessage);
     },
   });
 }

@@ -19,11 +19,11 @@ interface FinalsStageProps {
 }
 
 const determineWinnerName = (fixture: BracketSeedFixture | undefined, savedPred: BracketPrediction) => {
-  if (savedPred.predictedWinner?.name) {
+  if (savedPred?.predictedWinner?.name) {
     return savedPred.predictedWinner.name;
   }
 
-  if (fixture && savedPred.predictedWinnerTeamId) {
+  if (fixture && savedPred?.predictedWinnerTeamId) {
     if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
       return fixture.homeTeam.name;
     }
@@ -40,12 +40,12 @@ const getPredictedWinnerInfo = (
   savedPred: BracketPrediction
 ): BracketSeedTeam | null => {
   // If we have the predictedWinner object with full info, use it
-  if (savedPred.predictedWinner) {
+  if (savedPred?.predictedWinner) {
     return savedPred.predictedWinner;
   }
 
   // Otherwise, try to get it from the fixture using the team ID
-  if (fixture && savedPred.predictedWinnerTeamId) {
+  if (fixture && savedPred?.predictedWinnerTeamId) {
     if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
       return fixture.homeTeam;
     }
@@ -217,12 +217,12 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
   // Get predicted winner info (including logo) for third place match
   // This must be before any early returns to satisfy React hooks rules
   const thirdPlacePredictedWinner = useMemo(() => {
-    if (thirdPlaceSavedPredictions.length > 0 && thirdPlaceMatch) {
+    if (thirdPlaceSavedPredictions?.length > 0 && thirdPlaceMatch) {
       return getPredictedWinnerInfo(thirdPlaceMatch, thirdPlaceSavedPredictions[0]);
     }
-    if (thirdPlaceSavedPredictions.length > 0) {
+    if (thirdPlaceSavedPredictions?.length > 0) {
       // Even if we don't have the match fixture, we might have the predictedWinner object
-      return thirdPlaceSavedPredictions[0].predictedWinner || null;
+      return thirdPlaceSavedPredictions[0]?.predictedWinner || null;
     }
     return null;
   }, [thirdPlaceSavedPredictions, thirdPlaceMatch]);

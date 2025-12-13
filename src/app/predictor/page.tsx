@@ -3,29 +3,52 @@
 
 import { useEffect, useMemo, useState, Suspense, useRef } from "react";
 import { Check, Loader2 } from "lucide-react";
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
-import { useGroups, useStages, useStagePredictions, useBracketSeed, useBracketPredictions, useThirdPlaceMatchSeed, useThirdPlaceMatchPrediction, useThirdPlacedQualifiers } from "@/lib/api";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  useGroups,
+  useStages,
+  useBracketSeed,
+  useBracketPredictions,
+  useThirdPlaceMatchSeed,
+  useThirdPlaceMatchPrediction,
+  useThirdPlacedQualifiers,
+} from "@/lib/api";
 import { predictorApi } from "@/lib/api";
-import { FinalsStage, GroupStage, KnockoutStage, ThirdBestTeams } from '@/components/predictor';
-import toast from 'react-hot-toast';
-import type { RoundCode, BracketPrediction } from '@/types/predictorStage';
+import {
+  FinalsStage,
+  GroupStage,
+  KnockoutStage,
+  ThirdBestTeams,
+} from "@/components/predictor";
+import toast from "react-hot-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Group } from "@/types/predictor";
+import type { RoundCode, BracketPrediction } from "@/types/predictorStage";
 import Image from "next/image";
 
-
-export type PredictionStage = 'group' | 'thirdBest' | 'round16' | 'quarter' | 'semi' | 'finals';
+export type PredictionStage =
+  | "group"
+  | "thirdBest"
+  | "round16"
+  | "quarter"
+  | "semi"
+  | "finals";
 
 const determineWinnerName = (
   fixture:
-    | { homeTeam: { id: number; name: string }; awayTeam: { id: number; name: string } }
+    | {
+        homeTeam: { id: number; name: string };
+        awayTeam: { id: number; name: string };
+      }
     | undefined,
-  savedPred: BracketPrediction,
+  savedPred: BracketPrediction
 ) => {
-  if (savedPred.predictedWinner?.name) {
+  if (savedPred?.predictedWinner?.name) {
     return savedPred.predictedWinner.name;
   }
 
-  if (fixture && savedPred.predictedWinnerTeamId) {
+  if (fixture && savedPred?.predictedWinnerTeamId) {
     if (fixture.homeTeam.id === savedPred.predictedWinnerTeamId) {
       return fixture.homeTeam.name;
     }
@@ -61,8 +84,17 @@ function PredictorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const { data: groups = [], isLoading: groupsLoading, error: groupsError } = useGroups();
-  const { data: stages = [], isLoading: stagesLoading, error: stagesError } = useStages();
+  const { isAuthenticated } = useAuth();
+  const {
+    data: groups = [],
+    isLoading: groupsLoading,
+    error: groupsError,
+  } = useGroups();
+  const {
+    data: stages = [],
+    isLoading: stagesLoading,
+    error: stagesError,
+  } = useStages();
 
   // Find the stage ID for the group stage from /stages endpoint
   const groupStageId = useMemo(() => {
@@ -74,22 +106,25 @@ function PredictorPageContent() {
     return groupStage?.id;
   }, [stages]);
 
-  const { data: groupStagePredictions } = useStagePredictions(
-    groupStageId ?? 0,
-    !!groupStageId
-  );
-
   // Get initial stage from URL params or default to 'group'
   const getInitialStage = (): PredictionStage => {
-    const stageParam = searchParams.get('stage');
-    const validStages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
+    const stageParam = searchParams.get("stage");
+    const validStages: PredictionStage[] = [
+      "group",
+      "thirdBest",
+      "round16",
+      "quarter",
+      "semi",
+      "finals",
+    ];
     if (stageParam && validStages.includes(stageParam as PredictionStage)) {
       return stageParam as PredictionStage;
     }
-    return 'group';
+    return "group";
   };
 
-  const [currentStage, setCurrentStage] = useState<PredictionStage>(getInitialStage);
+  const [currentStage, setCurrentStage] =
+    useState<PredictionStage>(getInitialStage);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [predictions, setPredictions] = useState<TournamentPredictions>({
     groupStage: {},
@@ -98,38 +133,55 @@ function PredictorPageContent() {
     quarterFinals: {},
     semiFinals: {},
     finals: {
-      thirdPlace: '',
-      champion: ''
-    }
+      thirdPlace: "",
+      champion: "",
+    },
   });
 
   // Track loaded finals predictions to prevent infinite loops
-  const loadedFinalsRef = useRef<{ thirdPlace: string; champion: string } | null>(null);
+  const loadedFinalsRef = useRef<{
+    thirdPlace: string;
+    champion: string;
+  } | null>(null);
   // Track if we're updating stage to prevent feedback loops
   const isUpdatingStageRef = useRef(false);
 
   // When we have both groups and saved predictions for the group stage,
   // initialize the local predictions state so the UI reflects saved data.
-  useEffect(() => {
-    if (!groups.length || !groupStagePredictions?.length) return;
+  const getSavedGroupOrder = (
+    savedPrediction: Group["myPrediction"]
+  ): string[] | null => {
+    if (!savedPrediction) {
+      return null;
+    }
 
-    const groupIdToNameMap = new Map<number, string>();
-    groups.forEach((group) => {
-      groupIdToNameMap.set(group.id, group.name);
-    });
+    if (Array.isArray(savedPrediction) && savedPrediction.length === 4) {
+      return savedPrediction;
+    }
+
+    if (
+      typeof savedPrediction === "object" &&
+      "teams" in savedPrediction &&
+      Array.isArray(savedPrediction.teams)
+    ) {
+      const orderedTeams = [...savedPrediction.teams]
+        .sort((a, b) => a.index - b.index)
+        .map((team) => team.name);
+      return orderedTeams.length === 4 ? orderedTeams : null;
+    }
+
+    return null;
+  };
+
+  useEffect(() => {
+    if (!groups.length) return;
 
     const nextGroupStage: TournamentPredictions["groupStage"] = {};
 
-    groupStagePredictions.forEach((prediction) => {
-      const groupName = groupIdToNameMap.get(prediction.groupId);
-      if (!groupName) return;
-
-      const orderedTeams = [...prediction.teams]
-        .sort((a, b) => a.index - b.index)
-        .map((t) => t.name);
-
-      if (orderedTeams.length === 4) {
-        nextGroupStage[groupName] = orderedTeams;
+    groups.forEach((group) => {
+      const savedOrder = getSavedGroupOrder(group.myPrediction);
+      if (savedOrder) {
+        nextGroupStage[group.name] = savedOrder;
       }
     });
 
@@ -137,37 +189,55 @@ function PredictorPageContent() {
       setPredictions((prev) => ({
         ...prev,
         groupStage: {
-          // keep any existing predictions, override with API-loaded ones
           ...prev.groupStage,
           ...nextGroupStage,
         },
       }));
     }
-  }, [groups, groupStagePredictions]);
+  }, [groups]);
 
   // Fetch saved predictions for all stages to check completion status
   // This allows us to determine which stages are unlocked
   const { data: savedThirdBestTeams = [] } = useThirdPlacedQualifiers(true);
-  const { data: savedRound16Predictions = [] } = useBracketPredictions('r16', true);
-  const { data: savedQuarterPredictions = [] } = useBracketPredictions('qf', true);
-  const { data: savedSemiPredictions = [] } = useBracketPredictions('sf', true);
-  const { data: savedThirdPlaceMatch = [] } = useThirdPlaceMatchPrediction(true);
-  const { data: savedFinalPredictions = [] } = useBracketPredictions('final', true);
+  const { data: savedRound16Predictions = [] } = useBracketPredictions(
+    "r16",
+    true
+  );
+  const { data: savedQuarterPredictions = [] } = useBracketPredictions(
+    "qf",
+    true
+  );
+  const { data: savedSemiPredictions = [] } = useBracketPredictions("sf", true);
+  const { data: savedThirdPlaceMatch = [] } =
+    useThirdPlaceMatchPrediction(true);
+  const { data: savedFinalPredictions = [] } = useBracketPredictions(
+    "final",
+    true
+  );
 
   // Only fetch bracket data for the stage the user is currently on
-  const isRound16Stage = currentStage === 'round16';
-  const isQuarterStage = currentStage === 'quarter';
-  const isSemiStage = currentStage === 'semi';
-  const isFinalsStage = currentStage === 'finals';
+  const isRound16Stage = currentStage === "round16";
+  const isQuarterStage = currentStage === "quarter";
+  const isSemiStage = currentStage === "semi";
+  const isFinalsStage = currentStage === "finals";
 
-  const { data: round16Seed = [] } = useBracketSeed('r16', isRound16Stage);
-  const { data: round16Predictions = [] } = useBracketPredictions('r16', isRound16Stage);
-  
-  const { data: quarterSeed = [] } = useBracketSeed('qf', isQuarterStage);
-  const { data: quarterPredictions = [] } = useBracketPredictions('qf', isQuarterStage);
-  
-  const { data: semiSeed = [] } = useBracketSeed('sf', isSemiStage);
-  const { data: semiPredictions = [] } = useBracketPredictions('sf', isSemiStage);
+  const { data: round16Seed = [] } = useBracketSeed("r16", isRound16Stage);
+  const { data: round16Predictions = [] } = useBracketPredictions(
+    "r16",
+    isRound16Stage
+  );
+
+  const { data: quarterSeed = [] } = useBracketSeed("qf", isQuarterStage);
+  const { data: quarterPredictions = [] } = useBracketPredictions(
+    "qf",
+    isQuarterStage
+  );
+
+  const { data: semiSeed = [] } = useBracketSeed("sf", isSemiStage);
+  const { data: semiPredictions = [] } = useBracketPredictions(
+    "sf",
+    isSemiStage
+  );
 
   // Load round16 predictions into state - only when on that stage
   useEffect(() => {
@@ -175,7 +245,9 @@ function PredictorPageContent() {
     if (round16Seed.length > 0 && round16Predictions.length > 0) {
       const loaded: { [externalFixtureId: string]: string } = {};
       round16Predictions.forEach((savedPred) => {
-        const fixture = round16Seed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
+        const fixture = round16Seed.find(
+          (f) => f.externalFixtureId === savedPred.externalFixtureId
+        );
         if (fixture) {
           const winnerName = determineWinnerName(fixture, savedPred);
           if (winnerName) {
@@ -184,7 +256,7 @@ function PredictorPageContent() {
         }
       });
       if (Object.keys(loaded).length > 0) {
-        setPredictions(prev => ({ ...prev, round16: loaded }));
+        setPredictions((prev) => ({ ...prev, round16: loaded }));
       }
     }
   }, [isRound16Stage, round16Seed, round16Predictions]);
@@ -195,7 +267,9 @@ function PredictorPageContent() {
     if (quarterSeed.length > 0 && quarterPredictions.length > 0) {
       const loaded: { [externalFixtureId: string]: string } = {};
       quarterPredictions.forEach((savedPred) => {
-        const fixture = quarterSeed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
+        const fixture = quarterSeed.find(
+          (f) => f.externalFixtureId === savedPred.externalFixtureId
+        );
         if (fixture) {
           const winnerName = determineWinnerName(fixture, savedPred);
           if (winnerName) {
@@ -204,7 +278,7 @@ function PredictorPageContent() {
         }
       });
       if (Object.keys(loaded).length > 0) {
-        setPredictions(prev => ({ ...prev, quarterFinals: loaded }));
+        setPredictions((prev) => ({ ...prev, quarterFinals: loaded }));
       }
     }
   }, [isQuarterStage, quarterSeed, quarterPredictions]);
@@ -215,7 +289,9 @@ function PredictorPageContent() {
     if (semiSeed.length > 0 && semiPredictions.length > 0) {
       const loaded: { [externalFixtureId: string]: string } = {};
       semiPredictions.forEach((savedPred) => {
-        const fixture = semiSeed.find(f => f.externalFixtureId === savedPred.externalFixtureId);
+        const fixture = semiSeed.find(
+          (f) => f.externalFixtureId === savedPred.externalFixtureId
+        );
         if (fixture) {
           const winnerName = determineWinnerName(fixture, savedPred);
           if (winnerName) {
@@ -224,16 +300,23 @@ function PredictorPageContent() {
         }
       });
       if (Object.keys(loaded).length > 0) {
-        setPredictions(prev => ({ ...prev, semiFinals: loaded }));
+        setPredictions((prev) => ({ ...prev, semiFinals: loaded }));
       }
     }
   }, [isSemiStage, semiSeed, semiPredictions]);
 
   // Load finals predictions (third-place and final) - only fetch when on finals stage
   const { data: thirdPlaceSeed = [] } = useThirdPlaceMatchSeed(isFinalsStage);
-  const { data: thirdPlacePredictions = [] } = useThirdPlaceMatchPrediction(isFinalsStage);
-  const { data: finalSeedForFinals = [] } = useBracketSeed('final', isFinalsStage);
-  const { data: finalPredictionsForFinals = [] } = useBracketPredictions('final', isFinalsStage);
+  const { data: thirdPlacePredictions = [] } =
+    useThirdPlaceMatchPrediction(isFinalsStage);
+  const { data: finalSeedForFinals = [] } = useBracketSeed(
+    "final",
+    isFinalsStage
+  );
+  const { data: finalPredictionsForFinals = [] } = useBracketPredictions(
+    "final",
+    isFinalsStage
+  );
 
   // Extract prediction values using useMemo to create stable dependencies
   const thirdPlaceWinner = useMemo(() => {
@@ -262,69 +345,151 @@ function PredictorPageContent() {
     }
 
     // Only update if we have new prediction values that differ from what we've loaded
-    const shouldUpdateThirdPlace = thirdPlaceWinner !== null && 
+    const shouldUpdateThirdPlace =
+      thirdPlaceWinner !== null &&
       thirdPlaceWinner !== loadedFinalsRef.current?.thirdPlace;
-    const shouldUpdateChampion = finalWinner !== null && 
-      finalWinner !== loadedFinalsRef.current?.champion;
+    const shouldUpdateChampion =
+      finalWinner !== null && finalWinner !== loadedFinalsRef.current?.champion;
 
     if (shouldUpdateThirdPlace || shouldUpdateChampion) {
-      setPredictions(prev => {
-        const newThirdPlace = shouldUpdateThirdPlace ? thirdPlaceWinner! : prev.finals.thirdPlace;
-        const newChampion = shouldUpdateChampion ? finalWinner! : prev.finals.champion;
+      setPredictions((prev) => {
+        const newThirdPlace = shouldUpdateThirdPlace
+          ? thirdPlaceWinner!
+          : prev.finals.thirdPlace;
+        const newChampion = shouldUpdateChampion
+          ? finalWinner!
+          : prev.finals.champion;
 
         // Update ref with new values
         loadedFinalsRef.current = {
           thirdPlace: newThirdPlace,
-          champion: newChampion
+          champion: newChampion,
         };
 
         return {
           ...prev,
           finals: {
             thirdPlace: newThirdPlace,
-            champion: newChampion
-          }
+            champion: newChampion,
+          },
         };
       });
     }
   }, [isFinalsStage, thirdPlaceWinner, finalWinner]);
 
   // Calculate progress
-  const getGroupStageProgress = () => {
-    const totalGroups = groups.length;
-    const completedGroups = Object.values(predictions.groupStage).filter(group => group.length === 4).length;
-    return { completed: completedGroups, total: totalGroups };
+  const GROUP_STAGE_TOTAL = 6;
+  const KNOCKOUT_TOTAL = 16;
+  const hasSavedWinner = (prediction?: BracketPrediction) =>
+    Boolean(
+      prediction?.predictedWinnerTeamId ?? prediction?.predictedWinner?.id
+    );
+  const getSavedGroupCount = () => {
+    return groups.reduce((count, group) => {
+      const savedPrediction = group.myPrediction;
+      if (Array.isArray(savedPrediction) && savedPrediction.length === 4) {
+        return count + 1;
+      }
+      if (
+        savedPrediction &&
+        typeof savedPrediction === "object" &&
+        "teams" in savedPrediction &&
+        Array.isArray(savedPrediction.teams) &&
+        savedPrediction.teams.length === 4
+      ) {
+        return count + 1;
+      }
+      return count;
+    }, 0);
   };
 
-  const getThirdBestProgress = () => {
-    return { completed: predictions.thirdBestTeams.length, total: 4 };
+  const getProgressPercentage = (completed: number, total: number) => {
+    if (total === 0) {
+      return 0;
+    }
+    return (completed / total) * 100;
+  };
+
+  const getGroupStageProgress = () => {
+    const localCompleted = Object.values(predictions.groupStage).filter(
+      (group) => group.length === 4
+    ).length;
+    const savedCompleted = getSavedGroupCount();
+    const total = groups.length > 0 ? groups.length : GROUP_STAGE_TOTAL;
+    return {
+      completed: Math.min(Math.max(localCompleted, savedCompleted), total),
+      total,
+    };
   };
 
   const getKnockoutStageProgress = () => {
-    const totalMatches = 16;
-    const completedMatches = Object.keys(predictions.round16).length + 
-                           Object.keys(predictions.quarterFinals).length + 
-                           Object.keys(predictions.semiFinals).length + 
-                           (predictions.finals.thirdPlace ? 1 : 0) + 
-                           (predictions.finals.champion ? 1 : 0);
+    const totalMatches = KNOCKOUT_TOTAL;
+
+    const localRound16 = Math.min(
+      Object.keys(predictions.round16).filter((key) => predictions.round16[key])
+        .length,
+      8
+    );
+    const savedRound16 = Math.min(
+      savedRound16Predictions.filter(hasSavedWinner).length,
+      8
+    );
+
+    const localQuarter = Math.min(
+      Object.keys(predictions.quarterFinals).filter(
+        (key) => predictions.quarterFinals[key]
+      ).length,
+      4
+    );
+    const savedQuarter = Math.min(
+      savedQuarterPredictions.filter(hasSavedWinner).length,
+      4
+    );
+
+    const localSemi = Math.min(
+      Object.keys(predictions.semiFinals).filter(
+        (key) => predictions.semiFinals[key]
+      ).length,
+      2
+    );
+    const savedSemi = Math.min(
+      savedSemiPredictions.filter(hasSavedWinner).length,
+      2
+    );
+
+    const localThirdPlace = predictions.finals.thirdPlace ? 1 : 0;
+    const savedThirdPlace = savedThirdPlaceMatch.some(hasSavedWinner) ? 1 : 0;
+
+    const localChampion = predictions.finals.champion ? 1 : 0;
+    const savedChampion = savedFinalPredictions.some(hasSavedWinner) ? 1 : 0;
+
+    const completedMatches =
+      Math.max(localRound16, savedRound16) +
+      Math.max(localQuarter, savedQuarter) +
+      Math.max(localSemi, savedSemi) +
+      Math.max(localThirdPlace, savedThirdPlace) +
+      Math.max(localChampion, savedChampion);
+
     return { completed: completedMatches, total: totalMatches };
   };
 
   const getOverallProgress = () => {
     const groupProgress = getGroupStageProgress();
-    const thirdBestProgress = getThirdBestProgress();
     const knockoutProgress = getKnockoutStageProgress();
-    const totalTasks = groupProgress.total + thirdBestProgress.total + knockoutProgress.total;
-    const completedTasks = groupProgress.completed + thirdBestProgress.completed + knockoutProgress.completed;
+    const totalTasks = groupProgress.total + knockoutProgress.total;
+    const completedTasks = groupProgress.completed + knockoutProgress.completed;
+    if (totalTasks === 0) {
+      return 0;
+    }
     return Math.round((completedTasks / totalTasks) * 100);
   };
 
   const handleSavePredictions = async () => {
     try {
       // TODO: Implement API call to save predictions
-      console.log('Saving predictions:', predictions);
+      console.log("Saving predictions:", predictions);
     } catch (error: any) {
-      console.error('Error saving predictions:', error);
+      console.error("Error saving predictions:", error);
       toast.error(error);
     }
   };
@@ -332,14 +497,14 @@ function PredictorPageContent() {
   // Map stage to round code for bracket API
   const getRoundCode = (stage: PredictionStage): RoundCode | null => {
     switch (stage) {
-      case 'round16':
-        return 'r16';
-      case 'quarter':
-        return 'qf';
-      case 'semi':
-        return 'sf';
-      case 'finals':
-        return 'final';
+      case "round16":
+        return "r16";
+      case "quarter":
+        return "qf";
+      case "semi":
+        return "sf";
+      case "finals":
+        return "final";
       default:
         return null;
     }
@@ -349,25 +514,25 @@ function PredictorPageContent() {
   const updateStage = (newStage: PredictionStage) => {
     // Prevent navigation to locked stages
     if (!isStageAccessible(newStage)) {
-      toast.error('Please complete the previous stage before proceeding.');
+      toast.error("Please complete the previous stage before proceeding.");
       return;
     }
-    
+
     // Prevent feedback loops
     if (isUpdatingStageRef.current) {
       return;
     }
-    
+
     isUpdatingStageRef.current = true;
-    
+
     // Update state first for immediate UI update
     setCurrentStage(newStage);
-    
+
     // Update URL without causing a page reload
     const params = new URLSearchParams(searchParams.toString());
-    params.set('stage', newStage);
+    params.set("stage", newStage);
     router.replace(`/predictor?${params.toString()}`, { scroll: false });
-    
+
     // Reset flag after a short delay to allow URL update to complete
     setTimeout(() => {
       isUpdatingStageRef.current = false;
@@ -376,36 +541,41 @@ function PredictorPageContent() {
 
   const handleNextStage = async () => {
     const roundCode = getRoundCode(currentStage);
-    
+
     // If this is a bracket stage (r16, qf, sf), submit predictions first
     // Note: finals stage handles its own submission via onSave
-    if (roundCode && currentStage !== 'finals') {
+    if (roundCode && currentStage !== "finals") {
       setIsSubmitting(true);
       try {
         // Get bracket seed to map team names to IDs and get externalFixtureIds
         const bracketSeed = await predictorApi.getBracketSeed(roundCode);
-        
+
         // Get current predictions for this stage
-        const stagePredictions = 
-          currentStage === 'round16' ? predictions.round16 :
-          currentStage === 'quarter' ? predictions.quarterFinals :
-          currentStage === 'semi' ? predictions.semiFinals :
-          {};
+        const stagePredictions =
+          currentStage === "round16"
+            ? predictions.round16
+            : currentStage === "quarter"
+            ? predictions.quarterFinals
+            : currentStage === "semi"
+            ? predictions.semiFinals
+            : {};
 
         // Build predictions array for bracket API
         // Filter out fixtures where predictions aren't complete (e.g., one team is TBD)
-        const validFixtures = bracketSeed.filter(fixture => 
-          fixture.homeTeam.id && fixture.awayTeam.id
+        const validFixtures = bracketSeed.filter(
+          (fixture) => fixture.homeTeam.id && fixture.awayTeam.id
         );
-        
+
         const bracketPredictions = validFixtures.map((fixture) => {
           // For other stages, predictions are stored as { externalFixtureId: teamName }
-          const matchPredictions = stagePredictions as { [externalFixtureId: string]: string };
+          const matchPredictions = stagePredictions as {
+            [externalFixtureId: string]: string;
+          };
           const fixtureIdKey = fixture.externalFixtureId.toString();
           const selectedWinner = matchPredictions[fixtureIdKey];
-          
+
           let predictedWinnerTeamId: number | null = null;
-          
+
           if (selectedWinner) {
             // Match selected winner name to team ID
             if (selectedWinner === fixture.homeTeam.name) {
@@ -416,7 +586,9 @@ function PredictorPageContent() {
           }
 
           if (!predictedWinnerTeamId) {
-            throw new Error(`No prediction found for fixture ${fixture.externalFixtureId} (${fixture.homeTeam.name} vs ${fixture.awayTeam.name})`);
+            throw new Error(
+              `No prediction found for fixture ${fixture.externalFixtureId} (${fixture.homeTeam.name} vs ${fixture.awayTeam.name})`
+            );
           }
 
           return {
@@ -424,9 +596,11 @@ function PredictorPageContent() {
             predictedWinnerTeamId,
           };
         });
-        
+
         if (bracketPredictions.length === 0) {
-          throw new Error('No valid predictions to submit. Please make sure all matches have predictions.');
+          throw new Error(
+            "No valid predictions to submit. Please make sure all matches have predictions."
+          );
         }
 
         // Submit predictions
@@ -435,12 +609,25 @@ function PredictorPageContent() {
         });
 
         // Invalidate and refetch saved predictions to sync state
-        await queryClient.invalidateQueries({ queryKey: ['predictor', 'bracket', roundCode, 'me'] });
+        await queryClient.invalidateQueries({
+          queryKey: ["predictor", "bracket", roundCode, "me"],
+        });
 
-        toast.success(`${currentStage === 'round16' ? 'Round of 16' : currentStage === 'quarter' ? 'Quarter Finals' : 'Semi Finals'} predictions submitted successfully!`);
+        toast.success(
+          `${
+            currentStage === "round16"
+              ? "Round of 16"
+              : currentStage === "quarter"
+              ? "Quarter Finals"
+              : "Semi Finals"
+          } predictions submitted successfully!`
+        );
       } catch (error: any) {
-        console.error('Error submitting bracket predictions:', error);
-        toast.error(error?.response?.data?.message || 'Failed to submit predictions. Please try again.');
+        console.error("Error submitting bracket predictions:", error);
+        toast.error(
+          error?.response?.data?.message ||
+            "Failed to submit predictions. Please try again."
+        );
         setIsSubmitting(false);
         return; // Don't advance to next stage if submission fails
       } finally {
@@ -449,7 +636,14 @@ function PredictorPageContent() {
     }
 
     // Move to next stage
-    const stages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
+    const stages: PredictionStage[] = [
+      "group",
+      "thirdBest",
+      "round16",
+      "quarter",
+      "semi",
+      "finals",
+    ];
     const currentIndex = stages.indexOf(currentStage);
     if (currentIndex < stages.length - 1) {
       updateStage(stages[currentIndex + 1]);
@@ -458,39 +652,55 @@ function PredictorPageContent() {
 
   const isStageCompleted = (stage: PredictionStage) => {
     switch (stage) {
-      case 'group':
+      case "group":
         // Check both local state and saved API predictions
-        const localGroupCompleted = Object.values(predictions.groupStage).filter(group => group.length === 4).length === groups.length;
-        const savedGroupCompleted = groupStagePredictions && groupStagePredictions.length > 0 && 
-          groupStagePredictions.every(pred => pred.teams.length === 4);
+        const localGroupCompleted =
+          Object.values(predictions.groupStage).filter(
+            (group) => group.length === 4
+          ).length === (groups.length || GROUP_STAGE_TOTAL);
+        const savedGroupCompleted =
+          getSavedGroupCount() === (groups.length || GROUP_STAGE_TOTAL);
         return localGroupCompleted || savedGroupCompleted;
-      case 'thirdBest':
+      case "thirdBest":
         // Check both local state and saved API predictions
         const localThirdBestCompleted = predictions.thirdBestTeams.length === 4;
         const savedThirdBestCompleted = savedThirdBestTeams.length === 4;
         return localThirdBestCompleted || savedThirdBestCompleted;
-      case 'round16':
+      case "round16":
         // Check both local state and saved API predictions
-        const localRound16Keys = Object.keys(predictions.round16).filter(key => predictions.round16[key]);
+        const localRound16Keys = Object.keys(predictions.round16).filter(
+          (key) => predictions.round16[key]
+        );
         const localRound16Completed = localRound16Keys.length >= 8;
-        const savedRound16Completed = savedRound16Predictions.length >= 8;
+        const savedRound16Completed =
+          savedRound16Predictions.filter(hasSavedWinner).length >= 8;
         return localRound16Completed || savedRound16Completed;
-      case 'quarter':
+      case "quarter":
         // Check both local state and saved API predictions
-        const localQuarterKeys = Object.keys(predictions.quarterFinals).filter(key => predictions.quarterFinals[key]);
+        const localQuarterKeys = Object.keys(predictions.quarterFinals).filter(
+          (key) => predictions.quarterFinals[key]
+        );
         const localQuarterCompleted = localQuarterKeys.length >= 4;
-        const savedQuarterCompleted = savedQuarterPredictions.length >= 4;
+        const savedQuarterCompleted =
+          savedQuarterPredictions.filter(hasSavedWinner).length >= 4;
         return localQuarterCompleted || savedQuarterCompleted;
-      case 'semi':
+      case "semi":
         // Check both local state and saved API predictions
-        const localSemiKeys = Object.keys(predictions.semiFinals).filter(key => predictions.semiFinals[key]);
+        const localSemiKeys = Object.keys(predictions.semiFinals).filter(
+          (key) => predictions.semiFinals[key]
+        );
         const localSemiCompleted = localSemiKeys.length >= 2;
-        const savedSemiCompleted = savedSemiPredictions.length >= 2;
+        const savedSemiCompleted =
+          savedSemiPredictions.filter(hasSavedWinner).length >= 2;
         return localSemiCompleted || savedSemiCompleted;
-      case 'finals':
+      case "finals":
         // Check both local state and saved API predictions
-        const localFinalsCompleted = predictions.finals.thirdPlace !== '' && predictions.finals.champion !== '';
-        const savedFinalsCompleted = savedThirdPlaceMatch.length > 0 && savedFinalPredictions.length > 0;
+        const localFinalsCompleted =
+          predictions.finals.thirdPlace !== "" &&
+          predictions.finals.champion !== "";
+        const savedFinalsCompleted =
+          savedThirdPlaceMatch.some(hasSavedWinner) &&
+          savedFinalPredictions.some(hasSavedWinner);
         return localFinalsCompleted || savedFinalsCompleted;
       default:
         return false;
@@ -499,21 +709,28 @@ function PredictorPageContent() {
 
   // Check if a stage is accessible (all previous stages must be completed)
   const isStageAccessible = (stage: PredictionStage): boolean => {
-    const stages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
+    const stages: PredictionStage[] = [
+      "group",
+      "thirdBest",
+      "round16",
+      "quarter",
+      "semi",
+      "finals",
+    ];
     const stageIndex = stages.indexOf(stage);
-    
+
     // First stage is always accessible
     if (stageIndex === 0) {
       return true;
     }
-    
+
     // Check if all previous stages are completed
     for (let i = 0; i < stageIndex; i++) {
       if (!isStageCompleted(stages[i])) {
         return false;
       }
     }
-    
+
     return true;
   };
 
@@ -524,53 +741,69 @@ function PredictorPageContent() {
     if (isUpdatingStageRef.current) {
       return;
     }
-    
-    const stageParam = searchParams.get('stage');
-    const validStages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
-    
+
+    const stageParam = searchParams.get("stage");
+    const validStages: PredictionStage[] = [
+      "group",
+      "thirdBest",
+      "round16",
+      "quarter",
+      "semi",
+      "finals",
+    ];
+
     if (stageParam && validStages.includes(stageParam as PredictionStage)) {
       const newStage = stageParam as PredictionStage;
-      
+
       // Only update if the stage actually changed
       if (currentStage === newStage) {
         return;
       }
-      
+
       // Check if the stage is accessible before allowing navigation
       if (!isStageAccessible(newStage)) {
         // Redirect to the first incomplete stage or group stage
-        const stages: PredictionStage[] = ['group', 'thirdBest', 'round16', 'quarter', 'semi', 'finals'];
-        let firstIncompleteStage: PredictionStage = 'group';
-        
+        const stages: PredictionStage[] = [
+          "group",
+          "thirdBest",
+          "round16",
+          "quarter",
+          "semi",
+          "finals",
+        ];
+        let firstIncompleteStage: PredictionStage = "group";
+
         for (const stage of stages) {
           if (!isStageCompleted(stage)) {
             firstIncompleteStage = stage;
             break;
           }
         }
-        
+
         // Only redirect if we're not already on the correct stage
         if (currentStage !== firstIncompleteStage) {
           isUpdatingStageRef.current = true;
           const params = new URLSearchParams(searchParams.toString());
-          params.set('stage', firstIncompleteStage);
+          params.set("stage", firstIncompleteStage);
           router.replace(`/predictor?${params.toString()}`, { scroll: false });
           setCurrentStage(firstIncompleteStage);
-          toast.error('Please complete previous stages before accessing this stage.');
+          toast.error(
+            "Please complete previous stages before accessing this stage."
+          );
           setTimeout(() => {
             isUpdatingStageRef.current = false;
           }, 100);
         }
         return;
       }
-      
+
       // Update stage if it's different and accessible
       setCurrentStage(newStage);
     } else if (!stageParam) {
       // If no stage param, set it in URL to 'group' (only if not already on group)
-      if (currentStage !== 'group') {
+      if (currentStage !== "group") {
         const params = new URLSearchParams(searchParams.toString());
-        params.set('stage', 'group');
+        params.set("stage", "group");
         router.replace(`/predictor?${params.toString()}`, { scroll: false });
       }
     }
@@ -583,18 +816,24 @@ function PredictorPageContent() {
   const overallProgress = getOverallProgress();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto px-4 py-8">
+    <div className="min-h-screen">
+      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Header with Progress */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl text-[#070A11]">
-              Tournament Predictor
-            </h1>
+            <h1 className="text-3xl text-[#070A11]">Tournament Predictor</h1>
             <div className="text-right">
-              <div className="text-red-600 font-medium">{overallProgress}% Complete</div>
+              <div
+                className={`font-medium ${
+                  overallProgress >= 100 ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {overallProgress}% Complete
+              </div>
               {/* TODO: Add the actual ending date and time of the tournament */}
-              <div className="text-gray-500 text-sm">January 18, 2026 at 18:00 GMT</div>
+              <div className="text-gray-500 text-sm">
+                January 18, 2026 at 18:00 GMT
+              </div>
             </div>
           </div>
 
@@ -603,89 +842,122 @@ function PredictorPageContent() {
             {/* Group Stage Progress */}
             <div className="rounded-lg border border-[#F1F2F4] p-6">
               <div className="flex items-center mb-4">
-                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764592598/trophy_olvsvu.png" alt="Group Stage" width={24} height={24} className="w-6 h-6 mr-2" />
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764592598/trophy_olvsvu.png"
+                  alt="Group Stage"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 mr-2"
+                />
                 <h3 className="text-sm text-[#070A11]">Group Stage</h3>
               </div>
               <div className="progress-card-gradient rounded-lg p-4">
-              <div className="flex items-center justify-between">
-              <div className="text-base text-[#800000] mb-2">Groups Completed</div>
-              <div className="text-2xl font-bold text-[#070A11] mb-2">
-                {groupProgress.completed}/{groupProgress.total}
+                <div className="flex items-center justify-between">
+                  <div className="text-base text-[#800000] mb-2">
+                    Groups Completed
+                  </div>
+                  <div className="text-2xl font-bold text-[#070A11] mb-2">
+                    {groupProgress.completed}/{groupProgress.total}
+                  </div>
+                </div>
+                <div className="w-full bg-[#DDBBBB] rounded-full h-2">
+                  <div
+                    className="bg-[#800000] h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${getProgressPercentage(
+                        groupProgress.completed,
+                        groupProgress.total
+                      )}%`,
+                    }}
+                  ></div>
+                </div>
               </div>
-              </div>
-              <div className="w-full bg-[#DDBBBB] rounded-full h-2">
-                <div 
-                  className="bg-[#800000] h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(groupProgress.completed / groupProgress.total) * 100}%` }}
-                ></div>
-              </div>
-              </div>
-            
             </div>
 
             {/* Knockout Stage Progress */}
             <div className=" rounded-lg border border-[#F1F2F4] p-6">
               <div className="flex items-center mb-4">
-                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764592598/trophy_olvsvu.png" alt="Group Stage" width={24} height={24} className="w-6 h-6 mr-2" />
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764592598/trophy_olvsvu.png"
+                  alt="Group Stage"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 mr-2"
+                />
                 <h3 className="text-sm text-[#070A11]">Knockout Stage</h3>
               </div>
               <div className="progress-card-gradient rounded-lg p-4">
-              <div className="flex items-center justify-between">
-              <div className="text-base text-[#800000] mb-2">Matches Predicted</div>
-              <div className="text-2xl font-bold text-[#070A11] mb-2">
-                {knockoutProgress.completed}/{knockoutProgress.total}
+                <div className="flex items-center justify-between">
+                  <div className="text-base text-[#800000] mb-2">
+                    Matches Predicted
+                  </div>
+                  <div className="text-2xl font-bold text-[#070A11] mb-2">
+                    {knockoutProgress.completed}/{knockoutProgress.total}
+                  </div>
+                </div>
+                <div className="w-full bg-[#DDBBBB] rounded-full h-2">
+                  <div
+                    className="bg-[#800000] h-2 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${getProgressPercentage(
+                        knockoutProgress.completed,
+                        knockoutProgress.total
+                      )}%`,
+                    }}
+                  ></div>
+                </div>
               </div>
-              </div>
-              <div className="w-full bg-[#DDBBBB] rounded-full h-2">
-                <div 
-                  className="bg-[#800000] h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(knockoutProgress.completed / knockoutProgress.total) * 100}%` }}
-                ></div>
-              </div>
-              </div>
-           
             </div>
 
             {/* Overall Progress */}
             <div className="rounded-lg border border-[#F1F2F4] p-6">
               <div className="flex items-center mb-4">
-                <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764605960/progress-2_i4oump.png" alt="Overall Progress" width={24} height={24} className="w-6 h-6 mr-2" />
+                <Image
+                  src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764605960/progress-2_i4oump.png"
+                  alt="Overall Progress"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 mr-2"
+                />
                 <h3 className="text-sm text-[#070A11]">Overall Progress</h3>
               </div>
               <div className="progress-card-gradient rounded-lg p-4">
-          <div className="flex items-center justify-between">
-          <div className="text-base text-[#800000] mb-2">Total Complete</div>
-              <div className="text-base text-[#800000] mb-2">
-                {overallProgress}%
+                <div className="flex items-center justify-between">
+                  <div className="text-base text-[#800000] mb-2">
+                    Total Complete
+                  </div>
+                  <div className="text-base text-[#800000] mb-2">
+                    {overallProgress}%
+                  </div>
+                </div>
+                <div className="w-full bg-[#DDBBBB] rounded-full h-2">
+                  <div
+                    className="bg-[#800000] h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${overallProgress}%` }}
+                  ></div>
+                </div>
               </div>
-          </div>
-              <div className="w-full bg-[#DDBBBB] rounded-full h-2">
-                <div 
-                  className="bg-[#800000] h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${overallProgress}%` }}
-                ></div>
-              </div>
-              </div>
-      
             </div>
           </div>
         </div>
 
         {/* Stage Navigation */}
-        <div className="border-b mb-8">
+        <div className="mb-8">
           <div className="flex overflow-x-auto scrollbar-thin">
             {[
-              { id: 'group', label: 'Group Stage' },
-              { id: 'thirdBest', label: '3rd Best Teams' },
-              { id: 'round16', label: 'Round of 16' },
-              { id: 'quarter', label: 'Quarter Finals' },
-              { id: 'semi', label: 'Semi Finals' },
-              { id: 'finals', label: 'Finals' }
+              { id: "group", label: "Group Stage" },
+              { id: "thirdBest", label: "3rd Best Teams" },
+              { id: "round16", label: "Round of 16" },
+              { id: "quarter", label: "Quarter Finals" },
+              { id: "semi", label: "Semi Finals" },
+              { id: "finals", label: "Finals" },
             ].map((stage) => {
               const isActive = currentStage === stage.id;
               const isCompleted = isStageCompleted(stage.id as PredictionStage);
-              const isAccessible = isStageAccessible(stage.id as PredictionStage);
-              
+              const isAccessible = isStageAccessible(
+                stage.id as PredictionStage
+              );
+
               return (
                 <button
                   key={stage.id}
@@ -693,14 +965,18 @@ function PredictorPageContent() {
                   disabled={!isAccessible}
                   className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 w-full transition-all duration-150 ${
                     isActive
-                      ? 'border-[#4AA96C] text-[#070A11]'
+                      ? "border-[#4AA96C] text-[#070A11]"
                       : isCompleted
-                      ? 'border-gray-200 text-green-600 hover:border-gray-300'
+                      ? "border-gray-200 text-green-600 hover:border-gray-300"
                       : isAccessible
-                      ? 'border-gray-200 text-gray-500 hover:border-gray-300'
-                      : 'border-gray-200 text-gray-400 opacity-50 cursor-not-allowed'
+                      ? "border-gray-200 text-gray-500 hover:border-gray-300"
+                      : "border-gray-200 text-gray-400 opacity-50 cursor-not-allowed"
                   }`}
-                  title={!isAccessible ? 'Complete previous stages to unlock this stage' : ''}
+                  title={
+                    !isAccessible
+                      ? "Complete previous stages to unlock this stage"
+                      : ""
+                  }
                 >
                   {isCompleted && !isActive && (
                     <Check className="w-4 h-4 mr-2" />
@@ -716,143 +992,175 @@ function PredictorPageContent() {
         </div>
 
         {/* Stage Content */}
-        <div className="bg-white rounded-lg shadow-sm border transition-opacity duration-200">
-          {currentStage === 'group' && (
-            (groupsLoading || stagesLoading) ? (
+        <div className="bg-white rounded-lg shadow-sm transition-opacity duration-200">
+          {currentStage === "group" &&
+            (groupsLoading || stagesLoading ? (
               <div className="p-6 text-center">
                 <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-gray-500" />
               </div>
-            ) : (groupsError || stagesError || !groupStageId) ? (
+            ) : groupsError || stagesError || !groupStageId ? (
               <div className="p-6 text-center">
-                <p className="text-red-500">Error loading groups/stages. Please try again.</p>
+                <p className="text-red-500">Error loading groups/stages.</p>
+                {!isAuthenticated && (
+                  <button
+                    onClick={() => router.push("/sign-in")}
+                    className="cursor-pointer mt-4 px-6 py-2 bg-[#4AA96C] hover:bg-[#3d9a5c] text-white text-sm font-medium rounded-full transition-colors"
+                  >
+                    Log in
+                  </button>
+                )}
               </div>
             ) : (
-              <GroupStage 
+              <GroupStage
                 groups={groups}
                 predictions={predictions.groupStage}
                 stageId={groupStageId}
-                onUpdate={(groupPredictions: any) => setPredictions(prev => ({
-                  ...prev,
-                  groupStage: groupPredictions
-                }))}
+                onUpdate={(groupPredictions: any) =>
+                  setPredictions((prev) => ({
+                    ...prev,
+                    groupStage: groupPredictions,
+                  }))
+                }
                 onSave={handleSavePredictions}
                 onNextStage={handleNextStage}
               />
-            )
-          )}
-          
-          {currentStage === 'thirdBest' && (
-            <ThirdBestTeams 
+            ))}
+
+          {currentStage === "thirdBest" && (
+            <ThirdBestTeams
               predictions={predictions.thirdBestTeams}
               groupStage={predictions.groupStage}
               groups={groups}
-              onUpdate={(thirdBestTeams: string[]) => setPredictions(prev => ({
-                ...prev,
-                thirdBestTeams: thirdBestTeams
-              }))}
+              onUpdate={(thirdBestTeams: string[]) =>
+                setPredictions((prev) => ({
+                  ...prev,
+                  thirdBestTeams: thirdBestTeams,
+                }))
+              }
               onSave={handleSavePredictions}
               onNextStage={handleNextStage}
               isSubmitting={isSubmitting}
             />
           )}
-          
-          {currentStage === 'round16' && (
-            <KnockoutStage 
+
+          {currentStage === "round16" && (
+            <KnockoutStage
               stage="round16"
               predictions={predictions.round16}
-              onUpdate={(matchPredictions: any) => setPredictions(prev => ({
-                ...prev,
-                round16: matchPredictions
-              }))}
+              onUpdate={(matchPredictions: any) =>
+                setPredictions((prev) => ({
+                  ...prev,
+                  round16: matchPredictions,
+                }))
+              }
               onNextStage={handleNextStage}
               isSubmitting={isSubmitting}
             />
           )}
-          
-          {currentStage === 'quarter' && (
-            <KnockoutStage 
+
+          {currentStage === "quarter" && (
+            <KnockoutStage
               stage="quarter"
               predictions={predictions.quarterFinals}
-              onUpdate={(matchPredictions: any) => setPredictions(prev => ({
-                ...prev,
-                quarterFinals: matchPredictions
-              }))}
+              onUpdate={(matchPredictions: any) =>
+                setPredictions((prev) => ({
+                  ...prev,
+                  quarterFinals: matchPredictions,
+                }))
+              }
               onNextStage={handleNextStage}
               isSubmitting={isSubmitting}
             />
           )}
-          
-          {currentStage === 'semi' && (
-            <KnockoutStage 
+
+          {currentStage === "semi" && (
+            <KnockoutStage
               stage="semi"
               predictions={predictions.semiFinals}
-              onUpdate={(matchPredictions: any) => setPredictions(prev => ({
-                ...prev,
-                semiFinals: matchPredictions
-              }))}
+              onUpdate={(matchPredictions: any) =>
+                setPredictions((prev) => ({
+                  ...prev,
+                  semiFinals: matchPredictions,
+                }))
+              }
               onNextStage={handleNextStage}
               isSubmitting={isSubmitting}
             />
           )}
-          
-          {currentStage === 'finals' && (
-            <FinalsStage 
+
+          {currentStage === "finals" && (
+            <FinalsStage
               predictions={predictions.finals}
-              onUpdate={(finalsPredictions: any) => setPredictions(prev => ({
-                ...prev,
-                finals: finalsPredictions
-              }))}
+              onUpdate={(finalsPredictions: any) =>
+                setPredictions((prev) => ({
+                  ...prev,
+                  finals: finalsPredictions,
+                }))
+              }
               isSubmitting={isSubmitting}
               onSave={async () => {
                 // Submit third-place and final predictions separately
                 setIsSubmitting(true);
                 try {
                   const finalsPreds = predictions.finals;
-                  
+
                   // Submit third-place prediction
                   if (finalsPreds.thirdPlace) {
-                    const thirdPlaceSeed = await predictorApi.getThirdPlaceMatchSeed();
+                    const thirdPlaceSeed =
+                      await predictorApi.getThirdPlaceMatchSeed();
                     if (thirdPlaceSeed.length > 0) {
                       const thirdPlaceFixture = thirdPlaceSeed[0];
-                      const predictedWinnerTeamId = 
-                        finalsPreds.thirdPlace === thirdPlaceFixture.homeTeam.name
+                      const predictedWinnerTeamId =
+                        finalsPreds.thirdPlace ===
+                        thirdPlaceFixture.homeTeam.name
                           ? thirdPlaceFixture.homeTeam.id
                           : thirdPlaceFixture.awayTeam.id;
-                      
+
                       await predictorApi.saveThirdPlaceMatchPrediction({
                         externalFixtureId: thirdPlaceFixture.externalFixtureId,
                         predictedWinnerTeamId,
                       });
                     }
                   }
-                  
+
                   // Submit final prediction
                   if (finalsPreds.champion) {
-                    const finalSeed = await predictorApi.getBracketSeed('final');
+                    const finalSeed = await predictorApi.getBracketSeed(
+                      "final"
+                    );
                     if (finalSeed.length > 0) {
                       const finalFixture = finalSeed[0];
-                      const predictedWinnerTeamId = 
+                      const predictedWinnerTeamId =
                         finalsPreds.champion === finalFixture.homeTeam.name
                           ? finalFixture.homeTeam.id
                           : finalFixture.awayTeam.id;
-                      
-                      await predictorApi.saveBracketPredictions('final', {
-                        predictions: [{
-                          externalFixtureId: finalFixture.externalFixtureId,
-                          predictedWinnerTeamId,
-                        }],
+
+                      await predictorApi.saveBracketPredictions("final", {
+                        predictions: [
+                          {
+                            externalFixtureId: finalFixture.externalFixtureId,
+                            predictedWinnerTeamId,
+                          },
+                        ],
                       });
                     }
                   }
-                  
+
                   // Invalidate and refetch saved predictions to sync state
-                  await queryClient.invalidateQueries({ queryKey: ['predictor', 'third-place-match', 'me'] });
-                  await queryClient.invalidateQueries({ queryKey: ['predictor', 'bracket', 'final', 'me'] });
-                  
-                  toast.success('Finals predictions submitted successfully!');
+                  await queryClient.invalidateQueries({
+                    queryKey: ["predictor", "third-place-match", "me"],
+                  });
+                  await queryClient.invalidateQueries({
+                    queryKey: ["predictor", "bracket", "final", "me"],
+                  });
+
+                  toast.success("Finals predictions submitted successfully!");
                 } catch (error: any) {
-                  console.error('Error submitting finals predictions:', error);
-                  toast.error(error?.response?.data?.message || 'Failed to submit predictions. Please try again.');
+                  console.error("Error submitting finals predictions:", error);
+                  toast.error(
+                    error?.response?.data?.message ||
+                      "Failed to submit predictions. Please try again."
+                  );
                 } finally {
                   setIsSubmitting(false);
                 }
@@ -867,11 +1175,13 @@ function PredictorPageContent() {
 
 export default function PredictorPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        </div>
+      }
+    >
       <PredictorPageContent />
     </Suspense>
   );

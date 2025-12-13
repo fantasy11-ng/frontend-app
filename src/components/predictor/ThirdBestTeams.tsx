@@ -21,12 +21,15 @@ interface ThirdBestTeamsProps {
 
 // Team flags
 const teamFlags: { [key: string]: string } = {
-  'Nigeria': '🇳🇬', 'Burundi': '🇧🇮', 'Senegal': '🇸🇳', 'Algeria': '🇩🇿',
-  'Libya': '🇱🇾', 'Togo': '🇹🇬', 'Kenya': '🇰🇪', 'Botswana': '🇧🇼',
+  'Nigeria': '🇳🇬', 'Burundi': '🇧🇮', 'Senegal': '🇸🇳', 'Algeria': '🇩🇿', 'Morocco': '🇲🇦', 'Congo DR': '🇨🇩',
+  'Libya': '🇱🇾', 'Togo': '🇹🇬', 'Kenya': '🇰🇪', 'Botswana': '🇧🇼', 'Mali': '🇲🇱', 'Tunisia': '🇹🇳',
   'Sudan': '🇸🇩', 'Zimbabwe': '🇿🇼', 'Ethiopia': '🇪🇹', 'Somalia': '🇸🇴',
   'Gabon': '🇬🇦', 'Liberia': '🇱🇷', 'Burkina Faso': '🇧🇫', 'Seychelles': '🇸🇨',
   'Malawi': '🇲🇼', 'Angola': '🇦🇴', 'Eswatini': '🇸🇿', 'Zambia': '🇿🇲',
-  'Eritrea': '🇪🇷', 'Chad': '🇹🇩', 'Gambia': '🇬🇲', 'Niger': '🇳🇪'
+  'Eritrea': '🇪🇷', 'Chad': '🇹🇩', 'Gambia': '🇬🇲', 'Niger': '🇳🇪', 'Cape Verde': '🇨🇻', 'Cape Verde Islands': '🇨🇻',
+  'Ivory Coast': '🇨🇮', 'Cameroon': '🇨🇲', 'Côte d\'Ivoire': '🇨🇮', 'Ghana': '🇬🇭', 'Guinea': '🇬🇳', 'Madagascar': '🇲🇬', 'Mauritania': '🇲🇷',
+  'Mozambique': '🇲🇿', 'Namibia': '🇳🇦', 'Rwanda': '🇷🇼', 'Sao Tome and Principe': '🇸🇹', 'Equatorial Guinea': '🇬🇶',
+  'Sierra Leone': '🇸🇱', 'South Africa': '🇿🇦', 'Tanzania': '🇹🇿', 'Uganda': '🇺🇬', 'Guinea-Bissau': '🇬🇼', 'Egypt': '🇪🇬',
 };
 
 export default function ThirdBestTeams({ 
@@ -82,7 +85,6 @@ export default function ThirdBestTeams({
   // Get all 3rd place teams from completed groups
   const getThirdPlaceTeams = () => {
     const thirdPlaceTeams: { team: string; group: string }[] = [];
-    
     Object.entries(groupStage).forEach(([groupName, teams]) => {
       if (teams.length === 4) {
         const thirdPlaceTeam = teams[2]; // 3rd place (index 2)

@@ -7,93 +7,24 @@ interface WinnersContentProps {
   onTabChange: (tab: 'globalLeague' | 'predictorGame') => void;
 }
 
+interface Winner {
+  id: string;
+  rank: number;
+  name: string;
+  team?: string;
+  points?: number;
+  accuracy?: number;
+  prize: string;
+}
+
 export default function WinnersContent({ activeTab, onTabChange }: WinnersContentProps) {
   // Mock data for Global League Top 5
-  const globalLeagueWinners = [
-    {
-      id: '1',
-      rank: 1,
-      name: 'Amadou Diallo',
-      team: 'Desert Eagles',
-      points: 2847,
-      prize: 'N1,000,000'
-    },
-    {
-      id: '2',
-      rank: 2,
-      name: 'Amadou Diallo',
-      team: 'Desert Eagles',
-      points: 2847,
-      prize: 'N1,000,000'
-    },
-    {
-      id: '3',
-      rank: 3,
-      name: 'Amadou Diallo',
-      team: 'Desert Eagles',
-      points: 2847,
-      prize: 'N1,000,000'
-    },
-    {
-      id: '4',
-      rank: 4,
-      name: 'Amadou Diallo',
-      team: 'Desert Eagles',
-      points: 2847,
-      prize: 'N1,000,000'
-    },
-    {
-      id: '5',
-      rank: 5,
-      name: 'Amadou Diallo',
-      team: 'Desert Eagles',
-      points: 2847,
-      prize: 'N1,000,000'
-    }
+  const globalLeagueWinners: Winner[] = [
   ];
 
   // Mock data for Predictor Game Top 5
-  const predictorGameWinners = [
-    {
-      id: 'p1',
-      rank: 1,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
-    },
-    {
-      id: 'p2',
-      rank: 2,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
-    },
-    {
-      id: 'p3',
-      rank: 3,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
-    },
-    {
-      id: 'p4',
-      rank: 4,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
-    },
-    {
-      id: 'p5',
-      rank: 5,
-      name: 'Amadou Diallo',
-      accuracy: 94,
-      points: 847,
-      prize: 'N1,000,000'
-    }
+  const predictorGameWinners: Winner[] = [
+
   ];
 
   return (

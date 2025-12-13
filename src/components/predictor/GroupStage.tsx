@@ -292,7 +292,7 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
           const isComplete = isGroupComplete(group.name);
 
           return (
-            <div key={group.id} className="border active:border-[#4AA96C] hover:border-[#4AA96C] rounded-xl p-6">
+            <div key={group.id} className="border border-[#F1F2F4] active:border-[#4AA96C] hover:border-[#4AA96C] rounded-xl p-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-[#070A11]">{group.name}</h3>
                 {isComplete && <div className="w-3 h-3 bg-green-500 rounded-full" />}

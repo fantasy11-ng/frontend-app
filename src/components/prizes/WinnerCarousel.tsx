@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from "react";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight, Trophy } from "lucide-react";
 
 interface WinnerPhoto {
   id: string;
@@ -16,20 +16,15 @@ interface WinnerCarouselProps {
   year: string;
 }
 
-export default function WinnerCarousel({ title, photos }: WinnerCarouselProps) {
+export default function WinnerCarousel({
+  title,
+  photos,
+}: WinnerCarouselProps) {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
-  const [, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  if (photos.length === 0) {
+    return null;
+  }
 
   const handlePreviousPhoto = () => {
     setCurrentPhotoIndex((prev) => (prev > 0 ? prev - 1 : photos.length - 1));
@@ -39,101 +34,80 @@ export default function WinnerCarousel({ title, photos }: WinnerCarouselProps) {
     setCurrentPhotoIndex((prev) => (prev < photos.length - 1 ? prev + 1 : 0));
   };
 
-  if (photos.length === 0) {
-    return null;
-  }
-
   return (
-    <div className="relative">
-      {/* Carousel Container */}
-      <div className="relative overflow-hidden rounded-lg">
-        {/* Show 1 image at a time */}
-        <div 
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ 
-            transform: `translateX(-${currentPhotoIndex * 100}%)` 
-          }}
-        >
+    <div className="h-full w-[280px] flex-shrink-0 snap-start rounded-[32px] border border-[#E5E7EB] bg-white px-3 py-3 shadow-[0px_24px_80px_rgba(7,10,17,0.06)] sm:w-full">
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="rounded-full bg-[#FFF4EA]">
+            <Trophy className="h-4 w-4 text-[#C27834]" />
+          </div>
+          <p className="text-sm text-[#070A11]">{title}</p>
+        </div>
+      </div>
+
+      <div className="relative">
+        <div className="relative min-h-[360px] w-full max-w-[416px] overflow-hidden rounded-[28px] bg-[#F7F8FB] sm:min-h-[424px] sm:max-w-full">
           {photos.map((photo, index) => (
             <div
               key={photo.id}
-              className="min-w-full relative"
+              className={`absolute inset-0 transition-opacity duration-500 ${
+                index === currentPhotoIndex ? "opacity-100" : "opacity-0"
+              }`}
             >
-              {/* Image Container */}
-              <div className="relative h-96 w-full bg-gradient-to-br from-green-400 to-green-600 overflow-hidden">
-                {/* Background Image Placeholder - Only show if no image */}
-                {!photo.image && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center">
-                    <div className="text-white text-6xl opacity-20">🏆</div>
-                  </div>
-                )}
-                
-                {/* Actual Image - Display when available */}
-                {photo.image && (
-                  <Image
-                    src={photo.image}
-                    alt={photo.alt || `${title} - Photo ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    priority={index === 0}
-                  />
-                )}
-                
-                {/* Dark Overlay for better text readability */}
-                <div className="absolute inset-0 bg-black/30"></div>
-                
-                {/* Trophy Icon and Title Overlay */}
-                <div className="absolute top-4 left-4 flex items-center space-x-2 z-10">
-                  <Image src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764265435/Prize_pbqxgu.png" alt="Trophy" width={20} height={20} className="w-5 h-5 drop-shadow-lg" />
-                  <span className="text-white font-semibold text-lg drop-shadow-lg">{title}</span>
+              {photo.image ? (
+                <Image
+                  src={photo.image}
+                  alt={photo.alt || `${title} - Photo ${index + 1}`}
+                  fill
+                  className="object-cover object-[50%_25%]"
+                  sizes="(max-width: 768px) 100vw, 45vw"
+                  priority={index === 0}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-6xl text-gray-300">
+                  🏆
                 </div>
-              </div>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Navigation Arrows */}
         {photos.length > 1 && (
           <>
-            {/* Left Arrow */}
             <button
               onClick={handlePreviousPhoto}
-              className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition-all z-20"
               aria-label="Previous photo"
+              className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white p-2 shadow-lg transition hover:bg-white/90"
             >
-              <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+              <ChevronLeft className="h-5 w-5 text-[#070A11]" />
             </button>
-
-            {/* Right Arrow */}
             <button
               onClick={handleNextPhoto}
-              className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-700 p-2 rounded-full shadow-lg transition-all z-20"
               aria-label="Next photo"
+              className="absolute right-4 lg:right-12 top-1/2 -translate-y-1/2 rounded-full bg-white p-2 shadow-lg transition hover:bg-white/90"
             >
-              <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+              <ChevronRight className="h-5 w-5 text-[#070A11]" />
             </button>
           </>
         )}
-
-        {/* Carousel Indicators */}
-        {photos.length > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
-            {photos.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentPhotoIndex(index)}
-                className={`h-2 rounded-full transition-all ${
-                  index === currentPhotoIndex
-                    ? 'w-8 bg-white'
-                    : 'w-2 bg-white/50 hover:bg-white/75'
-                }`}
-                aria-label={`Go to photo ${index + 1}`}
-              />
-            ))}
-          </div>
-        )}
       </div>
+
+      {photos.length > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          {photos.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPhotoIndex(index)}
+              className={`h-2 rounded-full transition-all ${
+                index === currentPhotoIndex
+                  ? "w-6 bg-[#070A11]"
+                  : "w-2 bg-[#C6CBD8]"
+              }`}
+              aria-label={`Go to photo ${index + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

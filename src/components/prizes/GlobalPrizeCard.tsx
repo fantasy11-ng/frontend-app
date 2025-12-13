@@ -8,7 +8,6 @@ interface PrizeCardProps {
     id: string;
     place: number;
     title: string;
-    cashPrize: string;
     rewards: string[];
     color: "gold" | "silver" | "bronze" | "blue" | "purple" | "orange";
     icon: LucideIcon;
@@ -17,19 +16,20 @@ interface PrizeCardProps {
 
 const colorClasses = {
   gold: {
-    bg: "bg-gradient-to-br from-yellow-50 via-yellow-100 to-yellow-50",
+    bg: "bg-gradient-to-br from-[#EFBF0426]-50 via-[#EFBF0426]-50 to-[#EFBF0426]",
     text: "text-yellow-900",
     prizeText: "text-yellow-900",
     icon: "text-yellow-700",
+    height: "max-h-[330px]",
   },
   silver: {
-    bg: "bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50",
+    bg: "bg-gradient-to-br from-[#A9B0B426]-50 via-[#A9B0B426]-50 to-[#A9B0B426]",
     text: "text-gray-900",
     prizeText: "text-gray-900",
     icon: "text-gray-700",
   },
   bronze: {
-    bg: "bg-gradient-to-br from-amber-50 via-amber-100 to-amber-50",
+    bg: "bg-gradient-to-br from-[#A9714226]-50 via-[#A9714226]-50 to-[#A9714226]",
     text: "text-amber-900",
     prizeText: "text-amber-900",
     icon: "text-amber-700",
@@ -54,15 +54,15 @@ const colorClasses = {
   },
 };
 
-export default function PrizeCard({ prize }: PrizeCardProps) {
+export default function GlobalPrizeCard({ prize }: PrizeCardProps) {
   const colors = colorClasses[prize.color];
 
   return (
     <div
-      className={`${colors.bg} rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow relative overflow-hidden`}
+      className={`${colors.bg} rounded-xl p-6 relative max-h-[330px]`}
     >
       {/* Icon */}
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center mb-4 max-h-[330px] -mt-36 z-50">
         <div className={`${colors.icon} opacity-80`}>
           {prize.color === "gold" ? (
             <Image
@@ -70,7 +70,7 @@ export default function PrizeCard({ prize }: PrizeCardProps) {
               alt="Gold Trophy"
               width={489}
               height={266}
-              className="!w-[489px] !h-[266px] max-w-[1000px]"
+              className="!w-[489px] !h-[266px] max-w-[1000px] order-1 -mt-10"
             />
           ) : prize.color === "silver" ? (
             <Image
@@ -78,7 +78,7 @@ export default function PrizeCard({ prize }: PrizeCardProps) {
               alt="Silver Trophy"
               width={417}
               height={227}
-              className="!w-[417px] !h-[227px] max-w-[1000px]"
+              className="!w-[417px] !h-[227px] max-w-[1000px] order-2"
             />
           ) : prize.color === "bronze" ? (
             <Image
@@ -86,17 +86,9 @@ export default function PrizeCard({ prize }: PrizeCardProps) {
               alt="Bronze Trophy"
               width={379}
               height={206}
-              className="!w-[379px] !h-[206px] max-w-[1000px]"
+              className="!w-[379px] !h-[206px] max-w-[1000px] mt-4"
             />
-          ) : (
-            <Image
-              src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764268567/image_5_g8v1ws.png"
-              alt="Bronze Trophy"
-              width={417}
-              height={227}
-              className=""
-            />
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -104,15 +96,6 @@ export default function PrizeCard({ prize }: PrizeCardProps) {
       <h3 className={`text-lg font-semibold ${colors.text} mb-2`}>
         {prize.title}
       </h3>
-
-      {/* Cash Prize */}
-      <div className="mb-4">
-        <p className="text-xs text-gray-600 mb-1">Cash Prize</p>
-        <p className={`text-3xl font-bold ${colors.prizeText}`}>
-          {prize.cashPrize}
-        </p>
-      </div>
-
       {/* Rewards */}
       <ul className="space-y-2">
         {prize.rewards.map((reward, index) => (

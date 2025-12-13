@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -17,8 +18,46 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fantasy11 - African Cup of Nations",
-  description: "Fantasy football platform for African Cup of Nations",
+  title: "Fantasy11 | Play, Predict & Win Big!",
+  description:
+    "Fantasy11 is the ultimate fantasy sports platform for football fans. Create teams, join contests, track live scores and compete for prizes.",
+  keywords: [
+    "Fantasy11",
+    "fantasy football",
+    "sports prediction",
+    "fantasy sports Nigeria",
+    "football games",
+    "AFCON fantasy",
+    "Premier League fantasy",
+  ],
+  authors: [{ name: "Fantasy11" }],
+  robots: "index, follow",
+  openGraph: {
+    title: "Fantasy11 | Play, Predict & Win Big!",
+    description:
+      "Join Fantasy11 and experience the most exciting fantasy football platform. Create teams, join contests, and climb the leaderboard.",
+    images: [{ url: "https://fantasy11.com/og-image.png" }],
+    url: "https://fantasy11.com",
+    siteName: "Fantasy11",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fantasy11 | Play, Predict & Win Big!",
+    description:
+      "Create fantasy football teams, join contests, and win prizes on Fantasy11!",
+    images: ["https://fantasy11.com/og-image.png"],
+    creator: "@Fantasy11",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.json",
+  other: {
+    "theme-color": "#ff0000",
+  },
 };
 
 export default function RootLayout({
@@ -28,9 +67,43 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Tag Manager */}
+        <Script id="google-tag-manager" strategy="afterInteractive">
+          {`
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','${process.env.NEXT_PUBLIC_GTM_ID}');
+          `}
+        </Script>
+        {/* Google Analytics */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}');
+          `}
+        </Script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${process.env.NEXT_PUBLIC_GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
         <QueryProvider>
           <AuthProvider>
             <LayoutWrapper>

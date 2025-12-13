@@ -29,13 +29,14 @@ export interface Fixture {
 }
 
 export type PlayerPosition = 'GK' | 'DEF' | 'MID' | 'FWD';
-export type PlayerRole = 'captain' | 'vice-captain' | 'free-kick-taker' | 'penalty-taker' | null;
+export type PlayerRole = 'captain' | 'vice-captain' | null;
 
 export interface Player {
   id: string;
   name: string;
   position: PlayerPosition;
   country: string;
+  image?: string;
   countryFlag?: string;
   club?: string;
   jerseyNumber?: number;
@@ -54,6 +55,8 @@ export interface Player {
   inStarting11?: boolean;
   onBench?: boolean;
   role?: PlayerRole;
+  isPenaltyTaker?: boolean;
+  isFreeKickTaker?: boolean;
 }
 
 export interface SquadPlayer extends Player {
@@ -62,6 +65,11 @@ export interface SquadPlayer extends Player {
     x: number;
     y: number;
   };
+  /**
+   * Unique identifier for the squad entry (not the player id).
+   * Use this for role/lineup updates when the API expects the squad row id.
+   */
+  squadEntryId?: string;
 }
 
 export interface Squad {

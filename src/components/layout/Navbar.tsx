@@ -18,8 +18,8 @@ const Navbar: React.FC = () => {
     { name: 'My Team', href: '/my-team' },
     { name: 'League', href: '/league' },
     { name: 'Ranking', href: '/ranking' },
-    { name: 'Predictor', href: '/predictor' },
     { name: 'Stats', href: '/stats' },
+    { name: 'Predictor', href: '/predictor' },
     { name: 'News', href: '/news' },
     { name: 'Prizes', href: '/prizes' },
   ];
@@ -30,7 +30,7 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-800">
-      <div className="max-w-[1440px] mx-auto px-4">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-12">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex-shrink-0 flex items-center">
@@ -45,7 +45,7 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navigationLinks.map((link) => {
                 const isActive = pathname === link.href;
@@ -84,7 +84,7 @@ const Navbar: React.FC = () => {
             )}
 
             {/* Mobile menu button */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <button
                 onClick={toggleMobileMenu}
                 className="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-300 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
@@ -103,7 +103,7 @@ const Navbar: React.FC = () => {
 
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-800 rounded-lg mt-2">
               {navigationLinks.map((link) => {
                 const isActive = pathname === link.href;

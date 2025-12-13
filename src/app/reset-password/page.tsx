@@ -116,7 +116,7 @@ function ResetPasswordContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative">
       {/* Background Pattern */}
       <div 
         className="absolute inset-0 opacity-5"
@@ -283,7 +283,7 @@ function ResetPasswordContent() {
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <AuthLogo />
           <div className="bg-white rounded-xl shadow-lg p-8 text-center">

@@ -3,6 +3,8 @@
 import TopStatsCards from '@/components/stats/TopStatsCards';
 import PlayersTable from '@/components/stats/PlayersTable';
 import { TopStat, Player } from '@/types/stats';
+import Image from 'next/image';
+import Link from 'next/link';
 
 // Mock data - replace with actual API call
 const mockTopStats: TopStat[] = [
@@ -213,9 +215,12 @@ const mockPlayers: Player[] = [
 ];
 
 export default function StatsPage() {
+  const ready = true;
   return (
+    <>
+    {ready ? 
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto px-4 py-8">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-12 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Stats</h1>
@@ -227,6 +232,34 @@ export default function StatsPage() {
         {/* Players Table Section */}
         <PlayersTable players={mockPlayers} />
       </div>
-    </div>
+    </div> :
+
+    <div className="h-screen flex justify-center items-center">
+        <div className="flex flex-col items-center justify-center">
+          <Image
+            src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/CominSoonBlue_b9r5cs.png"
+            alt="Coming Soon"
+            width={350}
+            height={350}
+          />
+          <Link
+            href="/predictor"
+            className="bg-[#4AA96C] text-sm inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
+          >
+            Play Our Predictor Now
+          </Link>
+        </div>
+      </div>
+    }
+    </>
   );
 }
+
+// import Image from "next/image";
+// import Link from "next/link";
+
+// export default function StatsPage() {
+//   return (
+
+//   );
+// }

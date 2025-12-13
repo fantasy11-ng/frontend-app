@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Team, Player, SquadPlayer, PlayerRole } from "@/types/team";
 import FootballPitch from "./FootballPitch";
@@ -13,11 +13,22 @@ import Transfers from "./Transfers";
 import PlayerRoleMenu from "./PlayerRoleMenu";
 import SubstitutionModal from "./SubstitutionModal";
 import ReverseSubstitutionModal from "./ReverseSubstitutionModal";
+import { teamApi } from "@/lib/api";
+import { TransferHistoryItem } from "@/lib/api/team";
+import toast from "react-hot-toast";
 
 interface MyTeamPageProps {
   team: Team;
   onAppointStarting11: () => void;
   availablePlayers?: Player[];
+  initialSquad?: SquadPlayer[];
+  onLoadMorePlayers?: () => void;
+  canLoadMorePlayers?: boolean;
+  isLoadingMorePlayers?: boolean;
+  onAssignModalOpen?: () => void;
+  onSearchPlayers?: (value: string) => void;
+  onPositionChange?: (value: string) => void;
+  isPlayersListLoading?: boolean;
 }
 
 type TabType = "my-team" | "transfers" | "team-history";
@@ -26,6 +37,14 @@ type BoostTabType = "boosts" | "fixtures";
 const MyTeamPage: React.FC<MyTeamPageProps> = ({
   team,
   availablePlayers = [],
+  initialSquad = [],
+  onLoadMorePlayers,
+  canLoadMorePlayers = false,
+  isLoadingMorePlayers = false,
+  onAssignModalOpen,
+  onSearchPlayers,
+  onPositionChange,
+  isPlayersListLoading = false,
 }) => {
   const [activeTab, setActiveTab] = useState<TabType>("my-team");
   const [activeBoostTab, setActiveBoostTab] = useState<BoostTabType>("boosts");
@@ -47,65 +66,166 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     position: { x: 0, y: 0 },
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPosition, setSelectedPosition] = useState<string>("All");
+  const [localSelectedPosition, setLocalSelectedPosition] = useState<string>("All");
   const [selectedCountry, setSelectedCountry] = useState<string>("All");
+  const [fixtures, setFixtures] = useState<Fixture[]>([]);
+  const [isLoadingFixtures, setIsLoadingFixtures] = useState(false);
+  const [boosts, setBoosts] = useState<TeamBoost[]>([]);
+  const [isLoadingBoosts, setIsLoadingBoosts] = useState(false);
+  const [pendingTransferOut, setPendingTransferOut] = useState<SquadPlayer | null>(null);
+  const [transferHistory, setTransferHistory] = useState<TransferHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [transferPlayers, setTransferPlayers] = useState<Player[]>([]);
+  const [isLoadingTransferPlayers, setIsLoadingTransferPlayers] = useState(false);
 
-  // Mock data - would come from API
-  const boosts: TeamBoost[] = [
-    {
-      id: "1",
-      name: "Maximum Captain",
-      description: "Double points for both captain and vice-captain",
-      used: false,
-    },
-    {
-      id: "2",
-      name: "Triple Captain",
-      description: "Triple the points of your captain for one gameweek",
-      used: false,
-    },
-    {
-      id: "3",
-      name: "Saves Boost",
-      description: "Add 3 points per save to the GK for that game week",
-      used: false,
-    },
-  ];
+  const normalizePosition = (pos: unknown): Player["position"] => {
+    const code = (pos || "").toString().toUpperCase();
+    if (code.includes("GK") || code.includes("GOAL")) return "GK";
+    if (code.includes("DEF")) return "DEF";
+    if (code.includes("MID")) return "MID";
+    if (code.includes("FWD") || code.includes("ATT") || code.includes("STR") || code.includes("FOR"))
+      return "FWD";
+    return "MID";
+  };
+  useEffect(() => {
+    if (initialSquad.length && squadPlayers.length === 0) {
+      setSquadPlayers(initialSquad);
+    }
+  }, [initialSquad, squadPlayers.length]);
 
-  const fixtures: Fixture[] = [
-    {
-      id: "1",
-      homeTeam: { name: "Nigeria", flag: undefined },
-      awayTeam: { name: "Burundi", flag: undefined },
-      matchDay: "MD 1",
-      date: "Dec 21",
-    },
-    {
-      id: "2",
-      homeTeam: { name: "Nigeria", flag: undefined },
-      awayTeam: { name: "Burundi", flag: undefined },
-      matchDay: "MD 1",
-      date: "Dec 21",
-    },
-    {
-      id: "3",
-      homeTeam: { name: "Nigeria", flag: undefined },
-      awayTeam: { name: "Burundi", flag: undefined },
-      matchDay: "MD 1",
-      date: "Dec 21",
-    },
-    {
-      id: "4",
-      homeTeam: { name: "Nigeria", flag: undefined },
-      awayTeam: { name: "Burundi", flag: undefined },
-      matchDay: "MD 1",
-      date: "Dec 21",
-    },
-  ];
+  const defaultFixtureId = 0; // TODO: wire actual fixture id when available
 
-  const handleUseBoost = (boostId: string) => {
-    console.log("Using boost:", boostId);
-    // API call would go here
+  useEffect(() => {
+    const loadFixtures = async () => {
+      setIsLoadingFixtures(true);
+      try {
+        const upcoming = await teamApi.getUpcomingFixtures({ limit: 10 });
+        const mapped: Fixture[] = (upcoming ?? []).map((fx) => {
+          const home = fx.participants?.[0];
+          const away = fx.participants?.[1];
+          const date = fx.startingAt ? new Date(fx.startingAt) : null;
+          return {
+            id: String(fx.id ?? Math.random()),
+            homeTeam: { name: home?.name || "Home", flag: home?.logo },
+            awayTeam: { name: away?.name || "Away", flag: away?.logo },
+            matchDay: fx.gameweekId ? `GW ${fx.gameweekId}` : "Upcoming",
+            date: date ? date.toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "TBD",
+          };
+        });
+        setFixtures(mapped);
+      } catch (error) {
+        toast.error(
+          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+            (error as { message?: string })?.message ||
+            "Failed to load fixtures."
+        );
+      } finally {
+        setIsLoadingFixtures(false);
+      }
+    };
+
+    loadFixtures();
+  }, []);
+
+  const loadTransferHistory = useCallback(async () => {
+    setIsLoadingHistory(true);
+    try {
+      const history = await teamApi.getTransferHistory();
+      setTransferHistory(history);
+    } catch (error) {
+      // silent fail; history is optional
+      console.error("Failed to load transfer history", error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTransferHistory();
+  }, [loadTransferHistory]);
+
+  useEffect(() => {
+    const loadTransferPlayers = async () => {
+      if (isLoadingTransferPlayers || transferPlayers.length) return;
+      setIsLoadingTransferPlayers(true);
+      try {
+        const { players: apiPlayers } = await teamApi.getPlayers({ page: 1, limit: 100 });
+        const mapped: Player[] = (apiPlayers ?? []).map((p) => {
+          const pos = p.position?.code || p.position?.developer_name || p.position?.name || p.positionId;
+          return {
+            id: String(p.id ?? Math.random()),
+            name: p.commonName || p.name || "Player",
+            position: normalizePosition(pos),
+            country: "",
+            price: p.price ?? 0,
+            points: p.points ?? 0,
+            rating: p.rating ?? 0,
+            image: p.image,
+            selected: false,
+          };
+        });
+        setTransferPlayers(mapped);
+      } catch (error) {
+        console.error("Failed to load transfer players", error);
+      } finally {
+        setIsLoadingTransferPlayers(false);
+      }
+    };
+
+    if (activeTab === "transfers" && transferPlayers.length === 0) {
+      loadTransferPlayers();
+    }
+  }, [activeTab, transferPlayers.length, isLoadingTransferPlayers]);
+
+  useEffect(() => {
+    const loadBoosts = async () => {
+      setIsLoadingBoosts(true);
+      try {
+        const data = await teamApi.getTeamBoosts();
+        const boostDescriptions: Record<string, string> = {
+          MAX_CAPTAIN: "Double points for both captain and vice-captain",
+          TRIPLE_CAPTAIN: "Triple the points of your captain for one gameweek",
+          SAVES_BOOST: "Add 3 points per save to the GK for that game week",
+        };
+
+        const mapped: TeamBoost[] = (data ?? []).map((b, idx) => {
+          const type = (b.type || "").toUpperCase();
+          return {
+            id: String(b.id ?? type ?? idx),
+            name: type.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase()) || "Boost",
+            description: boostDescriptions[type] || "One-time gameweek boost",
+            used: Boolean(b.used),
+          };
+        });
+        setBoosts(mapped);
+      } catch (error) {
+        toast.error(
+          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+            (error as { message?: string })?.message ||
+            "Failed to load boosts."
+        );
+      } finally {
+        setIsLoadingBoosts(false);
+      }
+    };
+
+    loadBoosts();
+  }, []);
+
+  const handleUseBoost = async (boostId: string) => {
+    try {
+      await teamApi.applyTeamBoost(boostId);
+      setBoosts((prev) =>
+        prev.map((b) => (b.id === boostId ? { ...b, used: true } : b))
+      );
+      toast.success("Boost applied");
+    } catch (error) {
+      toast.error(
+        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+          (error as { message?: string })?.message ||
+          "Failed to apply boost."
+      );
+    }
   };
 
   const validateMatchday11 = (players: SquadPlayer[]): { isValid: boolean; errors: string[] } => {
@@ -152,7 +272,38 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     };
   };
 
-  const handleSaveSquad = (players: Player[]) => {
+  const deriveFormation = (players: SquadPlayer[]) => {
+    const def = players.filter((p) => p.inStarting11 && p.position === "DEF").length;
+    const mid = players.filter((p) => p.inStarting11 && p.position === "MID").length;
+    const fwd = players.filter((p) => p.inStarting11 && p.position === "FWD").length;
+    return `${def}-${mid}-${fwd}`;
+  };
+
+  const syncRolesWithApi = async (players: SquadPlayer[]) => {
+    const starters = players.filter((p) => p.inStarting11);
+    const getRoleId = (role: PlayerRole) =>
+      starters.find((p) => p.role === role)?.squadEntryId ||
+      starters.find((p) => p.role === role)?.id;
+
+    const captainId = getRoleId("captain");
+    const viceCaptainId = getRoleId("vice-captain");
+    const penaltyTakerId =
+      starters.find((p) => p.isPenaltyTaker)?.squadEntryId ||
+      starters.find((p) => p.isPenaltyTaker)?.id;
+    const freeKickTakerId =
+      starters.find((p) => p.isFreeKickTaker)?.squadEntryId ||
+      starters.find((p) => p.isFreeKickTaker)?.id;
+
+    await teamApi.updateRoles({
+      captainId,
+      viceCaptainId,
+      penaltyTakerId,
+      freeKickTakerId,
+      fixtureId: defaultFixtureId,
+    });
+  };
+
+  const handleSaveSquad = async (players: Player[]) => {
     // Ensure exactly 11 starting and 4 bench (total 15)
     const gks = players.filter((p) => p.position === 'GK');
     const nonGks = players.filter((p) => p.position !== 'GK');
@@ -187,12 +338,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
     // Ensure exactly 11 starting and max 4 bench
     if (starting11.length !== 11) {
-      alert(`Error: Starting 11 must have exactly 11 players (got ${starting11.length})`);
+      toast.error(`Error: Starting 11 must have exactly 11 players (got ${starting11.length})`);
       return;
     }
 
     if (bench.length > 4) {
-      alert(`Error: Bench cannot exceed 4 players (got ${bench.length})`);
+      toast.error(`Error: Bench cannot exceed 4 players (got ${bench.length})`);
       return;
     }
 
@@ -216,12 +367,62 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     // Validate matchday 11
     const validation = validateMatchday11(squad);
     if (!validation.isValid) {
-      alert(validation.errors.join('\n'));
+      toast.error(validation.errors.join('\n'));
       return;
     }
 
-    setSquadPlayers(squad);
-    setShowAssignModal(false);
+    try {
+      const formation = deriveFormation(squad);
+
+      await teamApi.createSquad({
+        formation,
+        squad: squad.map((p) => ({
+          playerId: Number(p.id),
+          isStarting: Boolean(p.inStarting11),
+          isCaptain: p.role === "captain",
+          isViceCaptain: p.role === "vice-captain",
+          isPenaltyTaker: Boolean(p.isPenaltyTaker),
+          isFreeKickTaker: Boolean(p.isFreeKickTaker),
+        })),
+      });
+
+      await teamApi.updateLineup({
+        formation,
+        startingPlayerIds: squad.filter((p) => p.inStarting11).map((p) => p.id),
+        benchPlayerIds: squad.filter((p) => p.onBench).map((p) => p.id),
+        fixtureId: defaultFixtureId,
+      });
+
+      await syncRolesWithApi(squad);
+
+      setSquadPlayers(squad);
+      setShowAssignModal(false);
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (error as { message?: string })?.message ||
+        "Failed to save squad. Please try again.";
+      toast.error(message);
+    }
+  };
+
+  const persistLineup = async (updatedSquad: SquadPlayer[]) => {
+    try {
+      const formation = deriveFormation(updatedSquad);
+      const toId = (p: SquadPlayer) => p.squadEntryId ?? p.id;
+      await teamApi.updateLineup({
+        formation,
+        startingPlayerIds: updatedSquad.filter((p) => p.inStarting11).map(toId),
+        benchPlayerIds: updatedSquad.filter((p) => p.onBench).map(toId),
+        fixtureId: defaultFixtureId,
+      });
+    } catch (error) {
+      toast.error(
+        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+          (error as { message?: string })?.message ||
+          "Failed to update lineup."
+      );
+    }
   };
 
   const starting11 = useMemo(() => {
@@ -326,11 +527,11 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     };
   };
 
-  const handleSubstitute = (playerOut: SquadPlayer, playerIn: SquadPlayer) => {
+  const handleSubstitute = async (playerOut: SquadPlayer, playerIn: SquadPlayer) => {
     // Validate substitution using formation rules
     const validation = validateSubstitution(playerOut, playerIn, starting11);
     if (!validation.isValid) {
-      alert(`Cannot perform substitution: ${validation.errors.join(', ')}`);
+      toast.error(`Cannot perform substitution: ${validation.errors.join(', ')}`);
       return;
     }
 
@@ -348,16 +549,17 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     // Final validation after substitution
     const finalValidation = validateMatchday11(updatedSquad);
     if (!finalValidation.isValid) {
-      alert(`Cannot perform substitution: ${finalValidation.errors.join(', ')}`);
+      toast.error(`Cannot perform substitution: ${finalValidation.errors.join(', ')}`);
       return;
     }
 
     setSquadPlayers(updatedSquad);
+    await persistLineup(updatedSquad);
     setShowSubstitutionModal(false);
     setSubstitutionPlayer(null);
   };
 
-  const handleMoveToStarting11 = (player: SquadPlayer) => {
+  const handleMoveToStarting11 = async (player: SquadPlayer) => {
     const currentStarting11 = squadPlayers.filter((p) => p.inStarting11);
     const currentBench = squadPlayers.filter((p) => p.onBench);
     
@@ -365,10 +567,10 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     if (currentStarting11.length >= 11 && !player.inStarting11) {
       // If bench is full (4 players), we need to swap
       if (currentBench.length >= 4) {
-        alert('Starting 11 is full and bench is full. You must swap players.');
+        toast.error('Starting 11 is full and bench is full. You must swap players.');
         return;
       }
-      alert('Starting 11 is full. Move a player to bench first.');
+      toast.error('Starting 11 is full. Move a player to bench first.');
       return;
     }
 
@@ -392,11 +594,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         // Validate matchday 11 after swap (includes bench limit check)
         const validation = validateMatchday11(updatedSquad);
         if (!validation.isValid) {
-          alert(`Cannot swap goalkeepers: ${validation.errors.join(', ')}`);
+          toast.error(`Cannot swap goalkeepers: ${validation.errors.join(', ')}`);
           return;
         }
         
         setSquadPlayers(updatedSquad);
+        await persistLineup(updatedSquad);
         return;
       }
     }
@@ -424,11 +627,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         // Validate matchday 11 after swap
         const validation = validateMatchday11(updatedSquad);
         if (!validation.isValid) {
-          alert(`Cannot swap players: ${validation.errors.join(', ')}`);
+          toast.error(`Cannot swap players: ${validation.errors.join(', ')}`);
           return;
         }
         
         setSquadPlayers(updatedSquad);
+        await persistLineup(updatedSquad);
         return;
       }
     }
@@ -442,20 +646,27 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     // Validate matchday 11 after moving to starting (includes bench limit check)
     const validation = validateMatchday11(updatedSquad);
     if (!validation.isValid) {
-      alert(`Cannot add player to starting 11: ${validation.errors.join(', ')}`);
+      toast.error(`Cannot add player to starting 11: ${validation.errors.join(', ')}`);
       return;
     }
 
     setSquadPlayers(updatedSquad);
+    await persistLineup(updatedSquad);
   };
 
-  const handleAssignRole = (role: PlayerRole) => {
-    if (!roleMenuState.player) return;
+  const handleAssignRole = async (role: PlayerRole) => {
+    const target = roleMenuState.player ?? (selectedPlayer as SquadPlayer | null);
+    if (!target) return;
+    if (!target.inStarting11) {
+      toast.error("Roles can only be assigned to starting players");
+      return;
+    }
     
+    let updatedSquad: SquadPlayer[] = [];
+
     setSquadPlayers((prev) => {
-      const targetPlayerId = roleMenuState.player!.id;
-      
-      return prev.map((p) => {
+      const targetPlayerId = target.id;
+      const next = prev.map((p) => {
         // If assigning a role (not null), remove it from any other player who has it
         if (role !== null && p.role === role && p.id !== targetPlayerId) {
           return { ...p, role: null };
@@ -466,13 +677,84 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         }
         return p;
       });
+      updatedSquad = next;
+      return next;
     });
     
     setRoleMenuState({ isOpen: false, player: null, position: { x: 0, y: 0 } });
+    setShowPlayerDetails(false);
+
+    try {
+      if (updatedSquad.length) {
+        await syncRolesWithApi(updatedSquad);
+      }
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (error as { message?: string })?.message ||
+        "Failed to update roles. Please try again.";
+      toast.error(message);
+    }
+  };
+
+  const handleToggleSpecialist = async (type: "penalty" | "free-kick") => {
+    const target = roleMenuState.player ?? (selectedPlayer as SquadPlayer | null);
+    if (!target) return;
+    if (!target.inStarting11) {
+      toast.error("Roles can only be assigned to starting players");
+      return;
+    }
+
+    let updatedSquad: SquadPlayer[] = [];
+
+    setSquadPlayers((prev) => {
+      const targetPlayerId = target.id;
+      const next = prev.map((p) => {
+        if (p.id === targetPlayerId) {
+          return {
+            ...p,
+            isPenaltyTaker:
+              type === "penalty" ? !p.isPenaltyTaker : p.isPenaltyTaker,
+            isFreeKickTaker:
+              type === "free-kick" ? !p.isFreeKickTaker : p.isFreeKickTaker,
+          };
+        }
+
+        if (type === "penalty" && p.isPenaltyTaker) {
+          return { ...p, isPenaltyTaker: false };
+        }
+        if (type === "free-kick" && p.isFreeKickTaker) {
+          return { ...p, isFreeKickTaker: false };
+        }
+        return p;
+      });
+
+      updatedSquad = next;
+      return next;
+    });
+
+    setRoleMenuState({ isOpen: false, player: null, position: { x: 0, y: 0 } });
+    setShowPlayerDetails(false);
+
+    try {
+      if (updatedSquad.length) {
+        await syncRolesWithApi(updatedSquad);
+      }
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (error as { message?: string })?.message ||
+        "Failed to update roles. Please try again.";
+      toast.error(message);
+    }
   };
 
   const handlePlayerRoleMenu = (player: SquadPlayer, event: React.MouseEvent) => {
     event.stopPropagation();
+    if (!player.inStarting11) {
+      toast.error("Roles can only be assigned to starting players");
+      return;
+    }
     setRoleMenuState({
       isOpen: true,
       player,
@@ -480,32 +762,80 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     });
   };
 
-  const handleTransferIn = (player: Player) => {
-    // Check if player is already in squad
-    if (squadPlayers.find((p) => p.id === player.id)) {
-      alert("Player already in squad");
+  const handleTransferOut = (player: Player) => {
+    const squadPlayer = squadPlayers.find((p) => p.id === player.id);
+    if (!squadPlayer) {
+      toast.error("Player not in squad");
       return;
     }
-
-    // Check budget
-    const currentSpent = squadPlayers.reduce((sum, p) => sum + p.price, 0);
-    if (currentSpent + player.price > team.budget) {
-      alert("Insufficient budget");
-      return;
-    }
-
-    const newPlayer: SquadPlayer = {
-      ...player,
-      inSquad: true,
-      inStarting11: false,
-      onBench: true,
-      squadPosition: "bench",
-    };
-    setSquadPlayers([...squadPlayers, newPlayer]);
+    setPendingTransferOut(squadPlayer);
   };
 
-  const handleTransferOut = (player: Player) => {
-    setSquadPlayers((prev) => prev.filter((p) => p.id !== player.id));
+  const handleTransferIn = async (player: Player) => {
+    if (!pendingTransferOut) {
+      toast.error("Select a player to transfer out first");
+      return;
+    }
+
+    if (player.position !== pendingTransferOut.position) {
+      toast.error(`Replacement must be a ${pendingTransferOut.position}`);
+      return;
+    }
+
+    const currentSpent = squadPlayers.reduce((sum, p) => sum + p.price, 0);
+    const newBudget = currentSpent - pendingTransferOut.price + player.price;
+    if (newBudget > team.budget) {
+      toast.error("Insufficient budget");
+      return;
+    }
+
+    const transfersUsedThisWeek = transferHistory.filter(
+      (t) => t.fixtureId === defaultFixtureId
+    ).length;
+    const TRANSFER_LIMIT = 4;
+    if (transfersUsedThisWeek >= TRANSFER_LIMIT) {
+      toast.error("Transfer limit for this gameweek reached (4)");
+      return;
+    }
+
+    try {
+      await teamApi.makeTransfers({
+        fixtureId: defaultFixtureId,
+        transfers: [
+          {
+            playerOutId: Number(pendingTransferOut.id),
+            playerInId: Number(player.id),
+          },
+        ],
+      });
+
+      // Swap locally
+      setSquadPlayers((prev) => {
+        const next = prev
+          .filter((p) => p.id !== pendingTransferOut.id)
+          .concat({
+            ...player,
+            inSquad: true,
+            inStarting11: pendingTransferOut.inStarting11,
+            onBench: pendingTransferOut.onBench,
+            squadPosition: pendingTransferOut.squadPosition,
+            role: null,
+            isPenaltyTaker: false,
+            isFreeKickTaker: false,
+          });
+        return next;
+      });
+
+      setPendingTransferOut(null);
+      await loadTransferHistory();
+      toast.success("Transfer completed");
+    } catch (error) {
+      const message =
+        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (error as { message?: string })?.message ||
+        "Failed to complete transfer.";
+      toast.error(message);
+    }
   };
 
   const allPlayersForSquad = useMemo(() => {
@@ -518,18 +848,19 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   const availableForTransfer = useMemo(() => {
     const squadPlayerIds = new Set(squadPlayers.map((p) => p.id));
-    return availablePlayers.filter((p) => !squadPlayerIds.has(p.id));
-  }, [squadPlayers, availablePlayers]);
+    const source = transferPlayers.length ? transferPlayers : availablePlayers;
+    return source.filter((p) => !squadPlayerIds.has(p.id));
+  }, [squadPlayers, availablePlayers, transferPlayers]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] mx-auto px-4 py-8">
+      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">My Team</h1>
+          {/* <h1 className="text-3xl font-bold text-gray-900 mb-4">My Team</h1> */}
           <div className="flex justify-end">
-            <div className="px-4 py-2 bg-white border-2 border-red-500 rounded-full">
-              <span className="text-red-600 font-semibold">
+            <div className="px-4 py-2 bg-[#F5EBEB] rounded-full">
+              <span className="text-[#800000] font-semibold">
                 ${(team.budget / 1000000).toFixed(1)}M Budget
               </span>
             </div>
@@ -590,10 +921,13 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               )}
             </div>
             {/* Appoint Starting 11 Button */}
-            {activeTab === "my-team" && (
+            {activeTab === "my-team" && squadPlayers.length === 0 && (
               <div className="flex justify-center">
                 <button
-                  onClick={() => setShowAssignModal(true)}
+                  onClick={() => {
+                    onAssignModalOpen?.();
+                    setShowAssignModal(true);
+                  }}
                   className="px-4 py-1 bg-[#4AA96C] text-white rounded-full font-semibold text-base"
                 >
                   Appoint starting 11
@@ -612,13 +946,16 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Squad Management */}
                 <SquadManagement
-                  players={squadPlayers}
+                  players={bench}
                   onPlayerClick={handlePlayerClick}
                   onMoveToStarting11={handleSubstituteClick}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
-                  selectedPosition={selectedPosition}
-                  onPositionChange={setSelectedPosition}
+                  selectedPosition={localSelectedPosition}
+                  onPositionChange={(val) => {
+                    setLocalSelectedPosition(val);
+                    onPositionChange?.(val);
+                  }}
                   selectedCountry={selectedCountry}
                   onCountryChange={setSelectedCountry}
                 />
@@ -655,9 +992,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                 </div>
 
                 {activeBoostTab === "boosts" ? (
-                  <TeamBoosts boosts={boosts} onUseBoost={handleUseBoost} />
+                  <TeamBoosts boosts={boosts} onUseBoost={handleUseBoost} isLoading={isLoadingBoosts} />
                 ) : (
-                  <UpcomingFixtures fixtures={fixtures} />
+                  <UpcomingFixtures fixtures={fixtures} isLoading={isLoadingFixtures} />
                 )}
               </div>
             </div>
@@ -666,13 +1003,56 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
         {/* Transfers Tab */}
         {activeTab === "transfers" && (
-          <Transfers
-            squadPlayers={squadPlayers}
-            availablePlayers={availableForTransfer}
-            budget={team.budget}
-            onTransferIn={handleTransferIn}
-            onTransferOut={handleTransferOut}
-          />
+          <div className="space-y-4">
+            <Transfers
+              squadPlayers={squadPlayers}
+              availablePlayers={availableForTransfer}
+              budget={team.budget}
+              pendingOut={pendingTransferOut}
+              onClearPendingOut={() => setPendingTransferOut(null)}
+              onTransferIn={handleTransferIn}
+              onTransferOut={handleTransferOut}
+              transfersUsed={transferHistory.filter((t) => t.fixtureId === defaultFixtureId).length}
+              transferLimit={4}
+            />
+
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-900">Transfer History</h3>
+                {isLoadingHistory && <span className="text-xs text-gray-500">Loading...</span>}
+              </div>
+              {transferHistory.length === 0 ? (
+                <p className="text-sm text-gray-500">No transfers yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-gray-600">Out</th>
+                        <th className="px-3 py-2 text-left text-gray-600">In</th>
+                        <th className="px-3 py-2 text-left text-gray-600">Type</th>
+                        <th className="px-3 py-2 text-left text-gray-600">Fixture</th>
+                        <th className="px-3 py-2 text-left text-gray-600">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {transferHistory.map((t) => (
+                        <tr key={t.id}>
+                          <td className="px-3 py-2 text-gray-800">{t.playerOutId ?? '—'}</td>
+                          <td className="px-3 py-2 text-gray-800">{t.playerInId ?? '—'}</td>
+                          <td className="px-3 py-2 text-gray-600">{t.type ?? 'TRANSFER'}</td>
+                          <td className="px-3 py-2 text-gray-600">{t.fixtureId ?? '—'}</td>
+                          <td className="px-3 py-2 text-gray-600">
+                            {t.createdAt ? new Date(t.createdAt).toLocaleString() : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Team History Tab */}
@@ -694,6 +1074,16 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           players={allPlayersForSquad}
           budget={team.budget}
           onSave={handleSaveSquad}
+          onLoadMore={onLoadMorePlayers}
+          canLoadMore={canLoadMorePlayers}
+          isLoadingMore={isLoadingMorePlayers}
+          onSearchChange={onSearchPlayers}
+          onPositionChange={(val) => {
+            setLocalSelectedPosition(val);
+            onPositionChange?.(val);
+          }}
+          selectedPosition={localSelectedPosition}
+          isLoadingList={isPlayersListLoading}
         />
 
         <PlayerDetailsModal
@@ -705,6 +1095,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           player={selectedPlayer}
           onSendToBench={selectedPlayer?.inStarting11 ? handleSendToBench : undefined}
           onAssignRole={handleAssignRole}
+          onTogglePenalty={() => handleToggleSpecialist("penalty")}
+          onToggleFreeKick={() => handleToggleSpecialist("free-kick")}
           isOnBench={selectedPlayer?.onBench || false}
         />
 
@@ -730,6 +1122,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               : undefined
           }
           onAssignRole={handleAssignRole}
+          onTogglePenalty={() => handleToggleSpecialist("penalty")}
+          onToggleFreeKick={() => handleToggleSpecialist("free-kick")}
         />
 
         <SubstitutionModal

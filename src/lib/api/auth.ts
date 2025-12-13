@@ -99,7 +99,7 @@ export const authApi = {
   initiateGoogleOAuth: (): string => {
     const origin = getRedirectOrigin();
     const redirectUri = origin ? `${origin}/auth/google/callback` : '';
-    return `${apiClient.defaults.baseURL}auth/google${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ''}`;
+    return `${apiClient.defaults.baseURL}/auth/google${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ''}`;
   },
 
   // GET /auth/google/callback - Google OAuth callback
@@ -115,7 +115,7 @@ export const authApi = {
   initiateFacebookOAuth: (): string => {
     const origin = getRedirectOrigin();
     const redirectUri = origin ? `${origin}/auth/facebook/callback` : '';
-    return `${apiClient.defaults.baseURL}auth/facebook${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ''}`;
+    return `${apiClient.defaults.baseURL}/auth/facebook${redirectUri ? `?redirect_uri=${encodeURIComponent(redirectUri)}` : ''}`;
   },
 
   // GET /auth/facebook/callback - Facebook OAuth callback
