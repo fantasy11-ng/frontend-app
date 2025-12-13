@@ -171,6 +171,7 @@ const Transfers: React.FC<TransfersProps> = ({
         </div>
       </div>
 
+
       {/* Transfer Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* My Squad */}
