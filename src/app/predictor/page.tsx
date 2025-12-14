@@ -22,6 +22,7 @@ import {
   ThirdBestTeams,
 } from "@/components/predictor";
 import toast from "react-hot-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Group } from "@/types/predictor";
 import type { RoundCode, BracketPrediction } from "@/types/predictorStage";
 import Image from "next/image";
@@ -83,6 +84,7 @@ function PredictorPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const {
     data: groups = [],
     isLoading: groupsLoading,
@@ -413,13 +415,9 @@ function PredictorPageContent() {
       (group) => group.length === 4
     ).length;
     const savedCompleted = getSavedGroupCount();
-    const total =
-      groups.length > 0 ? groups.length : GROUP_STAGE_TOTAL;
+    const total = groups.length > 0 ? groups.length : GROUP_STAGE_TOTAL;
     return {
-      completed: Math.min(
-        Math.max(localCompleted, savedCompleted),
-        total
-      ),
+      completed: Math.min(Math.max(localCompleted, savedCompleted), total),
       total,
     };
   };
@@ -660,8 +658,8 @@ function PredictorPageContent() {
           Object.values(predictions.groupStage).filter(
             (group) => group.length === 4
           ).length === (groups.length || GROUP_STAGE_TOTAL);
-        const savedGroupCompleted = getSavedGroupCount() ===
-          (groups.length || GROUP_STAGE_TOTAL);
+        const savedGroupCompleted =
+          getSavedGroupCount() === (groups.length || GROUP_STAGE_TOTAL);
         return localGroupCompleted || savedGroupCompleted;
       case "thirdBest":
         // Check both local state and saved API predictions
@@ -1002,9 +1000,15 @@ function PredictorPageContent() {
               </div>
             ) : groupsError || stagesError || !groupStageId ? (
               <div className="p-6 text-center">
-                <p className="text-red-500">
-                  Error loading groups/stages. Please try again.
-                </p>
+                <p className="text-red-500">Error loading groups/stages.</p>
+                {!isAuthenticated && (
+                  <button
+                    onClick={() => router.push("/sign-in")}
+                    className="cursor-pointer mt-4 px-6 py-2 bg-[#4AA96C] hover:bg-[#3d9a5c] text-white text-sm font-medium rounded-full transition-colors"
+                  >
+                    Log in
+                  </button>
+                )}
               </div>
             ) : (
               <GroupStage
