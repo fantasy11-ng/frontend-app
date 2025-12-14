@@ -7,6 +7,7 @@ import { ArrowLeft } from 'lucide-react';
 import { LeagueLeaderboard } from '@/components/league';
 import { leagueApi } from '@/lib/api/league';
 import { LeagueMember, UserLeague } from '@/types/league';
+import { Spinner } from '@/components/common/Spinner';
 
 export default function LeagueDetailPage() {
   const params = useParams<{ id: string }>();
@@ -144,10 +145,7 @@ export default function LeagueDetailPage() {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div
-              className="h-12 w-12 rounded-full border-4 border-[#4AA96C] border-t-transparent animate-spin"
-              aria-label="Loading league leaderboard"
-            />
+            <Spinner size={24} className="text-[#4AA96C]" />
           </div>
         ) : error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

@@ -8,6 +8,7 @@ import { Team, Player, SquadPlayer, PlayerRole } from '@/types/team';
 import Image from 'next/image';
 import Link from 'next/link';
 import { teamApi, authApi } from '@/lib/api';
+import { Spinner } from '@/components/common/Spinner';
 
 
 
@@ -302,8 +303,7 @@ export default function TeamPage() {
     return (
       <div className="h-screen flex justify-center items-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#4AA96C] mx-auto mb-3" />
-          <p className="text-sm text-[#656E81]">Loading your team...</p>
+          <Spinner size={24} className="text-[#4AA96C]" />
         </div>
       </div>
     );

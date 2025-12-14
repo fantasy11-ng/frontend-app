@@ -13,9 +13,10 @@ import Transfers from "./Transfers";
 import PlayerRoleMenu from "./PlayerRoleMenu";
 import SubstitutionModal from "./SubstitutionModal";
 import ReverseSubstitutionModal from "./ReverseSubstitutionModal";
-import { teamApi } from "@/lib/api";
+import { teamApi, TeamHistoryEvent } from "@/lib/api";
 import { TransferHistoryItem } from "@/lib/api/team";
 import toast from "react-hot-toast";
+import { Spinner } from "../common/Spinner";
 
 interface MyTeamPageProps {
   team: Team;
@@ -46,6 +47,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   onPositionChange,
   isPlayersListLoading = false,
 }) => {
+  const TRANSFER_PAGE_SIZE = 20;
   const [activeTab, setActiveTab] = useState<TabType>("my-team");
   const [activeBoostTab, setActiveBoostTab] = useState<BoostTabType>("boosts");
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -77,6 +79,24 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [transferPlayers, setTransferPlayers] = useState<Player[]>([]);
   const [isLoadingTransferPlayers, setIsLoadingTransferPlayers] = useState(false);
+  const [canLoadMoreTransferPlayers, setCanLoadMoreTransferPlayers] = useState(false);
+  const [transferPlayersPage, setTransferPlayersPage] = useState(1);
+  const [transferSearchTerm, setTransferSearchTerm] = useState("");
+  const [isProcessingTransfer, setIsProcessingTransfer] = useState(false);
+  const [isSavingLineup, setIsSavingLineup] = useState(false);
+  const [teamHistory, setTeamHistory] = useState<
+    Array<{
+      id: string;
+      matchDay: string;
+      date: string;
+      captain?: string;
+      viceCaptain?: string;
+      points?: number;
+      rank?: number;
+      transfers?: number;
+    }>
+  >([]);
+  const [isLoadingTeamHistory, setIsLoadingTeamHistory] = useState(false);
 
   const normalizePosition = (pos: unknown): Player["position"] => {
     const code = (pos || "").toString().toUpperCase();
@@ -144,38 +164,101 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     loadTransferHistory();
   }, [loadTransferHistory]);
 
-  useEffect(() => {
-    const loadTransferPlayers = async () => {
-      if (isLoadingTransferPlayers || transferPlayers.length) return;
+  const mapApiPlayersToTransfer = useCallback(
+    (apiPlayers?: Array<{ id?: number | string; name?: string; commonName?: string; position?: { code?: string; developer_name?: string; name?: string }; positionId?: number; price?: number; points?: number; rating?: number; image?: string }>): Player[] => {
+      return (apiPlayers ?? []).map((p) => {
+        const pos = p.position?.code || p.position?.developer_name || p.position?.name || p.positionId;
+        return {
+          id: String(p.id ?? Math.random()),
+          name: p.commonName || p.name || "Player",
+          position: normalizePosition(pos),
+          country: "",
+          price: p.price ?? 0,
+          points: p.points ?? 0,
+          rating: p.rating ?? 0,
+          image: p.image,
+          selected: false,
+        };
+      });
+    },
+    []
+  );
+
+  const fetchTransferPlayers = useCallback(
+    async ({ page = 1, append = false, search }: { page?: number; append?: boolean; search?: string } = {}) => {
       setIsLoadingTransferPlayers(true);
       try {
-        const { players: apiPlayers } = await teamApi.getPlayers({ page: 1, limit: 100 });
-        const mapped: Player[] = (apiPlayers ?? []).map((p) => {
-          const pos = p.position?.code || p.position?.developer_name || p.position?.name || p.positionId;
-          return {
-            id: String(p.id ?? Math.random()),
-            name: p.commonName || p.name || "Player",
-            position: normalizePosition(pos),
-            country: "",
-            price: p.price ?? 0,
-            points: p.points ?? 0,
-            rating: p.rating ?? 0,
-            image: p.image,
-            selected: false,
-          };
+        const { players: apiPlayers, meta } = await teamApi.getPlayers({
+          page,
+          limit: TRANSFER_PAGE_SIZE,
+          search: search || undefined,
         });
-        setTransferPlayers(mapped);
+
+        const mapped = mapApiPlayersToTransfer(apiPlayers);
+        setTransferPlayers((prev) => (append ? [...prev, ...mapped] : mapped));
+        setTransferPlayersPage(page);
+
+        const totalPages = meta?.totalPages ?? null;
+        const currentPage = meta?.currentPage ?? page;
+        const hasMore =
+          (totalPages !== null && currentPage < totalPages) ||
+          mapped.length === TRANSFER_PAGE_SIZE;
+        setCanLoadMoreTransferPlayers(hasMore);
       } catch (error) {
         console.error("Failed to load transfer players", error);
+        setCanLoadMoreTransferPlayers(false);
       } finally {
         setIsLoadingTransferPlayers(false);
       }
-    };
+    },
+    [mapApiPlayersToTransfer]
+  );
 
-    if (activeTab === "transfers" && transferPlayers.length === 0) {
-      loadTransferPlayers();
+  const fetchTeamHistory = useCallback(async () => {
+    setIsLoadingTeamHistory(true);
+    try {
+      const events = await teamApi.getTeamHistory();
+      const mapped =
+        events?.map((evt: TeamHistoryEvent, index: number) => {
+          const squad = evt.team?.squads?.[0];
+          const gw = squad?.gameweek;
+          const ranking = evt.team?.rankings?.find((r) => r.gameweekId === gw?.id) ?? evt.team?.rankings?.[0];
+          const captain = squad?.players?.find((p) => p.isCaptain)?.player?.name;
+          const viceCaptain = squad?.players?.find((p) => p.isViceCaptain)?.player?.name;
+          const date = gw?.firstKickoffAt || evt.createdAt;
+          const transfersCount = Array.isArray(evt.team?.transfers) ? evt.team.transfers.length : undefined;
+
+          return {
+            id: String(evt.id ?? `history-${index}`),
+            matchDay: gw?.name || gw?.code || "Match Day",
+            date: date ? new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—",
+            captain: captain || "—",
+            viceCaptain: viceCaptain || "—",
+            points: ranking?.totalPoints ?? undefined,
+            rank: ranking?.rank ?? undefined,
+            transfers: transfersCount,
+          };
+        }) ?? [];
+      setTeamHistory(mapped);
+    } catch (error) {
+      console.error("Failed to load team history", error);
+      setTeamHistory([]);
+    } finally {
+      setIsLoadingTeamHistory(false);
     }
-  }, [activeTab, transferPlayers.length, isLoadingTransferPlayers]);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab !== "transfers") return;
+    // initial load or refresh on search
+    fetchTransferPlayers({ page: 1, append: false, search: transferSearchTerm });
+  }, [activeTab, transferSearchTerm, fetchTransferPlayers]);
+
+  useEffect(() => {
+    if (activeTab === "team-history" && teamHistory.length === 0 && !isLoadingTeamHistory) {
+      fetchTeamHistory();
+    }
+  }, [activeTab, teamHistory.length, isLoadingTeamHistory, fetchTeamHistory]);
 
   useEffect(() => {
     const loadBoosts = async () => {
@@ -281,18 +364,16 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   const syncRolesWithApi = async (players: SquadPlayer[]) => {
     const starters = players.filter((p) => p.inStarting11);
-    const getRoleId = (role: PlayerRole) =>
-      starters.find((p) => p.role === role)?.squadEntryId ||
-      starters.find((p) => p.role === role)?.id;
+    const toPlayerId = (p?: SquadPlayer) => {
+      if (!p) return undefined;
+      const parsed = Number(p.id);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    };
 
-    const captainId = getRoleId("captain");
-    const viceCaptainId = getRoleId("vice-captain");
-    const penaltyTakerId =
-      starters.find((p) => p.isPenaltyTaker)?.squadEntryId ||
-      starters.find((p) => p.isPenaltyTaker)?.id;
-    const freeKickTakerId =
-      starters.find((p) => p.isFreeKickTaker)?.squadEntryId ||
-      starters.find((p) => p.isFreeKickTaker)?.id;
+    const captainId = toPlayerId(starters.find((p) => p.role === "captain"));
+    const viceCaptainId = toPlayerId(starters.find((p) => p.role === "vice-captain"));
+    const penaltyTakerId = toPlayerId(starters.find((p) => p.isPenaltyTaker));
+    const freeKickTakerId = toPlayerId(starters.find((p) => p.isFreeKickTaker));
 
     await teamApi.updateRoles({
       captainId,
@@ -388,8 +469,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
       await teamApi.updateLineup({
         formation,
-        startingPlayerIds: squad.filter((p) => p.inStarting11).map((p) => p.id),
-        benchPlayerIds: squad.filter((p) => p.onBench).map((p) => p.id),
+        startingPlayerIds: squad.filter((p) => p.inStarting11).map((p) => Number(p.id)),
+        benchPlayerIds: squad.filter((p) => p.onBench).map((p) => Number(p.id)),
         fixtureId: defaultFixtureId,
       });
 
@@ -407,13 +488,21 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   };
 
   const persistLineup = async (updatedSquad: SquadPlayer[]) => {
+    setIsSavingLineup(true);
     try {
       const formation = deriveFormation(updatedSquad);
-      const toId = (p: SquadPlayer) => p.squadEntryId ?? p.id;
+      const toPlayerId = (p: SquadPlayer) => {
+        const parsed = Number(p.id);
+        if (!Number.isFinite(parsed)) {
+          throw new Error(`Invalid player id for lineup: ${p.id}`);
+        }
+        return parsed;
+      };
+
       await teamApi.updateLineup({
         formation,
-        startingPlayerIds: updatedSquad.filter((p) => p.inStarting11).map(toId),
-        benchPlayerIds: updatedSquad.filter((p) => p.onBench).map(toId),
+        startingPlayerIds: updatedSquad.filter((p) => p.inStarting11).map(toPlayerId),
+        benchPlayerIds: updatedSquad.filter((p) => p.onBench).map(toPlayerId),
         fixtureId: defaultFixtureId,
       });
     } catch (error) {
@@ -422,6 +511,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           (error as { message?: string })?.message ||
           "Failed to update lineup."
       );
+    } finally {
+      setIsSavingLineup(false);
     }
   };
 
@@ -762,6 +853,15 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     });
   };
 
+  const handleLoadMoreTransferPlayers = useCallback(() => {
+    if (isLoadingTransferPlayers || !canLoadMoreTransferPlayers) return;
+    fetchTransferPlayers({ page: transferPlayersPage + 1, append: true, search: transferSearchTerm });
+  }, [isLoadingTransferPlayers, canLoadMoreTransferPlayers, fetchTransferPlayers, transferPlayersPage, transferSearchTerm]);
+
+  const handleTransferSearch = useCallback((term: string) => {
+    setTransferSearchTerm(term);
+  }, []);
+
   const handleTransferOut = (player: Player) => {
     const squadPlayer = squadPlayers.find((p) => p.id === player.id);
     if (!squadPlayer) {
@@ -799,6 +899,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     }
 
     try {
+      setIsProcessingTransfer(true);
       await teamApi.makeTransfers({
         fixtureId: defaultFixtureId,
         transfers: [
@@ -835,6 +936,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         (error as { message?: string })?.message ||
         "Failed to complete transfer.";
       toast.error(message);
+    } finally {
+      setIsProcessingTransfer(false);
     }
   };
 
@@ -971,6 +1074,13 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               </div>
             </div>
 
+        {(isSavingLineup || isProcessingTransfer) && (
+          <div className="mb-4 px-4 py-2 rounded-lg border border-[#F1F2F4] bg-white flex items-center gap-2 text-sm text-[#070A11]">
+            <Spinner size={16} className="text-[#4AA96C]" />
+            <span>{isSavingLineup ? "Updating lineup..." : "Processing transfer..."}</span>
+          </div>
+        )}
+
             {/* Right Column - Boosts and Fixtures */}
             <div className="space-y-6">
               {/* Boost/Fixture Tabs */}
@@ -1014,6 +1124,11 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               onTransferOut={handleTransferOut}
               transfersUsed={transferHistory.filter((t) => t.fixtureId === defaultFixtureId).length}
               transferLimit={4}
+              isLoadingAvailable={isLoadingTransferPlayers}
+              onLoadMoreAvailable={handleLoadMoreTransferPlayers}
+              canLoadMoreAvailable={canLoadMoreTransferPlayers}
+              onSearchAvailable={handleTransferSearch}
+              isTransferring={isProcessingTransfer}
             />
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -1058,12 +1173,65 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         {/* Team History Tab */}
         {activeTab === "team-history" && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Team History
-            </h3>
-            <div className="text-center py-8 text-gray-500">
-              <p>Team history coming soon</p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Team History</h3>
+              {isLoadingTeamHistory && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <Spinner size={16} className="text-[#4AA96C]" />
+                  <span>Loading...</span>
+                </div>
+              )}
             </div>
+
+            {teamHistory.length === 0 && !isLoadingTeamHistory ? (
+              <div className="text-center py-10 text-gray-500">
+                <p>No history yet.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {teamHistory.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-xl border border-[#F1F2F4] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-4 flex flex-col gap-3"
+                  >
+                    <div className="flex items-center justify-between text-xs text-[#656E81]">
+                      <span className="px-2 py-1 rounded-full bg-[#F5EBEB] text-[#800000] font-semibold">
+                        {item.matchDay}
+                      </span>
+                      <span className="px-2 py-1 rounded-full border border-[#F1F2F4] text-[#656E81]">
+                        {item.date}
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 text-sm">
+                      <div>
+                        <span className="text-[#656E81]">Captain </span>
+                        <span className="font-semibold text-[#070A11]">{item.captain || "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[#656E81]">Vice Captain </span>
+                        <span className="font-semibold text-[#070A11]">{item.viceCaptain || "—"}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm text-[#070A11]">
+                      <div>
+                        <p className="text-xs text-[#656E81]">Points</p>
+                        <p className="text-lg font-semibold text-[#800000]">{item.points ?? "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#656E81]">Rank</p>
+                        <p className="text-lg font-semibold text-[#800000]">{item.rank ?? "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-[#656E81]">Transfers</p>
+                        <p className="text-lg font-semibold text-[#800000]">{item.transfers ?? 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

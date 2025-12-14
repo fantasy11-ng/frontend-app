@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, Suspense, useRef } from "react";
-import { Check, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import type { Group } from "@/types/predictor";
 import type { RoundCode, BracketPrediction } from "@/types/predictorStage";
 import Image from "next/image";
+import { Spinner } from "@/components/common/Spinner";
 
 export type PredictionStage =
   | "group"
@@ -490,7 +491,7 @@ function PredictorPageContent() {
       console.log("Saving predictions:", predictions);
     } catch (error: any) {
       console.error("Error saving predictions:", error);
-      toast.error(error);
+      toast.error(error?.response?.data?.message || "Failed to save predictions. Please try again.");
     }
   };
 
@@ -996,7 +997,7 @@ function PredictorPageContent() {
           {currentStage === "group" &&
             (groupsLoading || stagesLoading ? (
               <div className="p-6 text-center">
-                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-gray-500" />
+                <Spinner size={24} className="text-[#4AA96C]" />
               </div>
             ) : groupsError || stagesError || !groupStageId ? (
               <div className="p-6 text-center">
@@ -1178,7 +1179,7 @@ export default function PredictorPage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+          <Spinner size={24} className="text-[#4AA96C]" />
         </div>
       }
     >

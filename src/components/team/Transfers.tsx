@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Search, ArrowRight, ArrowLeft, X } from 'lucide-react';
 import { Player } from '@/types/team';
+import { Spinner } from '../common/Spinner';
 
 interface TransfersProps {
   squadPlayers: Player[];
@@ -17,6 +18,8 @@ interface TransfersProps {
   isLoadingAvailable?: boolean;
   onLoadMoreAvailable?: () => void;
   onSearchAvailable?: (term: string) => void;
+  canLoadMoreAvailable?: boolean;
+  isTransferring?: boolean;
   pendingQueue?: Array<{ out: Player; in?: Player }>;
   onConfirmQueue?: () => void;
 }
@@ -34,12 +37,28 @@ const Transfers: React.FC<TransfersProps> = ({
   isLoadingAvailable = false,
   onLoadMoreAvailable,
   onSearchAvailable,
+  canLoadMoreAvailable = false,
+  isTransferring = false,
   pendingQueue = [],
   onConfirmQueue,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPosition, setSelectedPosition] = useState<string>('All');
   const [selectedCountry, setSelectedCountry] = useState<string>('All');
+
+  const handleAvailableScroll = useCallback(
+    (e: React.UIEvent<HTMLDivElement>) => {
+      const target = e.currentTarget;
+      const threshold = 80;
+      const nearBottom = target.scrollHeight - target.scrollTop - target.clientHeight < threshold;
+      if (!nearBottom) return;
+
+      if (onLoadMoreAvailable && !isLoadingAvailable && canLoadMoreAvailable) {
+        onLoadMoreAvailable();
+      }
+    },
+    [onLoadMoreAvailable, isLoadingAvailable, canLoadMoreAvailable]
+  );
 
   const limitReached = transfersUsed >= transferLimit;
 
@@ -211,14 +230,25 @@ const Transfers: React.FC<TransfersProps> = ({
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-lg font-semibold text-gray-900">Available Players</h3>
-            {isLoadingAvailable && <span className="text-xs text-gray-500">Loading...</span>}
+            <div className="flex items-center gap-3 text-xs text-gray-500">
+              {isTransferring && (
+                <span className="inline-flex items-center gap-1 text-[#4AA96C]">
+                  <Spinner size={14} className="text-[#4AA96C]" />
+                  Updating...
+                </span>
+              )}
+              {isLoadingAvailable && <span>Loading...</span>}
+            </div>
           </div>
           {filteredAvailablePlayers.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p>No players available</p>
             </div>
           ) : (
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+            <div
+              className="space-y-2 max-h-96 overflow-y-auto"
+              onScroll={handleAvailableScroll}
+            >
               {filteredAvailablePlayers.map((player) => {
                 const canAfford = getRemainingBudget() + (pendingOut?.price || 0) >= player.price;
                 const positionAllowed = pendingOut ? pendingOut.position === player.position : true;
@@ -239,7 +269,7 @@ const Transfers: React.FC<TransfersProps> = ({
                     </div>
                     <button
                       onClick={() => onTransferIn(player)}
-                      disabled={!canAfford || !positionAllowed || !pendingOut || limitReached}
+                      disabled={!canAfford || !positionAllowed || !pendingOut || limitReached || isTransferring}
                       className={`p-2 rounded-lg transition-colors ${
                         canAfford && positionAllowed && pendingOut && !limitReached
                           ? 'text-green-600 hover:bg-green-50'
@@ -252,7 +282,9 @@ const Transfers: React.FC<TransfersProps> = ({
                             ? 'Select a player to transfer out first'
                             : !positionAllowed
                               ? 'Must match position of player out'
-                              : 'Insufficient budget'
+                              : isTransferring
+                                ? 'Transfer in progress'
+                                : 'Insufficient budget'
                       }
                     >
                       <ArrowLeft className="w-5 h-5" />
@@ -260,7 +292,7 @@ const Transfers: React.FC<TransfersProps> = ({
                   </div>
                 );
               })}
-              {onLoadMoreAvailable && (
+              {onLoadMoreAvailable && canLoadMoreAvailable && (
                 <div className="flex justify-center pt-2">
                   <button
                     onClick={onLoadMoreAvailable}

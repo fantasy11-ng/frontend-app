@@ -2,12 +2,12 @@
 
 import { useEffect, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { tokenCookies } from '@/lib/utils/cookies';
 import { authApi } from '@/lib/api/auth';
 import { authKeys } from '@/lib/api/hooks/useAuth';
 import toast from 'react-hot-toast';
+import { Spinner } from '@/components/common/Spinner';
 
 function GoogleCallbackContent() {
   const router = useRouter();
@@ -82,7 +82,7 @@ function GoogleCallbackContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+      <Spinner size={32} className="text-green-600" />
     </div>
   );
 }
@@ -91,7 +91,7 @@ export default function GoogleCallbackPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Spinner size={32} className="text-green-600" />
       </div>
     }>
       <GoogleCallbackContent />

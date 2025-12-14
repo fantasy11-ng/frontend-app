@@ -101,6 +101,44 @@ type GetPlayersResponse = {
   };
 };
 
+export type TeamHistoryEvent = {
+  id?: string | number;
+  createdAt?: string;
+  fixtureId?: number | string;
+  type?: string;
+  team?: {
+    id?: string;
+    name?: string;
+    logoUrl?: string;
+    transfers?: Array<TransferHistoryItem>;
+    squads?: Array<{
+      gameweek?: {
+        id?: number;
+        name?: string;
+        code?: string;
+        firstKickoffAt?: string;
+      };
+      players?: Array<{
+        player?: { name?: string };
+        isCaptain?: boolean;
+        isViceCaptain?: boolean;
+      }>;
+    }>;
+    rankings?: Array<{
+      gameweekId?: number;
+      totalPoints?: number;
+      rank?: number;
+    }>;
+  };
+};
+
+type TeamHistoryResponse = {
+  success?: boolean;
+  data?: {
+    events?: TeamHistoryEvent[];
+  };
+};
+
 export const teamApi = {
   createTeam: async (payload: CreateTeamPayload): Promise<Team> => {
     const response = await apiClient.post<CreateTeamResponse>("/fantasy/team", payload);
@@ -165,7 +203,7 @@ export const teamApi = {
 
   updateLineup: async (payload: {
     formation: string;
-    startingPlayerIds: Array<string | number>;
+    startingPlayerIds: Array<number>;
     benchPlayerIds: Array<string | number>;
     fixtureId: number;
   }): Promise<void> => {
@@ -215,5 +253,11 @@ export const teamApi = {
       ...item,
       id: item.id ?? `${item.teamId ?? "transfer"}-${index}`,
     }));
+  },
+
+  getTeamHistory: async (): Promise<TeamHistoryEvent[]> => {
+    const response = await apiClient.get<TeamHistoryResponse>("/fantasy/team/history");
+    const payload = response.data?.data;
+    return payload?.events ?? [];
   },
 };

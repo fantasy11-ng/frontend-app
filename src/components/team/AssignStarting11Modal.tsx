@@ -4,6 +4,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { X, Search, Plus, Check } from 'lucide-react';
 import { Player, PlayerPosition, SquadValidation } from '@/types/team';
 import toast from 'react-hot-toast';
+import { Spinner } from '../common/Spinner';
 
 interface AssignStarting11ModalProps {
   isOpen: boolean;
@@ -245,7 +246,7 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
         <div className="flex-1 overflow-y-auto px-6 py-4 relative" onScroll={handleScroll}>
           {isLoadingList && filteredPlayers.length === 0 ? (
             <div className="flex justify-center items-center py-12 text-gray-500">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4AA96C]" />
+              <Spinner size={24} className="text-[#4AA96C]" />
             </div>
           ) : (
             <>
@@ -316,7 +317,7 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
 
               {isLoadingList && filteredPlayers.length > 0 && (
                 <div className="flex justify-center items-center py-3 text-gray-500">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#4AA96C]" />
+                  <Spinner size={24} className="text-[#4AA96C]" />
                 </div>
               )}
 

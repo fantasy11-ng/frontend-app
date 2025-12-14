@@ -3,9 +3,18 @@
 import Link from "next/link";
 import { Crown, Clock } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBlogPosts } from "@/lib/api";
+import { teamApi } from "@/lib/api/team";
 import { BlogPostListItem } from "@/types/news";
+import { Fixture } from "@/types/team";
+
+type HomeFixture = Fixture & {
+  time?: string;
+  status?: "LIVE" | null;
+  startsAt?: string;
+};
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -49,6 +58,56 @@ export default function HomePage() {
   // Toggle between empty and data states (for demo purposes)
   const hasWins = true; // Set to false to show empty state
   const hasTeamUpdates = true; // Set to false to show empty state
+
+  const [fixtures, setFixtures] = useState<HomeFixture[]>([]);
+  const [isLoadingFixtures, setIsLoadingFixtures] = useState(false);
+  const [fixturesError, setFixturesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadFixtures = async () => {
+      setIsLoadingFixtures(true);
+      setFixturesError(null);
+      try {
+        const upcoming = await teamApi.getUpcomingFixtures({ limit: 8 });
+        const mapped: HomeFixture[] = (upcoming ?? []).map((fx) => {
+          const home = fx.participants?.[0];
+          const away = fx.participants?.[1];
+          const start = fx.startingAt ? new Date(fx.startingAt) : null;
+          const now = Date.now();
+          const time = start
+            ? start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+            : "TBD";
+          const date = start
+            ? start.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+            : "TBD";
+          const startMs = start?.getTime() ?? null;
+          // Consider LIVE within a 3h window from kickoff to avoid marking past games as live
+          const isLive = startMs ? startMs <= now && now <= startMs + 3 * 60 * 60 * 1000 : false;
+          return {
+            id: String(fx.id ?? Math.random()),
+            homeTeam: { name: home?.name || "Home", flag: home?.logo },
+            awayTeam: { name: away?.name || "Away", flag: away?.logo },
+            matchDay: fx.gameweekId ? `GW ${fx.gameweekId}` : "Upcoming",
+            date: date,
+            time,
+            status: isLive ? "LIVE" : null,
+            startsAt: fx.startingAt ?? undefined,
+          };
+        });
+        setFixtures(mapped);
+      } catch (error) {
+        setFixturesError(
+          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+            (error as { message?: string })?.message ||
+            "Failed to load fixtures."
+        );
+      } finally {
+        setIsLoadingFixtures(false);
+      }
+    };
+
+    loadFixtures();
+  }, []);
 
 
   return (
@@ -464,9 +523,9 @@ export default function HomePage() {
         </div>
 
         {/* First Row: Upcoming Matches, Win Throughout Season, Team Updates */}
-        <div className="flex flex-col lg:flex-row gap-8 mb-8">
+        <div className="flex flex-col lg:flex-row gap-8 mb-8 items-stretch">
           {/* Upcoming Matches */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4]">
+          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4] flex flex-col min-h-[420px]">
             <h2 className="text-xl font-bold text-[#070A11] mb-1">
               Upcoming Matches
             </h2>
@@ -474,94 +533,73 @@ export default function HomePage() {
               Next fixtures in AFCON 2025
             </p>
 
-            <div className="space-y-4">
-              {[
-                {
-                  home: "Nigeria",
-                  away: "Burundi",
-                  time: "Today, 8:00 PM",
-                  status: "LIVE",
-                  date: null,
-                },
-                {
-                  home: "Nigeria",
-                  away: "Burundi",
-                  time: "6:00 PM",
-                  status: null,
-                  date: "Dec 21",
-                },
-                {
-                  home: "Nigeria",
-                  away: "Burundi",
-                  time: "7:00 PM",
-                  status: null,
-                  date: "Dec 21",
-                },
-                {
-                  home: "Nigeria",
-                  away: "Burundi",
-                  time: "7:00 PM",
-                  status: null,
-                  date: "Dec 21",
-                },
-              ].map((match, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between px-4 py-3 rounded-lg border border-[#F1F2F4] transition-colors"
-                >
-                  <div className="">
-                    <div className="flex items-center justify-between gap-2 sm:gap-8">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                          N
+            <div className="space-y-4 flex-1 min-h-0 max-h-[420px] overflow-y-auto pr-1">
+              {isLoadingFixtures ? (
+                <p className="text-sm text-[#656E81]">Loading fixtures...</p>
+              ) : fixturesError ? (
+                <p className="text-sm text-red-600">{fixturesError}</p>
+              ) : fixtures.length === 0 ? (
+                <p className="text-sm text-[#656E81]">No upcoming fixtures available.</p>
+              ) : (
+                fixtures.map((match) => (
+                  <div
+                    key={match.id}
+                    className="flex items-center justify-between px-4 py-3 rounded-lg border border-[#F1F2F4] transition-colors"
+                  >
+                    <div className="">
+                      <div className="flex items-center justify-between gap-2 sm:gap-8">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {match.homeTeam.name?.[0] ?? "H"}
+                          </div>
+                          <span className="font-medium text-[#070A11] text-sm truncate">
+                            {match.homeTeam.name}
+                          </span>
                         </div>
-                        <span className="font-medium text-[#070A11] text-sm">
-                          {match.home}
-                        </span>
-                      </div>
-                      <div className="text-[#070A11] text-sm font-medium">
-                        vs
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-[#800000] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                          B
+                        <div className="text-[#070A11] text-sm font-medium">
+                          vs
                         </div>
-                        <span className="font-medium text-gray-900 text-sm">
-                          {match.away}
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-[#800000] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {match.awayTeam.name?.[0] ?? "A"}
+                          </div>
+                          <span className="font-medium text-gray-900 text-sm truncate">
+                            {match.awayTeam.name}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <span className="text-xs text-[#656E81] font-light">
+                          {match.matchDay || "Upcoming"} • {match.time || "TBD"}
                         </span>
                       </div>
                     </div>
-                    <div className="text-left">
-                      <span className="text-xs text-[#656E81] font-light">
-                        MD1 • {match.time}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="ml-4">
-                    {match.status === "LIVE" ? (
-                      <span className="px-2 py-1 bg-[#FE5E41] text-white text-xs font-medium rounded-full flex items-center gap-1">
-                        <span className="font-black">•</span> LIVE
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 border border-[#D4D7DD] text-[#656E81] text-sm font-medium rounded-full">
-                        {match.date}
-                      </span>
-                    )}
+                    <div className="ml-4">
+                      {match.status === "LIVE" ? (
+                        <span className="px-2 py-1 bg-[#FE5E41] text-white text-xs font-medium rounded-full flex items-center gap-1">
+                          <span className="font-black">•</span> LIVE
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 border border-[#D4D7DD] text-[#656E81] text-sm font-medium rounded-full">
+                          {match.date}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
           {/* Win Throughout Season */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4]">
+          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4] flex flex-col min-h-[420px]">
             <h2 className="text-xl font-bold text-[#070A11] mb-6">
               Win throughout season
             </h2>
 
             {hasWins ? (
-              <div className="space-y-3">
+              <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
                 {[
                   {
                     icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-1_fapyuy.png",
@@ -629,7 +667,7 @@ export default function HomePage() {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-12 flex-1">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
                   <Image
                     src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764597186/wallet-2_eawcda.png"
@@ -653,7 +691,7 @@ export default function HomePage() {
           </div>
 
           {/* Team Updates */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4]">
+          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4] flex flex-col min-h-[420px]">
             <h2 className="text-xl font-bold text-[#070A11] mb-1">
               Team updates
             </h2>
@@ -662,7 +700,7 @@ export default function HomePage() {
             </p>
 
             {hasTeamUpdates ? (
-              <div className="space-y-3">
+              <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
                 {[
                   {
                     avatar:

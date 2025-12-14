@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { Spinner } from '../common/Spinner';
 
 export interface TeamBoost {
   id: string;
@@ -25,7 +26,7 @@ const TeamBoosts: React.FC<TeamBoostsProps> = ({ boosts, onUseBoost, isLoading =
 
       {isLoading ? (
         <div className="flex justify-center items-center py-8 text-gray-500">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4AA96C]" />
+          <Spinner size={24} className="text-[#4AA96C]" />
         </div>
       ) : boosts.length === 0 ? (
         <div className="text-center py-8 text-gray-500">No boosts available</div>

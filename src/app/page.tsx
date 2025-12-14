@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import LandingPage from '@/components/home/LandingPage';
 import HomePage from '@/components/home/HomePage';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Spinner } from '@/components/common/Spinner';
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -23,7 +23,7 @@ export default function Home() {
   if (!mounted) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Spinner size={32} className="text-green-600" />
       </div>
     );
   }
@@ -32,7 +32,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Spinner size={32} className="text-green-600" />
       </div>
     );
   }

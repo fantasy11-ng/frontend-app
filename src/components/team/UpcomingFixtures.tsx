@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { Spinner } from '../common/Spinner';
 
 export interface Fixture {
   id: string;
@@ -29,7 +30,7 @@ const UpcomingFixtures: React.FC<UpcomingFixturesProps> = ({ fixtures, isLoading
 
       {isLoading ? (
         <div className="flex justify-center items-center py-8 text-gray-500">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4AA96C]" />
+          <Spinner size={24} className="text-[#4AA96C]" />
         </div>
       ) : fixtures.length > 0 ? (
         fixtures.map((fixture) => (

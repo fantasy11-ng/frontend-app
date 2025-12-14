@@ -12,6 +12,7 @@ import {
 } from '@/components/league';
 import { ChampionshipDetails, LeagueOption, UserLeague } from '@/types/league';
 import { leagueApi } from '@/lib/api';
+import { Spinner } from '@/components/common/Spinner';
 
 const mockChampionshipDetails: ChampionshipDetails = {
   totalPrizePool: '₦1,000,000',
@@ -205,10 +206,7 @@ export default function LeaguePage() {
   if (initialLeaguesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div
-          className="h-12 w-12 rounded-full border-4 border-[#4AA96C] border-t-transparent animate-spin"
-          aria-label="Loading your leagues"
-        />
+        <Spinner size={24} className="text-[#4AA96C]" />
       </div>
     );
   }
@@ -310,10 +308,18 @@ export default function LeaguePage() {
                 <>
                   <div className="divide-y divide-[#F1F2F4] border border-[#F1F2F4] rounded-xl bg-white">
                     {visibleLeagues.map((league, index) => (
-                      <button
+                      <div
+                        role="button"
+                        tabIndex={0}
                         key={league.id || league.inviteCode || league.name || index}
                         onClick={() => handleSelectLeague(league)}
-                        className="w-full text-left px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleSelectLeague(league);
+                          }
+                        }}
+                        className="w-full text-left px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
@@ -345,7 +351,7 @@ export default function LeaguePage() {
                             </button>
                           </div>
                         )}
-                      </button>
+                      </div>
                     ))}
                   </div>
                   {visibleLeagues.length < filteredLeagues.length && (

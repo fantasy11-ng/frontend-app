@@ -5,11 +5,12 @@ import { useMemo, useState } from 'react';
 import { DndContext, DragEndEvent, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useQueryClient } from '@tanstack/react-query';
-import { Crown, Loader2 } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Group, Team } from '@/types/predictor';
 import { predictorApi } from '@/lib/api';
 import SortableTeamItem from './SortableTeamItem';
+import { Spinner } from '../common/Spinner';
 
 interface GroupPredictions {
   [groupName: string]: string[]; // ordered list of team names [1st..4th]
@@ -251,7 +252,7 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
     return (
       <div className="p-6">
         <div className="text-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-500" />
+          <Spinner size={24} className="text-[#4AA96C]" />
         </div>
       </div>
     );
@@ -270,7 +271,7 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
             className="h-10 px-3 w-fit bg-[#4AA96C] text-sm text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold"
             disabled={completedGroups.length !== groups.length || savingGroupId !== null}
           >
-            {savingGroupId !== null && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+            {savingGroupId !== null && <Spinner size={24} className="text-[#4AA96C]" />}
             Save Predictions
           </button>
           {completedGroups.length === groups.length && (
@@ -335,7 +336,7 @@ export default function GroupStage({ groups, predictions, onUpdate, onSave, onNe
                   disabled={savingGroupId === group.id || !isComplete || !hasUnsavedChanges(group.name)}
                 >
                   {savingGroupId === group.id ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Spinner size={24} className="text-[#4AA96C]" />
                   ) : (
                     'Save Group'
                   )}

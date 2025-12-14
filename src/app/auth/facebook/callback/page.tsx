@@ -2,8 +2,8 @@
 
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
 import { useOAuthCallback } from '@/lib/api/hooks/useOAuth';
+import { Spinner } from '@/components/common/Spinner';
 
 function FacebookCallbackContent() {
   const router = useRouter();
@@ -54,7 +54,7 @@ function FacebookCallbackContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+      <Spinner size={32} className="text-green-600" />
     </div>
   );
 }
@@ -63,7 +63,7 @@ export default function FacebookCallbackPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-green-600" />
+        <Spinner size={32} className="text-green-600" />
       </div>
     }>
       <FacebookCallbackContent />

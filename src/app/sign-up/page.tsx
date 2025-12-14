@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { PasswordRequirements } from '@/components/auth';
 import AuthLogo from '@/components/auth/AuthLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoogleOAuth } from '@/lib/api/hooks/useOAuth';
+import { Spinner } from '@/components/common/Spinner';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -211,7 +212,7 @@ export default function SignUpPage() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin inline-block" />
+                  <Spinner size={16} className="mr-2 inline-block" />
                   Creating account...
                 </>
               ) : (
