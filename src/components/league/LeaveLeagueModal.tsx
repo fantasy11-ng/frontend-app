@@ -8,6 +8,7 @@ interface LeaveLeagueModalProps {
   onClose: () => void;
   onConfirmLeave: () => void;
   leagueType?: 'private' | 'global';
+  leagueName?: string;
 }
 
 const LeaveLeagueModal: React.FC<LeaveLeagueModalProps> = ({
@@ -15,11 +16,12 @@ const LeaveLeagueModal: React.FC<LeaveLeagueModalProps> = ({
   onClose,
   onConfirmLeave,
   leagueType = 'global',
+  leagueName,
 }) => {
   if (!isOpen) return null;
 
   const isGlobal = leagueType === 'global';
-  const leagueName = isGlobal ? 'Fantasy11 Global League' : 'this league';
+  const resolvedLeagueName = leagueName?.trim() || (isGlobal ? 'Fantasy11 Global League' : 'this league');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#656E81CC] bg-opacity-50 backdrop-blur-sm">
@@ -35,10 +37,10 @@ const LeaveLeagueModal: React.FC<LeaveLeagueModalProps> = ({
         {/* Header */}
         <div className="px-6 pt-6 pb-6">
           <h2 className="text-2xl font-bold text-[#070A11] mb-2">
-            Leave {isGlobal ? 'Global' : ''} League
+            Leave {resolvedLeagueName}
           </h2>
           <p className="text-sm text-[#656E81]">
-            Are you sure you want to leave the {leagueName}? You&apos;ll lose your current ranking and won&apos;t be eligible for prizes.
+            Are you sure you want to leave {resolvedLeagueName}? You&apos;ll lose your current ranking and won&apos;t be eligible for prizes.
           </p>
         </div>
 

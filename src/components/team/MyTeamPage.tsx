@@ -385,37 +385,32 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   };
 
   const handleSaveSquad = async (players: Player[]) => {
-    // Ensure exactly 11 starting and 4 bench (total 15)
-    const gks = players.filter((p) => p.position === 'GK');
-    const nonGks = players.filter((p) => p.position !== 'GK');
+    // Auto-build a 4-3-3 starting lineup from the selected 15 players
+    const gks = players.filter((p) => p.position === "GK");
+    const defs = players.filter((p) => p.position === "DEF");
+    const mids = players.filter((p) => p.position === "MID");
+    const fwds = players.filter((p) => p.position === "FWD");
 
-    // If we have 2 GKs, ensure 1 is in starting 11
-    let starting11: Player[] = [];
-    let bench: Player[] = [];
+    const errors: string[] = [];
+    if (gks.length < 1) errors.push("You need at least 1 goalkeeper in your squad.");
+    if (defs.length < 4) errors.push("You need at least 4 defenders in your squad.");
+    if (mids.length < 3) errors.push("You need at least 3 midfielders in your squad.");
+    if (fwds.length < 3) errors.push("You need at least 3 forwards in your squad.");
 
-    if (gks.length === 2) {
-      // Put first GK in starting 11, second on bench
-      starting11.push(gks[0]);
-      bench.push(gks[1]);
-      
-      // Fill remaining 10 spots in starting 11 with non-GKs
-      const remainingStartingSpots = 10;
-      starting11.push(...nonGks.slice(0, remainingStartingSpots));
-      
-      // Rest go to bench (should be exactly 3 more to make 4 total)
-      bench.push(...nonGks.slice(remainingStartingSpots, remainingStartingSpots + 3));
-    } else if (gks.length === 1) {
-      // Only 1 GK, must be in starting 11
-      starting11.push(gks[0]);
-      const remainingStartingSpots = 10;
-      starting11.push(...nonGks.slice(0, remainingStartingSpots));
-      // Remaining 4 non-GKs go to bench
-      bench.push(...nonGks.slice(remainingStartingSpots, remainingStartingSpots + 4));
-    } else {
-      // No GKs or more than 2 - use original logic but this should be caught by validation
-      starting11 = players.slice(0, 11);
-      bench = players.slice(11, 15); // Ensure bench is max 4
+    if (errors.length > 0) {
+      toast.error(errors.join("\n"));
+      return;
     }
+
+    const starting11: Player[] = [
+      gks[0], // exactly one GK
+      ...defs.slice(0, 4),
+      ...mids.slice(0, 3),
+      ...fwds.slice(0, 3),
+    ];
+
+    const starterIds = new Set(starting11.map((p) => String(p.id)));
+    const bench: Player[] = players.filter((p) => !starterIds.has(String(p.id))).slice(0, 4);
 
     // Ensure exactly 11 starting and max 4 bench
     if (starting11.length !== 11) {
@@ -423,8 +418,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       return;
     }
 
-    if (bench.length > 4) {
-      toast.error(`Error: Bench cannot exceed 4 players (got ${bench.length})`);
+    if (bench.length !== 4) {
+      toast.error(`Error: Squad must have exactly 4 bench players (got ${bench.length})`);
       return;
     }
 

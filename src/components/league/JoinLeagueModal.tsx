@@ -68,7 +68,7 @@ const JoinLeagueModal: React.FC<JoinLeagueModalProps> = ({
               value={invitationCode}
               onChange={(e) => setInvitationCode(e.target.value.toUpperCase())}
               placeholder="FL11-XXXXXXX"
-              className="text-[#070A11] w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none font-mono"
+              className="text-[#070A11] w-full px-4 py-2 border border-gray-300 rounded-lg outline-none font-mono"
             />
           </div>
 
@@ -85,16 +85,16 @@ const JoinLeagueModal: React.FC<JoinLeagueModalProps> = ({
           <div className="flex space-x-3 pt-4">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-lg font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors"
+              className="flex-1 h-10 rounded-full font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!invitationCode.trim() || isSubmitting}
-              className={`flex-1 py-3 rounded-lg font-semibold text-white transition-colors ${
+              className={`flex-1 rounded-full font-semibold text-white transition-colors h-10 ${
                 invitationCode.trim() && !isSubmitting
-                  ? 'bg-green-500 hover:bg-green-600'
+                  ? 'bg-[#4AA96C]'
                   : 'bg-gray-300 cursor-not-allowed'
               }`}
             >

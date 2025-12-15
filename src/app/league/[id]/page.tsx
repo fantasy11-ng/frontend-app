@@ -8,6 +8,7 @@ import { LeagueLeaderboard } from '@/components/league';
 import { leagueApi } from '@/lib/api/league';
 import { LeagueMember, UserLeague } from '@/types/league';
 import { Spinner } from '@/components/common/Spinner';
+import LeaveLeagueModal from '@/components/league/LeaveLeagueModal';
 
 export default function LeagueDetailPage() {
   const params = useParams<{ id: string }>();
@@ -21,6 +22,7 @@ export default function LeagueDetailPage() {
   const [copying, setCopying] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -96,8 +98,8 @@ export default function LeagueDetailPage() {
           </button>
         </div>
 
-        <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6 mb-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {!loading && <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6 mb-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-2xl font-semibold text-[#070A11]">
                 {league?.name ?? 'League'}
@@ -125,7 +127,7 @@ export default function LeagueDetailPage() {
 
             {!league?.isOwner && (
               <button
-                onClick={handleLeaveLeague}
+                onClick={() => setShowLeaveModal(true)}
                 disabled={leaving}
                 className={`rounded-full h-10 px-4 text-sm font-semibold text-white transition-colors ${
                   leaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#d02f2f] hover:bg-[#b52828]'
@@ -141,10 +143,10 @@ export default function LeagueDetailPage() {
               {leaveError}
             </div>
           )}
-        </div>
+        </div>}
 
         {loading ? (
-          <div className="flex justify-center py-12">
+          <div className="flex justify-center py-12 items-center">
             <Spinner size={24} className="text-[#4AA96C]" />
           </div>
         ) : error ? (
@@ -160,10 +162,23 @@ export default function LeagueDetailPage() {
               budgetLeft: '—',
             }}
             members={members}
-            onLeaveLeague={() => {}}
+            onLeaveLeague={() => setShowLeaveModal(true)}
           />
         )}
       </div>
+
+      <LeaveLeagueModal
+        isOpen={showLeaveModal}
+        onClose={() => {
+          if (leaving) return;
+          setShowLeaveModal(false);
+        }}
+        onConfirmLeave={async () => {
+          setShowLeaveModal(false);
+          await handleLeaveLeague();
+        }}
+        leagueName={league?.name}
+      />
     </div>
   );
 }

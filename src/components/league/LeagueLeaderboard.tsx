@@ -35,7 +35,6 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
   leagueName,
   stats,
   members,
-  onLeaveLeague,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -145,12 +144,12 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
               </h1>
             </div>
           </div>
-          <button
+          {/* <button
             onClick={onLeaveLeague}
             className="rounded-full h-6 bg-[#4AA96C] px-5 text-sm font-semibold text-white transition hover:bg-[#3c8b58]"
           >
             Leave League
-          </button>
+          </button> */}
         </div>
 
         {/* Stats Cards */}
