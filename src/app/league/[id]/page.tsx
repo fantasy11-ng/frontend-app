@@ -6,7 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 
 import { LeagueLeaderboard } from '@/components/league';
 import { leagueApi } from '@/lib/api/league';
-import { LeagueMember, UserLeague } from '@/types/league';
+import { LeagueMember, LeagueStats, UserLeague } from '@/types/league';
 import { Spinner } from '@/components/common/Spinner';
 import LeaveLeagueModal from '@/components/league/LeaveLeagueModal';
 import toast from 'react-hot-toast';
@@ -18,6 +18,7 @@ export default function LeagueDetailPage() {
 
   const [league, setLeague] = useState<UserLeague | null>(null);
   const [members, setMembers] = useState<LeagueMember[]>([]);
+  const [stats, setStats] = useState<LeagueStats>({ globalRank: 0, totalPoints: 0, budgetLeft: '—' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copying, setCopying] = useState(false);
@@ -35,9 +36,19 @@ export default function LeagueDetailPage() {
           leagueApi.getLeagueLeaderboard({ leagueId, page: 1, limit: 50 }),
         ]);
 
-        setMembers(leaderboard);
+        setMembers(leaderboard.members);
         const found = leagues.find((l) => l.id === leagueId);
         setLeague(found ?? null);
+        setStats({
+          globalRank: leaderboard.me?.rank ?? leaderboard.members[0]?.rank ?? 0,
+          totalPoints:
+            leaderboard.me?.totalPoints ??
+            leaderboard.members.reduce((sum, m) => sum + (m.totalPoints ?? 0), 0),
+          budgetLeft:
+            leaderboard.me?.budgetRemaining !== undefined
+              ? `${leaderboard.me?.budgetRemaining}`
+              : '—',
+        });
       } catch (err) {
         setError(
           (err as { message?: string })?.message ??
@@ -108,11 +119,7 @@ export default function LeagueDetailPage() {
         ) : (
           <LeagueLeaderboard
             leagueName={league?.name ?? 'League Leaderboard'}
-            stats={{
-              globalRank: 0,
-              totalPoints: members.reduce((sum, m) => sum + (m.totalPoints ?? 0), 0),
-              budgetLeft: '—',
-            }}
+            stats={stats}
             members={members}
             inviteCode={league?.inviteCode}
             isOwner={Boolean(league?.isOwner)}
