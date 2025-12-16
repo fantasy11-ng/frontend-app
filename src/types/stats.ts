@@ -1,20 +1,37 @@
+export interface PlayerPosition {
+  id?: number;
+  code?: string;
+  name?: string;
+  developer_name?: string;
+}
+
 export interface Player {
-  id: string;
-  rank: number;
+  id: number;
   name: string;
-  country: string;
-  countryFlag: string;
-  club: string;
-  position: string;
-  age: number;
-  height: string;
-  weight: string;
-  price: string;
-  points: number;
+  commonName?: string;
+  image?: string;
+  pool?: string;
+  positionId?: number;
+  position?: PlayerPosition;
+  countryId?: number;
+  externalId?: number;
+  rating?: number;
   goals: number;
   assists: number;
-  cards: number;
-  index: number;
+  yellowCards: number;
+  redCards: number;
+  points: number;
+  price: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PlayerListMeta {
+  itemsPerPage: number;
+  totalItems: number;
+  currentPage: number;
+  totalPages: number;
+  sortBy?: [string, string][];
 }
 
 export interface TopStat {
@@ -24,4 +41,3 @@ export interface TopStat {
   value: string;
   icon: 'points' | 'goals' | 'assists';
 }
-
