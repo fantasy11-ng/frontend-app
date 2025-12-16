@@ -13,7 +13,7 @@ import Transfers from "./Transfers";
 import PlayerRoleMenu from "./PlayerRoleMenu";
 import SubstitutionModal from "./SubstitutionModal";
 import ReverseSubstitutionModal from "./ReverseSubstitutionModal";
-import { teamApi, TeamHistoryEvent } from "@/lib/api";
+import { teamApi, FixturePerformanceItem } from "@/lib/api";
 import { TransferHistoryItem } from "@/lib/api/team";
 import toast from "react-hot-toast";
 import { Spinner } from "../common/Spinner";
@@ -49,6 +49,7 @@ type TeamHistoryCard = {
   transfersList?: TransferHistoryItem[];
   gameweekId?: number;
   fixtureId?: number | string;
+  cumulative?: number;
 };
 
 const MyTeamPage: React.FC<MyTeamPageProps> = ({
@@ -103,6 +104,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const [teamHistory, setTeamHistory] = useState<TeamHistoryCard[]>([]);
   const [isLoadingTeamHistory, setIsLoadingTeamHistory] = useState(false);
   const [activeTeamHistoryTab, setActiveTeamHistoryTab] = useState<TeamHistoryTab>("performance");
+  const [hasFetchedTeamHistory, setHasFetchedTeamHistory] = useState(false);
 
   const normalizePosition = (pos: unknown): Player["position"] => {
     const code = (pos || "").toString().toUpperCase();
@@ -223,20 +225,20 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const fetchTeamHistory = useCallback(async () => {
     setIsLoadingTeamHistory(true);
     try {
-      const events = await teamApi.getTeamHistory();
+      const events: FixturePerformanceItem[] = await teamApi.getFixturePerformance({ limit: 20 });
       const mapped =
-        events?.map((evt: TeamHistoryEvent, index: number) => {
-          const squad = evt.team?.squads?.[0];
-          const gw = squad?.gameweek;
-          const ranking = evt.team?.rankings?.find((r) => r.gameweekId === gw?.id) ?? evt.team?.rankings?.[0];
-          const captain = squad?.players?.find((p) => p.isCaptain)?.player?.name;
-          const viceCaptain = squad?.players?.find((p) => p.isViceCaptain)?.player?.name;
-          const date = gw?.firstKickoffAt || evt.createdAt;
+        events?.map((evt: FixturePerformanceItem, index: number) => {
+          const gw = evt.gameweek;
+          const date = gw?.firstKickoffAt || evt.fixture?.startingAt;
           const dateValue = date ? new Date(date).getTime() : 0;
-          const transfersCount = Array.isArray(evt.team?.transfers) ? evt.team.transfers.length : undefined;
+          const captain =
+            evt.captain?.player?.commonName || evt.captain?.player?.name;
+          const viceCaptain =
+            evt.viceCaptain?.player?.commonName || evt.viceCaptain?.player?.name;
+          const transfersCount = Array.isArray(evt.transfers) ? evt.transfers.length : undefined;
 
           return {
-            id: String(evt.id ?? `history-${index}`),
+            id: String(evt.fixtureId ?? `history-${index}`),
             matchDay: gw?.name || gw?.code || "Match Day",
             dateLabel: date
               ? new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
@@ -244,12 +246,13 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
             dateValue,
             captain: captain || "—",
             viceCaptain: viceCaptain || "—",
-            points: ranking?.totalPoints ?? undefined,
-            rank: ranking?.rank ?? undefined,
+            points: evt.totalPoints ?? evt.ranking?.totalPoints ?? undefined,
+            rank: evt.ranking?.rank ?? undefined,
             transfers: transfersCount,
-            transfersList: Array.isArray(evt.team?.transfers) ? evt.team?.transfers : [],
-            gameweekId: gw?.id,
+            transfersList: Array.isArray(evt.transfers) ? evt.transfers : [],
+            gameweekId: gw?.id ?? evt.gameweekId,
             fixtureId: evt.fixtureId ?? gw?.id,
+            cumulative: evt.cumulativePoints ?? undefined,
           };
         }) ?? [];
       setTeamHistory(mapped);
@@ -258,6 +261,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       setTeamHistory([]);
     } finally {
       setIsLoadingTeamHistory(false);
+      setHasFetchedTeamHistory(true);
     }
   }, []);
 
@@ -268,10 +272,10 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   }, [activeTab, transferSearchTerm, fetchTransferPlayers]);
 
   useEffect(() => {
-    if (activeTab === "team-history" && teamHistory.length === 0 && !isLoadingTeamHistory) {
-      fetchTeamHistory();
-    }
-  }, [activeTab, teamHistory.length, isLoadingTeamHistory, fetchTeamHistory]);
+    if (activeTab !== "team-history") return;
+    if (hasFetchedTeamHistory || isLoadingTeamHistory) return;
+    fetchTeamHistory();
+  }, [activeTab, hasFetchedTeamHistory, isLoadingTeamHistory, fetchTeamHistory]);
 
   useEffect(() => {
     const loadBoosts = async () => {
@@ -285,7 +289,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         };
 
         const usedByType = new Map(
-          (boostStates ?? []).map((b) => [(b.type || "").toUpperCase(), Boolean(b.used)])
+          (boostStates ?? []).map((b) => [(b.type || "").toUpperCase(), true])
         );
 
         const mapped: TeamBoost[] = (availableBoosts ?? []).map((type, idx) => {
@@ -301,11 +305,13 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         });
         setBoosts(mapped);
       } catch (error) {
-        toast.error(
+        const message =
+          (error as { response?: { data?: { error?: { message?: string }; message?: string } } })?.response?.data
+            ?.error?.message ||
           (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
-            (error as { message?: string })?.message ||
-            "Failed to load boosts."
-        );
+          (error as { message?: string })?.message ||
+          "Failed to load boosts.";
+        toast.error(message);
       } finally {
         setIsLoadingBoosts(false);
       }
@@ -316,17 +322,19 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   const handleUseBoost = async (boostId: string) => {
     try {
-      await teamApi.applyTeamBoost(boostId);
+      const result = await teamApi.applyTeamBoost(boostId);
       setBoosts((prev) =>
         prev.map((b) => (b.id === boostId ? { ...b, used: true } : b))
       );
-      toast.success("Boost applied");
+      toast.success(result?.message || "Boost applied");
     } catch (error) {
-      toast.error(
+      const message =
+        (error as { response?: { data?: { error?: { message?: string }; message?: string } } })?.response?.data?.error
+          ?.message ||
         (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
-          (error as { message?: string })?.message ||
-          "Failed to apply boost."
-      );
+        (error as { message?: string })?.message ||
+        "Failed to apply boost.";
+      toast.error(message);
     }
   };
 
@@ -977,48 +985,59 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   );
 
   const historyTransfers = useMemo(() => {
-    return sortedTeamHistory.flatMap((item) =>
-      (item.transfersList ?? []).map((t, idx) => {
-        const outName =
-          playerNameById.get(String(t.playerOutId)) ??
-          (t.playerOutId ? `Player ${t.playerOutId}` : "—");
-        const inName =
-          playerNameById.get(String(t.playerInId)) ??
-          (t.playerInId ? `Player ${t.playerInId}` : "—");
-        return {
-          id: `${item.id}-transfer-${idx}`,
-          matchDay: item.matchDay,
-          dateLabel: item.dateLabel,
-          outName,
-          inName,
-          amount: t.netAmount ?? t.amountIn ?? t.amountOut ?? null,
-        };
-      })
-    );
-  }, [sortedTeamHistory, playerNameById]);
+    const formatAmount = (value?: number | null) => {
+      if (value === null || value === undefined) return null;
+      const million = value / 1_000_000;
+      return `$${million.toFixed(million >= 1 ? 1 : 1)}M`;
+    };
 
-  const pointsProgression = useMemo(() => {
-    if (sortedTeamHistory.length === 0) return [];
-    const chronological = [...sortedTeamHistory].reverse();
-    let cumulative = 0;
-    const cumulativeById = new Map<string, number>();
-    chronological.forEach((item) => {
-      cumulative += item.points ?? 0;
-      cumulativeById.set(item.id, cumulative);
+    const sorted = [...transferHistory].sort((a, b) => {
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bDate - aDate;
     });
-    const maxCumulative =
-      Math.max(...(cumulativeById.size ? Array.from(cumulativeById.values()) : [0]), 0) || 1;
 
-    return sortedTeamHistory.map((item) => {
-      const cum = cumulativeById.get(item.id) ?? 0;
-      const progress = Math.round((cum / maxCumulative) * 100);
+    return sorted.map((t, idx) => {
+      const matchDay = t.gameweek?.name || t.gameweek?.code || "Match Day";
+      const dateSource = t.gameweek?.firstKickoffAt || t.createdAt;
+      const dateLabel = dateSource
+        ? new Date(dateSource).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+        : "—";
+      const outName =
+        t.playerOut?.commonName || t.playerOut?.name || playerNameById.get(String(t.playerOutId)) || "—";
+      const inName =
+        t.playerIn?.commonName || t.playerIn?.name || playerNameById.get(String(t.playerInId)) || "—";
+
       return {
-        ...item,
-        cumulative: cum,
-        progress: Number.isFinite(progress) ? Math.min(progress, 100) : 0,
+        id: t.id ?? `transfer-${idx}`,
+        matchDay,
+        dateLabel,
+        outName,
+        inName,
+        amountLabel: formatAmount(t.netAmount ?? t.amountIn ?? t.amountOut ?? null),
+        outImage: t.playerOut?.image,
+        inImage: t.playerIn?.image,
       };
     });
-  }, [sortedTeamHistory]);
+  }, [transferHistory, playerNameById]);
+
+  // const renderCountryBadge = useCallback((countryId?: number) => {
+  //   const name = getCountryName(countryId ?? undefined);
+  //   const initials =
+  //     name && name !== "-"
+  //       ? name
+  //           .split(/\s+/)
+  //           .map((w) => w[0])
+  //           .join("")
+  //           .slice(0, 2)
+  //           .toUpperCase()
+  //       : "–";
+  //   return (
+  //     <div className="w-6 h-6 rounded-full bg-[#F5EBEB] text-[#800000] flex items-center justify-center text-[10px] font-semibold">
+  //       {initials}
+  //     </div>
+  //   );
+  // }, []);
 
   const availableForTransfer = useMemo(() => {
     const squadPlayerIds = new Set(squadPlayers.map((p) => p.id));
@@ -1027,8 +1046,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   }, [squadPlayers, availablePlayers, transferPlayers]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
+    <div className="min-h-screen ">      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Header */}
         <div className="mb-6">
           {/* <h1 className="text-3xl font-bold text-gray-900 mb-4">My Team</h1> */}
@@ -1255,7 +1273,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
             </div>
 
             <div className="flex space-x-6 border-b border-gray-200 mb-6">
-              {(["performance", "transfers", "points"] as TeamHistoryTab[]).map((tab) => (
+              {(["performance", "transfers"] as TeamHistoryTab[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTeamHistoryTab(tab)}
@@ -1268,8 +1286,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                   {tab === "performance"
                     ? "Performance"
                     : tab === "transfers"
-                    ? "Transfers"
-                    : "Points Progression"}
+                    ? "Transfers" : null}
                 </button>
               ))}
             </div>
@@ -1339,64 +1356,38 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                     {historyTransfers.map((item) => (
                       <div
                         key={item.id}
-                        className="rounded-xl border border-[#F1F2F4] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-4 flex flex-col gap-3"
+                        className="rounded-2xl border border-[#F1F2F4] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-4 flex flex-col gap-4"
                       >
-                        <div className="flex items-center justify-between text-xs text-[#656E81]">
-                          <span className="px-2 py-1 rounded-full bg-[#F5EBEB] text-[#800000] font-semibold">
-                            {item.matchDay}
-                          </span>
-                          <span className="px-2 py-1 rounded-full border border-[#F1F2F4] text-[#656E81]">
-                            {item.dateLabel}
-                          </span>
-                        </div>
-                        <div className="text-sm flex items-center gap-2">
-                          <span className="text-red-600 font-semibold">{item.outName}</span>
-                          <span className="text-[#656E81]">→</span>
-                          <span className="text-green-700 font-semibold">{item.inName}</span>
-                        </div>
-                        {item.amount !== null && item.amount !== undefined && (
-                          <div className="text-xs text-[#656E81]">
-                            Net: <span className="font-semibold text-[#070A11]">${item.amount}M</span>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-[#1D2939] font-medium">{item.dateLabel}</span>
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
+                          {item.amountLabel && (
+                            <span className="px-3 py-1 rounded-full bg-[#F5EBEB] text-[#800000] text-xs font-semibold">
+                              {item.amountLabel}
+                            </span>
+                          )}
+                        </div>
 
-            {activeTeamHistoryTab === "points" && (
-              <>
-                {pointsProgression.length === 0 && !isLoadingTeamHistory ? (
-                  <div className="text-center py-10 text-gray-500">
-                    <p>No points yet.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {pointsProgression.map((item) => (
-                      <div
-                        key={item.id}
-                        className="rounded-xl border border-[#F1F2F4] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-4 flex flex-col gap-3"
-                      >
-                        <div className="flex items-center justify-between text-xs text-[#656E81]">
-                          <span className="px-2 py-1 rounded-full bg-[#F5EBEB] text-[#800000] font-semibold">
-                            {item.matchDay}
-                          </span>
-                          <span className="px-2 py-1 rounded-full border border-[#F1F2F4] text-[#656E81]">
-                            {item.dateLabel}
-                          </span>
-                        </div>
-                        <div className="text-sm text-[#070A11]">
-                          <p className="text-xs text-[#656E81] mb-2">Cumulative</p>
-                          <div className="h-2 rounded-full bg-[#F5EBEB] overflow-hidden">
-                            <div
-                              className="h-full bg-[#800000] transition-all"
-                              style={{ width: `${item.progress}%` }}
-                            />
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Image src={item.outImage ?? ""} alt={item.outName} width={20} height={20} />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold text-[#FE5E41]">{item.outName}</span>
+                              <span className="text-xs text-[#667085]">Out</span>
+                            </div>
                           </div>
-                          <div className="mt-2 text-sm font-semibold text-[#800000]">
-                            {item.cumulative}pts
+
+                          <div className="w-8 h-8 rounded-full bg-[#F6F7F8] flex items-center justify-center text-[#667085] text-lg font-black">
+                            →
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Image src={item.inImage ?? ""} alt={item.inName} width={20} height={20} />
+                            <div className="flex flex-col items-start">
+                              <span className="text-sm font-semibold text-[#12B76A]">{item.inName}</span>
+                              <span className="text-xs text-[#667085]">In</span>
+                            </div>
                           </div>
                         </div>
                       </div>
