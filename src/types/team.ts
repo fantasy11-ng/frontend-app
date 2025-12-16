@@ -4,6 +4,7 @@ export interface Team {
   logo?: string;
   points: number;
   budget: number;
+  budgetRemaining: number;
   manager: string;
 }
 

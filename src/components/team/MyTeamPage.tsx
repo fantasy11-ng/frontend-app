@@ -1053,7 +1053,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           <div className="flex justify-end">
             <div className="px-4 py-2 bg-[#F5EBEB] rounded-full">
               <span className="text-[#800000] font-semibold">
-                ${(team.budget / 1000000).toFixed(1)}M Budget
+                ${(team.budgetRemaining / 1000000).toFixed(1)}M Budget
               </span>
             </div>
           </div>

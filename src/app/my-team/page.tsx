@@ -120,6 +120,7 @@ export default function TeamPage() {
           logo: apiTeam.logo ?? (apiTeam as { logoUrl?: string }).logoUrl,
           points: (apiTeam as { points?: number }).points ?? 0,
           budget: apiTeam.budgetRemaining ?? apiTeam.budgetTotal ?? 100000000,
+          budgetRemaining: apiTeam.budgetRemaining ?? apiTeam.budgetTotal ?? 100000000,
           manager: (apiTeam as { owner?: { fullName?: string; email?: string } }).owner?.fullName ||
             (apiTeam as { owner?: { email?: string } }).owner?.email ||
             'Manager',
@@ -242,6 +243,7 @@ export default function TeamPage() {
         logo: createdTeam.logo || logoUrl,
         points: createdTeam.points ?? 0,
         budget: createdTeam.budget ?? 100000000,
+        budgetRemaining: createdTeam.budgetRemaining ?? 100000000,
         manager: createdTeam.manager ?? 'Current User',
       });
       setHasTeam(true);
