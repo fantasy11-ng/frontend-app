@@ -11,6 +11,7 @@ import {
   COUNTRY_NAMES,
   getCountryName 
 } from '@/lib/constants';
+import { Spinner } from '../common/Spinner';
 
 interface PlayersTableProps {
   players: Player[];
@@ -277,9 +278,8 @@ export default function PlayersTable({
 
       {/* Loading State */}
       {isLoading && (
-        <div className="text-center py-12">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#4AA96C] border-r-transparent"></div>
-          <p className="mt-4 text-gray-500">Loading players...</p>
+        <div className="flex justify-center py-12 items-center">
+          <Spinner size={24} className="text-[#4AA96C]" />
         </div>
       )}
 

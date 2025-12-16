@@ -168,15 +168,23 @@ export const teamApi = {
 
   getTeamBoosts: async () => {
     const response = await apiClient.get<{
-      data?: Array<{
-        id?: string | number;
-        type?: string;
-        used?: boolean;
-        gameweekId?: number;
-      }>;
+      success?: boolean;
+      data?: {
+        availableBoosts?: string[];
+        boosts?: Array<{
+          id?: string | number;
+          type?: string;
+          used?: boolean;
+          gameweekId?: number;
+        }>;
+      };
     }>("/fantasy/team/boosts");
 
-    return response.data?.data ?? [];
+    const payload = response.data?.data ?? {};
+    return {
+      availableBoosts: payload.availableBoosts ?? [],
+      boosts: payload.boosts ?? [],
+    };
   },
 
   applyTeamBoost: async (type: string) => {

@@ -34,6 +34,22 @@ interface MyTeamPageProps {
 
 type TabType = "my-team" | "transfers" | "team-history";
 type BoostTabType = "boosts" | "fixtures";
+type TeamHistoryTab = "performance" | "transfers" | "points";
+
+type TeamHistoryCard = {
+  id: string;
+  matchDay: string;
+  dateLabel: string;
+  dateValue: number;
+  captain?: string;
+  viceCaptain?: string;
+  points?: number;
+  rank?: number;
+  transfers?: number;
+  transfersList?: TransferHistoryItem[];
+  gameweekId?: number;
+  fixtureId?: number | string;
+};
 
 const MyTeamPage: React.FC<MyTeamPageProps> = ({
   team,
@@ -84,19 +100,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const [transferSearchTerm, setTransferSearchTerm] = useState("");
   const [isProcessingTransfer, setIsProcessingTransfer] = useState(false);
   const [isSavingLineup, setIsSavingLineup] = useState(false);
-  const [teamHistory, setTeamHistory] = useState<
-    Array<{
-      id: string;
-      matchDay: string;
-      date: string;
-      captain?: string;
-      viceCaptain?: string;
-      points?: number;
-      rank?: number;
-      transfers?: number;
-    }>
-  >([]);
+  const [teamHistory, setTeamHistory] = useState<TeamHistoryCard[]>([]);
   const [isLoadingTeamHistory, setIsLoadingTeamHistory] = useState(false);
+  const [activeTeamHistoryTab, setActiveTeamHistoryTab] = useState<TeamHistoryTab>("performance");
 
   const normalizePosition = (pos: unknown): Player["position"] => {
     const code = (pos || "").toString().toUpperCase();
@@ -226,17 +232,24 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           const captain = squad?.players?.find((p) => p.isCaptain)?.player?.name;
           const viceCaptain = squad?.players?.find((p) => p.isViceCaptain)?.player?.name;
           const date = gw?.firstKickoffAt || evt.createdAt;
+          const dateValue = date ? new Date(date).getTime() : 0;
           const transfersCount = Array.isArray(evt.team?.transfers) ? evt.team.transfers.length : undefined;
 
           return {
             id: String(evt.id ?? `history-${index}`),
             matchDay: gw?.name || gw?.code || "Match Day",
-            date: date ? new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—",
+            dateLabel: date
+              ? new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+              : "—",
+            dateValue,
             captain: captain || "—",
             viceCaptain: viceCaptain || "—",
             points: ranking?.totalPoints ?? undefined,
             rank: ranking?.rank ?? undefined,
             transfers: transfersCount,
+            transfersList: Array.isArray(evt.team?.transfers) ? evt.team?.transfers : [],
+            gameweekId: gw?.id,
+            fixtureId: evt.fixtureId ?? gw?.id,
           };
         }) ?? [];
       setTeamHistory(mapped);
@@ -264,20 +277,26 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     const loadBoosts = async () => {
       setIsLoadingBoosts(true);
       try {
-        const data = await teamApi.getTeamBoosts();
+        const { availableBoosts = [], boosts: boostStates = [] } = await teamApi.getTeamBoosts();
         const boostDescriptions: Record<string, string> = {
           MAX_CAPTAIN: "Double points for both captain and vice-captain",
           TRIPLE_CAPTAIN: "Triple the points of your captain for one gameweek",
           SAVES_BOOST: "Add 3 points per save to the GK for that game week",
         };
 
-        const mapped: TeamBoost[] = (data ?? []).map((b, idx) => {
-          const type = (b.type || "").toUpperCase();
+        const usedByType = new Map(
+          (boostStates ?? []).map((b) => [(b.type || "").toUpperCase(), Boolean(b.used)])
+        );
+
+        const mapped: TeamBoost[] = (availableBoosts ?? []).map((type, idx) => {
+          const normalized = (type || "").toUpperCase();
           return {
-            id: String(b.id ?? type ?? idx),
-            name: type.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase()) || "Boost",
-            description: boostDescriptions[type] || "One-time gameweek boost",
-            used: Boolean(b.used),
+            id: String(normalized || idx),
+            name:
+              normalized.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase()) ||
+              "Boost",
+            description: boostDescriptions[normalized] || "One-time gameweek boost",
+            used: usedByType.get(normalized) ?? false,
           };
         });
         setBoosts(mapped);
@@ -944,6 +963,63 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     ];
   }, [squadPlayers, availablePlayers]);
 
+  const playerNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    allPlayersForSquad.forEach((p) => {
+      map.set(String(p.id), p.name);
+    });
+    return map;
+  }, [allPlayersForSquad]);
+
+  const sortedTeamHistory = useMemo(
+    () => [...teamHistory].sort((a, b) => (b.dateValue ?? 0) - (a.dateValue ?? 0)),
+    [teamHistory]
+  );
+
+  const historyTransfers = useMemo(() => {
+    return sortedTeamHistory.flatMap((item) =>
+      (item.transfersList ?? []).map((t, idx) => {
+        const outName =
+          playerNameById.get(String(t.playerOutId)) ??
+          (t.playerOutId ? `Player ${t.playerOutId}` : "—");
+        const inName =
+          playerNameById.get(String(t.playerInId)) ??
+          (t.playerInId ? `Player ${t.playerInId}` : "—");
+        return {
+          id: `${item.id}-transfer-${idx}`,
+          matchDay: item.matchDay,
+          dateLabel: item.dateLabel,
+          outName,
+          inName,
+          amount: t.netAmount ?? t.amountIn ?? t.amountOut ?? null,
+        };
+      })
+    );
+  }, [sortedTeamHistory, playerNameById]);
+
+  const pointsProgression = useMemo(() => {
+    if (sortedTeamHistory.length === 0) return [];
+    const chronological = [...sortedTeamHistory].reverse();
+    let cumulative = 0;
+    const cumulativeById = new Map<string, number>();
+    chronological.forEach((item) => {
+      cumulative += item.points ?? 0;
+      cumulativeById.set(item.id, cumulative);
+    });
+    const maxCumulative =
+      Math.max(...(cumulativeById.size ? Array.from(cumulativeById.values()) : [0]), 0) || 1;
+
+    return sortedTeamHistory.map((item) => {
+      const cum = cumulativeById.get(item.id) ?? 0;
+      const progress = Math.round((cum / maxCumulative) * 100);
+      return {
+        ...item,
+        cumulative: cum,
+        progress: Number.isFinite(progress) ? Math.min(progress, 100) : 0,
+      };
+    });
+  }, [sortedTeamHistory]);
+
   const availableForTransfer = useMemo(() => {
     const squadPlayerIds = new Set(squadPlayers.map((p) => p.id));
     const source = transferPlayers.length ? transferPlayers : availablePlayers;
@@ -1178,54 +1254,156 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               )}
             </div>
 
-            {teamHistory.length === 0 && !isLoadingTeamHistory ? (
-              <div className="text-center py-10 text-gray-500">
-                <p>No history yet.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {teamHistory.map((item) => (
-                  <div
-                    key={item.id}
-                    className="rounded-xl border border-[#F1F2F4] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-4 flex flex-col gap-3"
-                  >
-                    <div className="flex items-center justify-between text-xs text-[#656E81]">
-                      <span className="px-2 py-1 rounded-full bg-[#F5EBEB] text-[#800000] font-semibold">
-                        {item.matchDay}
-                      </span>
-                      <span className="px-2 py-1 rounded-full border border-[#F1F2F4] text-[#656E81]">
-                        {item.date}
-                      </span>
-                    </div>
+            <div className="flex space-x-6 border-b border-gray-200 mb-6">
+              {(["performance", "transfers", "points"] as TeamHistoryTab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTeamHistoryTab(tab)}
+                  className={`pb-3 px-1 font-medium text-sm transition-colors ${
+                    activeTeamHistoryTab === tab
+                      ? "text-green-600 border-b-2 border-green-600"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  {tab === "performance"
+                    ? "Performance"
+                    : tab === "transfers"
+                    ? "Transfers"
+                    : "Points Progression"}
+                </button>
+              ))}
+            </div>
 
-                    <div className="space-y-1 text-sm">
-                      <div>
-                        <span className="text-[#656E81]">Captain </span>
-                        <span className="font-semibold text-[#070A11]">{item.captain || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-[#656E81]">Vice Captain </span>
-                        <span className="font-semibold text-[#070A11]">{item.viceCaptain || "—"}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between text-sm text-[#070A11]">
-                      <div>
-                        <p className="text-xs text-[#656E81]">Points</p>
-                        <p className="text-lg font-semibold text-[#800000]">{item.points ?? "—"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-[#656E81]">Rank</p>
-                        <p className="text-lg font-semibold text-[#800000]">{item.rank ?? "—"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-[#656E81]">Transfers</p>
-                        <p className="text-lg font-semibold text-[#800000]">{item.transfers ?? 0}</p>
-                      </div>
-                    </div>
+            {activeTeamHistoryTab === "performance" && (
+              <>
+                {sortedTeamHistory.length === 0 && !isLoadingTeamHistory ? (
+                  <div className="text-center py-10 text-gray-500">
+                    <p>No history yet.</p>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sortedTeamHistory.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-[#F1F2F4] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-4 flex flex-col gap-3"
+                      >
+                        <div className="flex items-center justify-between text-xs text-[#656E81]">
+                          <span className="px-2 py-1 rounded-full bg-[#F5EBEB] text-[#800000] font-semibold">
+                            {item.matchDay}
+                          </span>
+                          <span className="px-2 py-1 rounded-full border border-[#F1F2F4] text-[#656E81]">
+                            {item.dateLabel}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1 text-sm">
+                          <div>
+                            <span className="text-[#656E81]">Captain </span>
+                            <span className="font-semibold text-[#070A11]">{item.captain || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-[#656E81]">Vice Captain </span>
+                            <span className="font-semibold text-[#070A11]">{item.viceCaptain || "—"}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm text-[#070A11]">
+                          <div>
+                            <p className="text-xs text-[#656E81]">Points</p>
+                            <p className="text-lg font-semibold text-[#800000]">{item.points ?? "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-[#656E81]">Rank</p>
+                            <p className="text-lg font-semibold text-[#800000]">{item.rank ?? "—"}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-[#656E81]">Transfers</p>
+                            <p className="text-lg font-semibold text-[#800000]">{item.transfers ?? 0}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTeamHistoryTab === "transfers" && (
+              <>
+                {historyTransfers.length === 0 && !isLoadingTeamHistory ? (
+                  <div className="text-center py-10 text-gray-500">
+                    <p>No transfer history yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {historyTransfers.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-[#F1F2F4] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-4 flex flex-col gap-3"
+                      >
+                        <div className="flex items-center justify-between text-xs text-[#656E81]">
+                          <span className="px-2 py-1 rounded-full bg-[#F5EBEB] text-[#800000] font-semibold">
+                            {item.matchDay}
+                          </span>
+                          <span className="px-2 py-1 rounded-full border border-[#F1F2F4] text-[#656E81]">
+                            {item.dateLabel}
+                          </span>
+                        </div>
+                        <div className="text-sm flex items-center gap-2">
+                          <span className="text-red-600 font-semibold">{item.outName}</span>
+                          <span className="text-[#656E81]">→</span>
+                          <span className="text-green-700 font-semibold">{item.inName}</span>
+                        </div>
+                        {item.amount !== null && item.amount !== undefined && (
+                          <div className="text-xs text-[#656E81]">
+                            Net: <span className="font-semibold text-[#070A11]">${item.amount}M</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTeamHistoryTab === "points" && (
+              <>
+                {pointsProgression.length === 0 && !isLoadingTeamHistory ? (
+                  <div className="text-center py-10 text-gray-500">
+                    <p>No points yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {pointsProgression.map((item) => (
+                      <div
+                        key={item.id}
+                        className="rounded-xl border border-[#F1F2F4] bg-white shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-4 flex flex-col gap-3"
+                      >
+                        <div className="flex items-center justify-between text-xs text-[#656E81]">
+                          <span className="px-2 py-1 rounded-full bg-[#F5EBEB] text-[#800000] font-semibold">
+                            {item.matchDay}
+                          </span>
+                          <span className="px-2 py-1 rounded-full border border-[#F1F2F4] text-[#656E81]">
+                            {item.dateLabel}
+                          </span>
+                        </div>
+                        <div className="text-sm text-[#070A11]">
+                          <p className="text-xs text-[#656E81] mb-2">Cumulative</p>
+                          <div className="h-2 rounded-full bg-[#F5EBEB] overflow-hidden">
+                            <div
+                              className="h-full bg-[#800000] transition-all"
+                              style={{ width: `${item.progress}%` }}
+                            />
+                          </div>
+                          <div className="mt-2 text-sm font-semibold text-[#800000]">
+                            {item.cumulative}pts
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
