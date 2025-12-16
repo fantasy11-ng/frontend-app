@@ -10,6 +10,7 @@ import { teamApi } from "@/lib/api/team";
 import { BlogPostListItem } from "@/types/news";
 import { Fixture, Team } from "@/types/team";
 import { getCountryName } from "@/lib/constants/countries";
+import { Spinner } from "../common/Spinner";
 
 type HomeFixture = Fixture & {
   time?: string;
@@ -62,6 +63,7 @@ export default function HomePage() {
 
   // Team card info
   const [team, setTeam] = useState<Team | null>(null);
+  const [currentGameweek, setCurrentGameweek] = useState<number | null>(null);
   const [squadPlayers, setSquadPlayers] = useState<
     Array<{
       id: string | number;
@@ -154,10 +156,13 @@ export default function HomePage() {
             return orderA - orderB;
           });
         setSquadPlayers(mapped);
+        setCurrentGameweek(teamData?.currentSquad?.gameweekId ?? null);
       } catch {
         // User may not have a team yet
         setTeam(null);
         setSquadPlayers([]);
+        setCurrentGameweek(null);
+        setCurrentGameweek(null);
       }
     };
 
@@ -281,15 +286,12 @@ export default function HomePage() {
           {/* Gameweek Info Bar */}
           <div className="flex flex-wrap items-center gap-3 mb-8 pb-4">
             <span className="px-4 py-2 bg-[#F5EBEB] text-[#800000] rounded-full text-sm font-medium">
-              Gameweek 1
+              Gameweek {currentGameweek ?? "-"}
             </span>
             <div className="flex items-center text-[#656E81] border border-[#D4D7DD] rounded-full px-2 py-1">
               <Clock className="w-4 h-4 mr-2" />
               <span className="text-sm">2 days left</span>
             </div>
-            {/* <div className="ml-auto text-[#4AA96C] border border-[#4AA96C] rounded-full px-2 py-1 text-base font-semibold">
-              Top 11
-            </div> */}
           </div>
         </div>
 
@@ -692,7 +694,7 @@ export default function HomePage() {
 
             <div className="space-y-4 flex-1 min-h-0 max-h-[420px] overflow-y-auto pr-1">
               {isLoadingFixtures ? (
-                <p className="text-sm text-[#656E81]">Loading fixtures...</p>
+                <Spinner size={24} className="text-[#4AA96C]" />
               ) : fixturesError ? (
                 <p className="text-sm text-red-600">{fixturesError}</p>
               ) : fixtures.length === 0 ? (
@@ -915,9 +917,7 @@ export default function HomePage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-[#656E81] text-center py-4">
-                    Loading top players...
-                  </p>
+                  <Spinner size={24} className="text-[#4AA96C]" />
                 )}
               </div>
             </div>
