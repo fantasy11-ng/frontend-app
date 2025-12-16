@@ -8,7 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useBlogPosts } from "@/lib/api";
 import { teamApi } from "@/lib/api/team";
 import { BlogPostListItem } from "@/types/news";
-import { Fixture } from "@/types/team";
+import { Fixture, Team } from "@/types/team";
+import { getCountryName } from "@/lib/constants/countries";
 
 type HomeFixture = Fixture & {
   time?: string;
@@ -55,13 +56,99 @@ export default function HomePage() {
   const { data: newsData } = useBlogPosts({ status: "published", limit: 4 });
   const newsArticles = newsData?.items || [];
 
-  // Toggle between empty and data states (for demo purposes)
-  const hasWins = true; // Set to false to show empty state
-  const hasTeamUpdates = true; // Set to false to show empty state
-
   const [fixtures, setFixtures] = useState<HomeFixture[]>([]);
   const [isLoadingFixtures, setIsLoadingFixtures] = useState(false);
   const [fixturesError, setFixturesError] = useState<string | null>(null);
+
+  // Team card info
+  const [team, setTeam] = useState<Team | null>(null);
+  const [squadPlayers, setSquadPlayers] = useState<
+    Array<{
+      id: string | number;
+      name: string;
+      position: string;
+      points: number;
+      country: string;
+      price: number;
+    }>
+  >([]);
+
+  // Fetch team data
+  useEffect(() => {
+    const loadTeamData = async () => {
+      try {
+        const teamData = await teamApi.getMyTeam();
+        if (teamData?.team) {
+          setTeam({
+            id: teamData.team.id ?? "",
+            name: teamData.team.name ?? "",
+            points: teamData.team.points ?? 0,
+            budget: teamData.team.budgetTotal ?? 0,
+            budgetRemaining:
+              Number((teamData.team.budgetRemaining / 1000000).toFixed(1)) ?? 0,
+            manager: teamData.team.manager ?? "",
+            logo: teamData.team.logo ?? teamData.team.logoUrl,
+          });
+        }
+
+        // Map squad players - filter for starting 11 and sort by position
+        const players = (teamData?.currentSquad?.players ?? []) as Array<{
+          isStarting?: boolean;
+          position?: string;
+          player?: {
+            id?: number | string;
+            name?: string;
+            positionId?: number;
+            countryId?: number;
+            position?: {
+              code?: string;
+              developer_name?: string;
+              name?: string;
+            };
+            points?: number;
+            price?: number;
+          };
+        }>;
+        const positionOrder: Record<string, number> = {
+          // Abbreviations
+          gk: 1,
+          def: 2,
+          mid: 3,
+          att: 4,
+          // Full names
+          goalkeeper: 1,
+          defender: 2,
+          midfielder: 3,
+          attacker: 4,
+        };
+
+        const mapped = players
+          .filter((p) => p.isStarting === true)
+          .map((p) => ({
+            id: p.player?.id ?? Math.random(),
+            name: p.player?.name ?? "Unknown",
+            position: p.position ?? "N/A",
+            points: p.player?.points ?? 0,
+            country: getCountryName(p.player?.countryId),
+            price: p.player?.price ?? 0,
+          }))
+          .sort((a, b) => {
+            const posA = a.position.toString().toLowerCase();
+            const posB = b.position.toString().toLowerCase();
+            const orderA = positionOrder[posA] ?? 99;
+            const orderB = positionOrder[posB] ?? 99;
+            return orderA - orderB;
+          });
+        setSquadPlayers(mapped);
+      } catch {
+        // User may not have a team yet
+        setTeam(null);
+        setSquadPlayers([]);
+      }
+    };
+
+    loadTeamData();
+  }, []);
 
   useEffect(() => {
     const loadFixtures = async () => {
@@ -75,14 +162,22 @@ export default function HomePage() {
           const start = fx.startingAt ? new Date(fx.startingAt) : null;
           const now = Date.now();
           const time = start
-            ? start.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+            ? start.toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })
             : "TBD";
           const date = start
-            ? start.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+            ? start.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+              })
             : "TBD";
           const startMs = start?.getTime() ?? null;
           // Consider LIVE within a 3h window from kickoff to avoid marking past games as live
-          const isLive = startMs ? startMs <= now && now <= startMs + 3 * 60 * 60 * 1000 : false;
+          const isLive = startMs
+            ? startMs <= now && now <= startMs + 3 * 60 * 60 * 1000
+            : false;
           return {
             id: String(fx.id ?? Math.random()),
             homeTeam: { name: home?.name || "Home", flag: home?.logo },
@@ -97,7 +192,12 @@ export default function HomePage() {
         setFixtures(mapped);
       } catch (error) {
         setFixturesError(
-          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
             (error as { message?: string })?.message ||
             "Failed to load fixtures."
         );
@@ -109,13 +209,12 @@ export default function HomePage() {
     loadFixtures();
   }, []);
 
-
   return (
     <div className="min-h-screen bg-[#FFFFFF]">
       <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Welcome Section */}
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between">
           <div className="mb-6">
             <h1 className="text-2xl font-medium text-[#070A11]">
               Welcome back, {userName}!
@@ -134,9 +233,9 @@ export default function HomePage() {
               <Clock className="w-4 h-4 mr-2" />
               <span className="text-sm">2 days left</span>
             </div>
-            <div className="text-[#4AA96C] border border-[#4AA96C] rounded-full px-2 py-1 text-base font-semibold">
+            {/* <div className="ml-auto text-[#4AA96C] border border-[#4AA96C] rounded-full px-2 py-1 text-base font-semibold">
               Top 11
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -155,7 +254,7 @@ export default function HomePage() {
               <p className="text-sm text-gray-700">My Team</p>
             </div>
             {/* Card with gradient background */}
-            <div className="rounded-xl border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
+            <div className="rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
               {/* SVG Background */}
               <svg
                 className="absolute inset-0 w-full h-full"
@@ -225,10 +324,8 @@ export default function HomePage() {
               </svg>
               {/* Content */}
               <div className="p-6 relative z-10">
-                <p className="text-base text-[#800000] mb-1">
-                  Players selected
-                </p>
-                <p className="text-3xl text-[#800000]">0/11</p>
+                <p className="text-base text-[#800000] mb-1">Team Name</p>
+                <p className="text-3xl text-[#800000]">{team?.name || '--'}</p>
               </div>
             </div>
           </div>
@@ -246,7 +343,7 @@ export default function HomePage() {
               <p className="text-sm font-medium text-gray-700">Points</p>
             </div>
             {/* Card with gradient background */}
-            <div className="rounded-xl border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
+            <div className="rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
               <svg
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 296 110"
@@ -324,7 +421,9 @@ export default function HomePage() {
               </svg>
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Total points</p>
-                <p className="text-3xl text-[#800000]">247 pts</p>
+                <p className="text-3xl text-[#800000]">
+                  {team?.points ?? "--"} pts
+                </p>
               </div>
             </div>
           </div>
@@ -342,7 +441,7 @@ export default function HomePage() {
               <p className="text-sm text-gray-700">Rank</p>
             </div>
             {/* Card with gradient background */}
-            <div className="rounded-xl border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
+            <div className="rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
               <svg
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 303 111"
@@ -438,7 +537,7 @@ export default function HomePage() {
               <p className="text-sm font-medium text-gray-700">Budget</p>
             </div>
             {/* Card with gradient background */}
-            <div className="rounded-xl border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
+            <div className="rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
               <svg
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 303 111"
@@ -516,7 +615,9 @@ export default function HomePage() {
               </svg>
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Remaining</p>
-                <p className="text-3xl text-[#800000]">$100M</p>
+                <p className="text-3xl text-[#800000]">
+                  ${team?.budgetRemaining ?? "--"}M
+                </p>
               </div>
             </div>
           </div>
@@ -525,7 +626,7 @@ export default function HomePage() {
         {/* First Row: Upcoming Matches, Win Throughout Season, Team Updates */}
         <div className="flex flex-col lg:flex-row gap-8 mb-8 items-stretch">
           {/* Upcoming Matches */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4] flex flex-col min-h-[420px]">
+          <div className="flex-1 rounded-xl p-3 lg:p-6 border border-[#F1F2F4] flex flex-col min-h-[420px]">
             <h2 className="text-xl font-bold text-[#070A11] mb-1">
               Upcoming Matches
             </h2>
@@ -539,28 +640,30 @@ export default function HomePage() {
               ) : fixturesError ? (
                 <p className="text-sm text-red-600">{fixturesError}</p>
               ) : fixtures.length === 0 ? (
-                <p className="text-sm text-[#656E81]">No upcoming fixtures available.</p>
+                <p className="text-sm text-[#656E81]">
+                  No upcoming fixtures available.
+                </p>
               ) : (
                 fixtures.map((match) => (
                   <div
                     key={match.id}
-                    className="flex items-center justify-between px-4 py-3 rounded-lg border border-[#F1F2F4] transition-colors"
+                    className="flex items-start justify-between px-4 py-3 rounded-lg border border-[#F1F2F4] transition-colors"
                   >
                     <div className="">
                       <div className="flex items-center justify-between gap-2 sm:gap-8">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        <div className="flex items-center gap-2 min-w-[100px] max-w-[100px] lg:min-w-[150px]">
+                          <div className="w-6 min-w-6 h-6 min-h-6 bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-xs font-bold">
                             {match.homeTeam.name?.[0] ?? "H"}
                           </div>
                           <span className="font-medium text-[#070A11] text-sm truncate">
                             {match.homeTeam.name}
                           </span>
                         </div>
-                        <div className="text-[#070A11] text-sm font-medium">
+                        <div className="text-[#070A11] w-6 lg:w-10 text-sm font-medium">
                           vs
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-[#800000] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                        <div className="flex items-center gap-2 min-w-[100px] max-w-[100px] lg:min-w-[150px]">
+                          <div className="w-6 min-w-6 h-6 min-h-6 bg-[#800000] rounded-full flex items-center justify-center text-white text-xs font-bold">
                             {match.awayTeam.name?.[0] ?? "A"}
                           </div>
                           <span className="font-medium text-gray-900 text-sm truncate">
@@ -575,13 +678,13 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    <div className="ml-4">
+                    <div className="lg:ml-4">
                       {match.status === "LIVE" ? (
                         <span className="px-2 py-1 bg-[#FE5E41] text-white text-xs font-medium rounded-full flex items-center gap-1">
                           <span className="font-black">•</span> LIVE
                         </span>
                       ) : (
-                        <span className="px-2 py-1 border border-[#D4D7DD] text-[#656E81] text-sm font-medium rounded-full">
+                        <span className="px-2 py-1 whitespace-nowrap border border-[#D4D7DD] text-[#656E81] text-sm font-medium rounded-full">
                           {match.date}
                         </span>
                       )}
@@ -592,76 +695,38 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Win Throughout Season */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4] flex flex-col min-h-[420px]">
-            <h2 className="text-xl font-bold text-[#070A11] mb-6">
-              Win throughout season
+          {/* Current Squad */}
+          <div className="flex-1 rounded-xl pb-0 p-3 lg:p-6 lg:pb-0 border border-[#F1F2F4] flex flex-col min-h-[420px]">
+            <h2 className="text-xl font-bold text-[#070A11] mb-1">
+              Current Squad
             </h2>
+            <p className="text-sm text-[#656E81] mb-6">
+              View your starting 11 players
+            </p>
 
-            {hasWins ? (
-              <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
-                {[
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-1_fapyuy.png",
-                    title: "Game week Winner",
-                    subtitle: "Week 3",
-                    badge: "+ 5pts",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
-                    title: "Perfect Prediction",
-                    subtitle: "Nigeria vs Egypt",
-                    badge: "+ 25pts",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Top 1000",
-                    subtitle: "Global ranking",
-                    badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Top 1000",
-                    subtitle: "Global ranking",
-                    badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Top 1000",
-                    subtitle: "Global ranking",
-                    badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                ].map((item, index) => (
+            {squadPlayers.length > 0 ? (
+              <div className="space-y-3 flex-1 min-h-0 max-h-[420px] overflow-y-auto pr-1">
+                {squadPlayers.map((player) => (
                   <div
-                    key={index}
+                    key={player.id}
                     className="flex items-center justify-between p-3 rounded-lg border border-[#F1F2F4]"
                   >
                     <div className="flex items-center gap-3">
-                      <Image
-                        src={item.icon}
-                        alt={item.title}
-                        width={38}
-                        height={38}
-                        className="w-[38px] h-[38px] rounded-full"
-                      />
-                      <div>
-                        <p className="font-medium text-[#070A11] text-sm">
-                          {item.title}
+                      <div className="w-[38px] h-[38px] bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                        {player.position}
+
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-[#070A11] text-sm mb-1">
+                          {player.name}
                         </p>
                         <p className="text-xs text-[#656E81]">
-                          {item.subtitle}
+                          {player.country} • ${(player.price / 1000000).toFixed(1)}M
                         </p>
                       </div>
                     </div>
-                    <span
-                      className={`px-3 py-1 ${item.badgeColor} text-[#800000] text-sm font-semibold rounded-full`}
-                    >
-                      {item.badge}
+                    <span className="bg-[#F5EBEB] text-[#800000] px-3 py-1 rounded-full text-sm font-semibold">
+                      {player.points} pts
                     </span>
                   </div>
                 ))}
@@ -671,107 +736,20 @@ export default function HomePage() {
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
                   <Image
                     src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764597186/wallet-2_eawcda.png"
-                    alt="Trophy"
+                    alt="Squad"
                     width={32}
                     height={32}
                     className="w-8 h-8 opacity-50"
                   />
                 </div>
                 <p className="text-sm text-gray-600 text-center mb-6">
-                  When you start playing, you&apos;ll see your wins here
+                  Create your squad to see your starting 11 here
                 </p>
                 <Link
-                  href="/predictor"
+                  href="/my-team"
                   className="inline-flex items-center justify-center px-6 py-2 bg-[#4AA96C] text-white font-semibold rounded-full transition-colors"
                 >
-                  Make a Prediction
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Team Updates */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4] flex flex-col min-h-[420px]">
-            <h2 className="text-xl font-bold text-[#070A11] mb-1">
-              Team updates
-            </h2>
-            <p className="text-sm text-[#656E81] mb-6">
-              Recent changes and notifications
-            </p>
-
-            {hasTeamUpdates ? (
-              <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
-                {[
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-1_fapyuy.png",
-                    title: "Mohamed Salah scored 12 points",
-                    time: "3 hours ago",
-                  },
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
-                    title: "You transferred in Sadio Mané",
-                    time: "1 day ago",
-                  },
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Your rank improved by 523 points",
-                    time: "3 days ago",
-                  },
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Your rank improved by 523 points",
-                    time: "3 days ago",
-                  },
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Your rank improved by 523 points",
-                    time: "3 days ago",
-                  },
-                ].map((update, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 p-3 rounded-lg border border-[#F1F2F4]"
-                  >
-                    <Image
-                      src={update.avatar}
-                      alt="Avatar"
-                      width={38}
-                      height={38}
-                      className="w-[38px] h-[38px] rounded-full flex-shrink-0"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium text-[#070A11] text-sm mb-1">
-                        {update.title}
-                      </p>
-                      <p className="text-xs text-[#656E81]">{update.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                  <Image
-                    src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764597186/wallet-2_eawcda.png"
-                    alt="Trophy"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 opacity-50"
-                  />
-                </div>
-                <p className="text-sm text-gray-600 text-center mb-6">
-                  When you start playing, you&apos;ll see your updates here
-                </p>
-                <Link
-                  href="/league"
-                  className="inline-flex items-center justify-center px-6 py-2 bg-[#4AA96C] text-white font-semibold rounded-full transition-colors"
-                >
-                  Join a League
+                  Create Squad
                 </Link>
               </div>
             )}
@@ -783,7 +761,7 @@ export default function HomePage() {
           {/* Left Column */}
           <div className="lg:col-span-1 space-y-8">
             {/* How to Play */}
-            <div className="rounded-xl p-6 border border-[#F1F2F4]">
+            <div className="rounded-xl p-3 lg:p-6 border border-[#F1F2F4]">
               <h2 className="text-xl font-bold text-[#070A11] mb-6">
                 How to Play
               </h2>
@@ -792,7 +770,7 @@ export default function HomePage() {
                 {[
                   {
                     title: "Create your Team",
-                    desc: "Select 11 players within $100M budget",
+                    desc: "Select 15 players within $100M budget",
                   },
                   {
                     title: "Make Predictions",
@@ -844,7 +822,7 @@ export default function HomePage() {
           {/* Right Column */}
           <div className="lg:col-span-2">
             {/* Top 5 Players */}
-            <div className="rounded-xl p-6 border border-[#F1F2F4]">
+            <div className="rounded-xl p-3 lg:p-6 border border-[#F1F2F4]">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
                 Current Top 5 Players
               </h2>
@@ -922,7 +900,7 @@ export default function HomePage() {
         </div>
 
         {/* Latest News */}
-        <div className="mt-8 rounded-xl p-6 border border-[#F1F2F4]">
+        <div className="mt-8 rounded-xl p-3 lg:p-6 border border-[#F1F2F4]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-[#070A11]">Latest News</h2>
             <Link href="/news" className="text-[#4AA96C] font-medium">
