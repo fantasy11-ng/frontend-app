@@ -93,6 +93,7 @@ interface GetMyTeamResponse {
   data: {
     team?: Team & { logoUrl?: string; budgetTotal?: number; budgetRemaining?: number };
     currentSquad?: {
+      gameweekId?: number;
       players?: Array<{
         player?: {
           id?: number | string;
@@ -221,12 +222,14 @@ export const teamApi = {
     }
 
     const response = await apiClient.get<GetPlayersResponse>("/players", { params: queryParams });
+    const currentGameweek = response;
     const payload = (response.data as GetPlayersResponse)?.data;
 
     return {
       players: payload?.data ?? [],
       meta: payload?.meta,
       links: payload?.links,
+      gameweekId: currentGameweek?.data,
     };
   },
 
