@@ -182,6 +182,14 @@ export default function LeaguePage() {
     setShowChooseModal(true);
   };
 
+  const handleViewGlobalLeaderboard = () => {
+    router.push('/league/leaderboard');
+  };
+
+  const handleViewLeague = (league: UserLeague) => {
+    handleSelectLeague(league);
+  };
+
   if (!ready) {
     return (
       <div className="h-screen flex justify-center items-center">
@@ -233,7 +241,7 @@ export default function LeaguePage() {
             )}
 
             {isLoadingLeagues ? (
-              <p className="text-sm text-[#656E81]">Loading your leagues...</p>
+              <Spinner size={24} className="text-[#4AA96C]" />
             ) : (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-dashed border-[#D4D7DD] bg-gray-50 px-4 py-6">
                 <div>
@@ -261,6 +269,43 @@ export default function LeaguePage() {
         <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-6">
           <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6">
             <div className="flex flex-col gap-4">
+              <div className="rounded-xl border border-dashed border-[#D4D7DD] bg-gray-50 p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-[#070A11]">Global Leaderboard</h3>
+                    <p className="text-xs text-[#656E81] mt-1">
+                      See how the top managers are performing worldwide.
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+                      <div className="rounded-lg bg-white border border-[#E9EBF0] p-3">
+                        <p className="text-[11px] text-[#656E81]">Total Prize Pool</p>
+                        <p className="text-sm font-semibold text-[#070A11]">{mockChampionshipDetails.totalPrizePool}</p>
+                      </div>
+                      <div className="rounded-lg bg-white border border-[#E9EBF0] p-3">
+                        <p className="text-[11px] text-[#656E81]">Active Managers</p>
+                        <p className="text-sm font-semibold text-[#070A11]">{mockChampionshipDetails.activeManagers}</p>
+                      </div>
+                      <div className="rounded-lg bg-white border border-[#E9EBF0] p-3">
+                        <p className="text-[11px] text-[#656E81]">Winner Prize</p>
+                        <p className="text-sm font-semibold text-[#070A11]">{mockChampionshipDetails.winnerPrize}</p>
+                      </div>
+                      <div className="rounded-lg bg-white border border-[#E9EBF0] p-3">
+                        <p className="text-[11px] text-[#656E81]">Entry Fee</p>
+                        <p className="text-sm font-semibold text-[#070A11]">{mockChampionshipDetails.entryFee}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="shrink-0">
+                    <button
+                      onClick={handleViewGlobalLeaderboard}
+                      className="rounded-full cursor-pointer h-8 px-4 bg-[#4AA96C] text-white text-sm font-semibold hover:bg-[#3c8b58] transition-colors"
+                    >
+                      View Leaderboard
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-[#070A11]">Your Leagues</h2>
@@ -287,7 +332,7 @@ export default function LeaguePage() {
                       setSelectedOption(null);
                       setShowChooseModal(true);
                     }}
-                    className="rounded-full h-10 px-4 bg-[#4AA96C] text-white text-sm font-semibold hover:bg-[#3c8b58] transition-colors"
+                    className="rounded-full cursor-pointer h-8 px-4 bg-[#4AA96C] text-white text-sm font-semibold hover:bg-[#3c8b58] transition-colors"
                   >
                     Create / Join
                   </button>
@@ -301,7 +346,7 @@ export default function LeaguePage() {
             )}
 
               {isLoadingLeagues ? (
-                <p className="text-sm text-[#656E81]">Loading your leagues...</p>
+                <Spinner size={24} className="text-[#4AA96C]" />
               ) : filteredLeagues.length === 0 ? (
                 <p className="text-sm text-[#656E81]">No leagues match your search.</p>
               ) : (
@@ -312,13 +357,13 @@ export default function LeaguePage() {
                         role="button"
                         tabIndex={0}
                         key={league.id || league.inviteCode || league.name || index}
-                        onClick={() => handleSelectLeague(league)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            handleSelectLeague(league);
-                          }
-                        }}
+                        // onClick={() => handleSelectLeague(league)}
+                        // onKeyDown={(e) => {
+                        //   if (e.key === "Enter" || e.key === " ") {
+                        //     e.preventDefault();
+                        //     handleSelectLeague(league);
+                        //   }
+                        // }}
                         className="w-full text-left px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
                       >
                         <div className="flex-1 min-w-0">
@@ -336,21 +381,33 @@ export default function LeaguePage() {
                             {league.ownerName ? ` • Admin: ${league.ownerName}` : ''}
                           </p>
                         </div>
-                        {league.inviteCode && (
-                          <div className="flex items-center gap-2 shrink-0">
-                            <p className="text-xs text-[#070A11] font-mono">{league.inviteCode}</p>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleCopyInvite(league);
-                              }}
-                              className="text-xs font-semibold text-[#4AA96C] hover:text-[#3c8b58] transition-colors"
-                            >
-                              {copyingLeagueId === league.id ? 'Copied' : 'Copy'}
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3 shrink-0">
+                          {league.inviteCode && (
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-[#070A11] font-mono">{league.inviteCode}</p>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyInvite(league);
+                                }}
+                                className="text-xs font-semibold text-[#4AA96C] hover:text-[#3c8b58] transition-colors"
+                              >
+                                {copyingLeagueId === league.id ? 'Copied' : 'Copy'}
+                              </button>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewLeague(league);
+                            }}
+                            className="h-8 px-3 cursor-pointer rounded-full border border-[#D4D7DD] bg-white text-xs font-semibold text-[#070A11] hover:bg-gray-50 transition-colors"
+                          >
+                            View
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
