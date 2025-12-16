@@ -44,7 +44,7 @@ const Transfers: React.FC<TransfersProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPosition, setSelectedPosition] = useState<string>('All');
-  const [selectedCountry, setSelectedCountry] = useState<string>('All');
+  const [selectedCountry] = useState<string>('All');
 
   const handleAvailableScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
@@ -64,14 +64,6 @@ const Transfers: React.FC<TransfersProps> = ({
 
   const positions: (Player['position'] | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'ATT'];
 
-  const countries = useMemo(() => {
-    const allCountries = [
-      ...squadPlayers.map((p) => p.country),
-      ...availablePlayers.map((p) => p.country),
-    ].filter(Boolean);
-    const uniqueCountries = Array.from(new Set(allCountries));
-    return ['All', ...uniqueCountries.sort()];
-  }, [squadPlayers, availablePlayers]);
 
   const filteredSquadPlayers = useMemo(() => {
     return squadPlayers.filter((player) => {
@@ -175,7 +167,7 @@ const Transfers: React.FC<TransfersProps> = ({
                 </option>
               ))}
             </select>
-            <select
+            {/* <select
               value={selectedCountry}
               onChange={(e) => setSelectedCountry(e.target.value)}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -185,7 +177,7 @@ const Transfers: React.FC<TransfersProps> = ({
                   {country === 'All' ? 'Country' : country}
                 </option>
               ))}
-            </select>
+            </select> */}
           </div>
         </div>
       </div>

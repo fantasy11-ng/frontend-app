@@ -17,6 +17,11 @@ interface LeagueLeaderboardProps {
   stats: LeagueStats;
   members: LeagueMember[];
   onLeaveLeague: () => void;
+  inviteCode?: string;
+  isOwner?: boolean;
+  leaving?: boolean;
+  copying?: boolean;
+  onCopyInvite?: () => void;
 }
 
 const statIcons = {
@@ -35,6 +40,12 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
   leagueName,
   stats,
   members,
+  inviteCode,
+  isOwner = false,
+  leaving = false,
+  copying = false,
+  onCopyInvite,
+  onLeaveLeague,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -133,7 +144,7 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-8">
+        <div className="flex flex-col gap-3 mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div className="p-3 h-8 w-8 rounded-full bg-[#800000] text-white flex items-center justify-center text-xs font-semibold">
               {leagueName.slice(0, 2).toUpperCase()}
@@ -144,12 +155,34 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
               </h1>
             </div>
           </div>
-          {/* <button
-            onClick={onLeaveLeague}
-            className="rounded-full h-6 bg-[#4AA96C] px-5 text-sm font-semibold text-white transition hover:bg-[#3c8b58]"
-          >
-            Leave League
-          </button> */}
+          <div className="flex flex-wrap items-center justify-start sm:justify-end gap-3 sm:gap-12">
+            {inviteCode && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-[#070A11] font-mono bg-gray-100 px-3 py-1 rounded-full">
+                  {inviteCode}
+                </span>
+                <button
+                  onClick={onCopyInvite}
+                  className="text-xs font-semibold text-[#4AA96C] hover:text-[#3c8b58] transition-colors"
+                  disabled={!onCopyInvite}
+                >
+                  {copying ? "Copied" : "Copy"}
+                </button>
+              </div>
+            )}
+
+            {!isOwner && (
+              <button
+                onClick={onLeaveLeague}
+                disabled={leaving}
+                className={`rounded-full h-9 px-4 text-sm font-semibold text-white transition-colors ${
+                  leaving ? "bg-gray-400 cursor-not-allowed" : "bg-[#4AA96C]"
+                }`}
+              >
+                {leaving ? "Leaving..." : "Leave League"}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Stats Cards */}
