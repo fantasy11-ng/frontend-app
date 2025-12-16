@@ -73,6 +73,17 @@ export default function HomePage() {
     }>
   >([]);
 
+  // Top 5 players by points
+  const [topPlayers, setTopPlayers] = useState<
+    Array<{
+      id: string | number;
+      name: string;
+      country: string;
+      position: string;
+      points: number;
+    }>
+  >([]);
+
   // Fetch team data
   useEffect(() => {
     const loadTeamData = async () => {
@@ -207,6 +218,32 @@ export default function HomePage() {
     };
 
     loadFixtures();
+  }, []);
+
+  // Fetch top 5 players by points
+  useEffect(() => {
+    const loadTopPlayers = async () => {
+      try {
+        const response = await teamApi.getPlayers({ limit: 50 });
+        const players = response.players ?? [];
+        // Sort by points descending and take top 5
+        const sorted = [...players]
+          .sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
+          .slice(0, 5)
+          .map((p) => ({
+            id: p.id ?? Math.random(),
+            name: p.commonName || p.name || "Unknown",
+            country: getCountryName(p.countryId),
+            position: p.position?.code ?? "N/A",
+            points: p.points ?? 0,
+          }));
+        setTopPlayers(sorted);
+      } catch {
+        setTopPlayers([]);
+      }
+    };
+
+    loadTopPlayers();
   }, []);
 
   return (
@@ -828,72 +865,41 @@ export default function HomePage() {
               </h2>
 
               <div className="space-y-3">
-                {[
-                  {
-                    rank: 1,
-                    name: "Mohammed Salah",
-                    country: "Egypt",
-                    position: "ATT",
-                    points: 156,
-                    isCrown: true,
-                  },
-                  {
-                    rank: 2,
-                    name: "Sadio Mané",
-                    country: "Senegal",
-                    value: "$12.5M",
-                    points: 142,
-                  },
-                  {
-                    rank: 3,
-                    name: "Sadio Mané",
-                    country: "Senegal",
-                    value: "$12.5M",
-                    points: 142,
-                  },
-                  {
-                    rank: 4,
-                    name: "Sadio Mané",
-                    country: "Senegal",
-                    value: "$12.5M",
-                    points: 142,
-                  },
-                  {
-                    rank: 5,
-                    name: "Sadio Mané",
-                    country: "Senegal",
-                    value: "$12.5M",
-                    points: 142,
-                  },
-                ].map((player) => (
-                  <div
-                    key={player.rank}
-                    className="flex items-center justify-between p-3 rounded-lg transition-colors border border-[#F1F2F4]"
-                  >
-                    <div className="flex items-center gap-3">
-                      {player.isCrown ? (
-                        <div className="w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center">
-                          <Crown className="w-5 h-5 text-white" />
+                {topPlayers.length > 0 ? (
+                  topPlayers.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center justify-between p-3 rounded-lg transition-colors border border-[#F1F2F4]"
+                    >
+                      <div className="flex items-center gap-3">
+                        {index === 0 ? (
+                          <div className="w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center">
+                            <Crown className="w-5 h-5 text-white" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {index + 1}
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[#070A11] text-sm">{player.name}</p>
+                          <p className="text-xs text-[#656E81]">
+                            {player.country} • {player.position}
+                          </p>
                         </div>
-                      ) : (
-                        <div className="w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">
-                            {player.rank}
-                          </span>
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-[#070A11] text-sm">{player.name}</p>
-                        <p className="text-xs text-[#656E81]">
-                          {player.country} • {player.position || player.value}
-                        </p>
                       </div>
+                      <span className="bg-[#F5EBEB] text-[#800000] px-3 py-1 rounded-full text-sm font-semibold">
+                        {player.points}pts
+                      </span>
                     </div>
-                    <span className="bg-[#F5EBEB] text-[#800000] px-3 py-1 rounded-full text-sm font-semibold">
-                      {player.points}pts
-                    </span>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-sm text-[#656E81] text-center py-4">
+                    Loading top players...
+                  </p>
+                )}
               </div>
             </div>
           </div>

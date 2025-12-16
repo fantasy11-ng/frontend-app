@@ -72,9 +72,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [showPlayerDetails, setShowPlayerDetails] = useState(false);
   const [showSubstitutionModal, setShowSubstitutionModal] = useState(false);
-  const [substitutionPlayer, setSubstitutionPlayer] = useState<SquadPlayer | null>(null);
-  const [showReverseSubstitutionModal, setShowReverseSubstitutionModal] = useState(false);
-  const [reverseSubstitutionPlayer, setReverseSubstitutionPlayer] = useState<SquadPlayer | null>(null);
+  const [substitutionPlayer, setSubstitutionPlayer] =
+    useState<SquadPlayer | null>(null);
+  const [showReverseSubstitutionModal, setShowReverseSubstitutionModal] =
+    useState(false);
+  const [reverseSubstitutionPlayer, setReverseSubstitutionPlayer] =
+    useState<SquadPlayer | null>(null);
   const [roleMenuState, setRoleMenuState] = useState<{
     isOpen: boolean;
     player: SquadPlayer | null;
@@ -85,25 +88,32 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     position: { x: 0, y: 0 },
   });
   const [searchQuery, setSearchQuery] = useState("");
-  const [localSelectedPosition, setLocalSelectedPosition] = useState<string>("All");
+  const [localSelectedPosition, setLocalSelectedPosition] =
+    useState<string>("All");
   const [selectedCountry, setSelectedCountry] = useState<string>("All");
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [isLoadingFixtures, setIsLoadingFixtures] = useState(false);
   const [boosts, setBoosts] = useState<TeamBoost[]>([]);
   const [isLoadingBoosts, setIsLoadingBoosts] = useState(false);
-  const [pendingTransferOut, setPendingTransferOut] = useState<SquadPlayer | null>(null);
-  const [transferHistory, setTransferHistory] = useState<TransferHistoryItem[]>([]);
+  const [pendingTransferOut, setPendingTransferOut] =
+    useState<SquadPlayer | null>(null);
+  const [transferHistory, setTransferHistory] = useState<TransferHistoryItem[]>(
+    []
+  );
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [transferPlayers, setTransferPlayers] = useState<Player[]>([]);
-  const [isLoadingTransferPlayers, setIsLoadingTransferPlayers] = useState(false);
-  const [canLoadMoreTransferPlayers, setCanLoadMoreTransferPlayers] = useState(false);
+  const [isLoadingTransferPlayers, setIsLoadingTransferPlayers] =
+    useState(false);
+  const [canLoadMoreTransferPlayers, setCanLoadMoreTransferPlayers] =
+    useState(false);
   const [transferPlayersPage, setTransferPlayersPage] = useState(1);
   const [transferSearchTerm, setTransferSearchTerm] = useState("");
   const [isProcessingTransfer, setIsProcessingTransfer] = useState(false);
   const [isSavingLineup, setIsSavingLineup] = useState(false);
   const [teamHistory, setTeamHistory] = useState<TeamHistoryCard[]>([]);
   const [isLoadingTeamHistory, setIsLoadingTeamHistory] = useState(false);
-  const [activeTeamHistoryTab, setActiveTeamHistoryTab] = useState<TeamHistoryTab>("performance");
+  const [activeTeamHistoryTab, setActiveTeamHistoryTab] =
+    useState<TeamHistoryTab>("performance");
   const [hasFetchedTeamHistory, setHasFetchedTeamHistory] = useState(false);
 
   const normalizePosition = (pos: unknown): Player["position"] => {
@@ -111,7 +121,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     if (code.includes("GK") || code.includes("GOAL")) return "GK";
     if (code.includes("DEF")) return "DEF";
     if (code.includes("MID")) return "MID";
-    if (code.includes("ATT") || code.includes("FWD") || code.includes("STR") || code.includes("FOR"))
+    if (
+      code.includes("ATT") ||
+      code.includes("FWD") ||
+      code.includes("STR") ||
+      code.includes("FOR")
+    )
       return "ATT";
     return "MID";
   };
@@ -137,13 +152,23 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
             homeTeam: { name: home?.name || "Home", flag: home?.logo },
             awayTeam: { name: away?.name || "Away", flag: away?.logo },
             matchDay: fx.gameweekId ? `GW ${fx.gameweekId}` : "Upcoming",
-            date: date ? date.toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "TBD",
+            date: date
+              ? date.toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                })
+              : "TBD",
           };
         });
         setFixtures(mapped);
       } catch (error) {
         toast.error(
-          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
             (error as { message?: string })?.message ||
             "Failed to load fixtures."
         );
@@ -173,9 +198,25 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   }, [loadTransferHistory]);
 
   const mapApiPlayersToTransfer = useCallback(
-    (apiPlayers?: Array<{ id?: number | string; name?: string; commonName?: string; position?: { code?: string; developer_name?: string; name?: string }; positionId?: number; price?: number; points?: number; rating?: number; image?: string }>): Player[] => {
+    (
+      apiPlayers?: Array<{
+        id?: number | string;
+        name?: string;
+        commonName?: string;
+        position?: { code?: string; developer_name?: string; name?: string };
+        positionId?: number;
+        price?: number;
+        points?: number;
+        rating?: number;
+        image?: string;
+      }>
+    ): Player[] => {
       return (apiPlayers ?? []).map((p) => {
-        const pos = p.position?.code || p.position?.developer_name || p.position?.name || p.positionId;
+        const pos =
+          p.position?.code ||
+          p.position?.developer_name ||
+          p.position?.name ||
+          p.positionId;
         return {
           id: String(p.id ?? Math.random()),
           name: p.commonName || p.name || "Player",
@@ -193,7 +234,11 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   );
 
   const fetchTransferPlayers = useCallback(
-    async ({ page = 1, append = false, search }: { page?: number; append?: boolean; search?: string } = {}) => {
+    async ({
+      page = 1,
+      append = false,
+      search,
+    }: { page?: number; append?: boolean; search?: string } = {}) => {
       setIsLoadingTransferPlayers(true);
       try {
         const { players: apiPlayers, meta } = await teamApi.getPlayers({
@@ -225,7 +270,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const fetchTeamHistory = useCallback(async () => {
     setIsLoadingTeamHistory(true);
     try {
-      const events: FixturePerformanceItem[] = await teamApi.getFixturePerformance({ limit: 20 });
+      const events: FixturePerformanceItem[] =
+        await teamApi.getFixturePerformance({ limit: 20 });
       const mapped =
         events?.map((evt: FixturePerformanceItem, index: number) => {
           const gw = evt.gameweek;
@@ -234,14 +280,21 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           const captain =
             evt.captain?.player?.commonName || evt.captain?.player?.name;
           const viceCaptain =
-            evt.viceCaptain?.player?.commonName || evt.viceCaptain?.player?.name;
-          const transfersCount = Array.isArray(evt.transfers) ? evt.transfers.length : undefined;
+            evt.viceCaptain?.player?.commonName ||
+            evt.viceCaptain?.player?.name;
+          const transfersCount = Array.isArray(evt.transfers)
+            ? evt.transfers.length
+            : undefined;
 
           return {
             id: String(evt.fixtureId ?? `history-${index}`),
             matchDay: gw?.name || gw?.code || "Match Day",
             dateLabel: date
-              ? new Date(date).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+              ? new Date(date).toLocaleDateString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
               : "—",
             dateValue,
             captain: captain || "—",
@@ -268,20 +321,30 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   useEffect(() => {
     if (activeTab !== "transfers") return;
     // initial load or refresh on search
-    fetchTransferPlayers({ page: 1, append: false, search: transferSearchTerm });
+    fetchTransferPlayers({
+      page: 1,
+      append: false,
+      search: transferSearchTerm,
+    });
   }, [activeTab, transferSearchTerm, fetchTransferPlayers]);
 
   useEffect(() => {
     if (activeTab !== "team-history") return;
     if (hasFetchedTeamHistory || isLoadingTeamHistory) return;
     fetchTeamHistory();
-  }, [activeTab, hasFetchedTeamHistory, isLoadingTeamHistory, fetchTeamHistory]);
+  }, [
+    activeTab,
+    hasFetchedTeamHistory,
+    isLoadingTeamHistory,
+    fetchTeamHistory,
+  ]);
 
   useEffect(() => {
     const loadBoosts = async () => {
       setIsLoadingBoosts(true);
       try {
-        const { availableBoosts = [], boosts: boostStates = [] } = await teamApi.getTeamBoosts();
+        const { availableBoosts = [], boosts: boostStates = [] } =
+          await teamApi.getTeamBoosts();
         const boostDescriptions: Record<string, string> = {
           MAX_CAPTAIN: "Double points for both captain and vice-captain",
           TRIPLE_CAPTAIN: "Triple the points of your captain for one gameweek",
@@ -297,18 +360,31 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           return {
             id: String(normalized || idx),
             name:
-              normalized.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase()) ||
-              "Boost",
-            description: boostDescriptions[normalized] || "One-time gameweek boost",
+              normalized
+                .replace(/_/g, " ")
+                .toLowerCase()
+                .replace(/\b\w/g, (l) => l.toUpperCase()) || "Boost",
+            description:
+              boostDescriptions[normalized] || "One-time gameweek boost",
             used: usedByType.get(normalized) ?? false,
           };
         });
         setBoosts(mapped);
       } catch (error) {
         const message =
-          (error as { response?: { data?: { error?: { message?: string }; message?: string } } })?.response?.data
-            ?.error?.message ||
-          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+          (
+            error as {
+              response?: {
+                data?: { error?: { message?: string }; message?: string };
+              };
+            }
+          )?.response?.data?.error?.message ||
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
           (error as { message?: string })?.message ||
           "Failed to load boosts.";
         toast.error(message);
@@ -329,23 +405,37 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       toast.success(result?.message || "Boost applied");
     } catch (error) {
       const message =
-        (error as { response?: { data?: { error?: { message?: string }; message?: string } } })?.response?.data?.error
-          ?.message ||
-        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (
+          error as {
+            response?: {
+              data?: { error?: { message?: string }; message?: string };
+            };
+          }
+        )?.response?.data?.error?.message ||
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
         (error as { message?: string })?.message ||
         "Failed to apply boost.";
       toast.error(message);
     }
   };
 
-  const validateMatchday11 = (players: SquadPlayer[]): { isValid: boolean; errors: string[] } => {
+  const validateMatchday11 = (
+    players: SquadPlayer[]
+  ): { isValid: boolean; errors: string[] } => {
     const starting11 = players.filter((p) => p.inStarting11);
     const bench = players.filter((p) => p.onBench);
     const errors: string[] = [];
 
     // Validate starting 11 count
     if (starting11.length !== 11) {
-      errors.push(`Starting 11 must have exactly 11 players (currently ${starting11.length})`);
+      errors.push(
+        `Starting 11 must have exactly 11 players (currently ${starting11.length})`
+      );
       return { isValid: false, errors };
     }
 
@@ -356,24 +446,30 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     }
 
     const counts = {
-      GK: starting11.filter((p) => p.position === 'GK').length,
-      DEF: starting11.filter((p) => p.position === 'DEF').length,
-      MID: starting11.filter((p) => p.position === 'MID').length,
-      ATT: starting11.filter((p) => p.position === 'ATT').length,
+      GK: starting11.filter((p) => p.position === "GK").length,
+      DEF: starting11.filter((p) => p.position === "DEF").length,
+      MID: starting11.filter((p) => p.position === "MID").length,
+      ATT: starting11.filter((p) => p.position === "ATT").length,
     };
 
     // Matchday validation rules
     if (counts.GK !== 1) {
-      errors.push('Starting 11 must have exactly 1 goalkeeper');
+      errors.push("Starting 11 must have exactly 1 goalkeeper");
     }
     if (counts.DEF < 3 || counts.DEF > 5) {
-      errors.push(`Starting 11 must have between 3 and 5 defenders (currently ${counts.DEF})`);
+      errors.push(
+        `Starting 11 must have between 3 and 5 defenders (currently ${counts.DEF})`
+      );
     }
     if (counts.MID < 2 || counts.MID > 5) {
-      errors.push(`Starting 11 must have between 2 and 5 midfielders (currently ${counts.MID})`);
+      errors.push(
+        `Starting 11 must have between 2 and 5 midfielders (currently ${counts.MID})`
+      );
     }
     if (counts.ATT < 1 || counts.ATT > 3) {
-      errors.push(`Starting 11 must have between 1 and 3 forwards (currently ${counts.ATT})`);
+      errors.push(
+        `Starting 11 must have between 1 and 3 forwards (currently ${counts.ATT})`
+      );
     }
 
     return {
@@ -383,9 +479,15 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   };
 
   const deriveFormation = (players: SquadPlayer[]) => {
-    const def = players.filter((p) => p.inStarting11 && p.position === "DEF").length;
-    const mid = players.filter((p) => p.inStarting11 && p.position === "MID").length;
-    const fwd = players.filter((p) => p.inStarting11 && p.position === "ATT").length;
+    const def = players.filter(
+      (p) => p.inStarting11 && p.position === "DEF"
+    ).length;
+    const mid = players.filter(
+      (p) => p.inStarting11 && p.position === "MID"
+    ).length;
+    const fwd = players.filter(
+      (p) => p.inStarting11 && p.position === "ATT"
+    ).length;
     return `${def}-${mid}-${fwd}`;
   };
 
@@ -398,7 +500,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     };
 
     const captainId = toPlayerId(starters.find((p) => p.role === "captain"));
-    const viceCaptainId = toPlayerId(starters.find((p) => p.role === "vice-captain"));
+    const viceCaptainId = toPlayerId(
+      starters.find((p) => p.role === "vice-captain")
+    );
     const penaltyTakerId = toPlayerId(starters.find((p) => p.isPenaltyTaker));
     const freeKickTakerId = toPlayerId(starters.find((p) => p.isFreeKickTaker));
 
@@ -419,10 +523,14 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     const fwds = players.filter((p) => p.position === "ATT");
 
     const errors: string[] = [];
-    if (gks.length < 1) errors.push("You need at least 1 goalkeeper in your squad.");
-    if (defs.length < 4) errors.push("You need at least 4 defenders in your squad.");
-    if (mids.length < 3) errors.push("You need at least 3 midfielders in your squad.");
-    if (fwds.length < 3) errors.push("You need at least 3 forwards in your squad.");
+    if (gks.length < 1)
+      errors.push("You need at least 1 goalkeeper in your squad.");
+    if (defs.length < 4)
+      errors.push("You need at least 4 defenders in your squad.");
+    if (mids.length < 3)
+      errors.push("You need at least 3 midfielders in your squad.");
+    if (fwds.length < 3)
+      errors.push("You need at least 3 forwards in your squad.");
 
     if (errors.length > 0) {
       toast.error(errors.join("\n"));
@@ -437,16 +545,22 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     ];
 
     const starterIds = new Set(starting11.map((p) => String(p.id)));
-    const bench: Player[] = players.filter((p) => !starterIds.has(String(p.id))).slice(0, 4);
+    const bench: Player[] = players
+      .filter((p) => !starterIds.has(String(p.id)))
+      .slice(0, 4);
 
     // Ensure exactly 11 starting and max 4 bench
     if (starting11.length !== 11) {
-      toast.error(`Error: Starting 11 must have exactly 11 players (got ${starting11.length})`);
+      toast.error(
+        `Error: Starting 11 must have exactly 11 players (got ${starting11.length})`
+      );
       return;
     }
 
     if (bench.length !== 4) {
-      toast.error(`Error: Squad must have exactly 4 bench players (got ${bench.length})`);
+      toast.error(
+        `Error: Squad must have exactly 4 bench players (got ${bench.length})`
+      );
       return;
     }
 
@@ -470,7 +584,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     // Validate matchday 11
     const validation = validateMatchday11(squad);
     if (!validation.isValid) {
-      toast.error(validation.errors.join('\n'));
+      toast.error(validation.errors.join("\n"));
       return;
     }
 
@@ -491,7 +605,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
       await teamApi.updateLineup({
         formation,
-        startingPlayerIds: squad.filter((p) => p.inStarting11).map((p) => Number(p.id)),
+        startingPlayerIds: squad
+          .filter((p) => p.inStarting11)
+          .map((p) => Number(p.id)),
         benchPlayerIds: squad.filter((p) => p.onBench).map((p) => Number(p.id)),
         fixtureId: defaultFixtureId,
       });
@@ -502,7 +618,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       setShowAssignModal(false);
     } catch (error) {
       const message =
-        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
         (error as { message?: string })?.message ||
         "Failed to save squad. Please try again.";
       toast.error(message);
@@ -523,13 +644,20 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
       await teamApi.updateLineup({
         formation,
-        startingPlayerIds: updatedSquad.filter((p) => p.inStarting11).map(toPlayerId),
+        startingPlayerIds: updatedSquad
+          .filter((p) => p.inStarting11)
+          .map(toPlayerId),
         benchPlayerIds: updatedSquad.filter((p) => p.onBench).map(toPlayerId),
         fixtureId: defaultFixtureId,
       });
     } catch (error) {
       toast.error(
-        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
           (error as { message?: string })?.message ||
           "Failed to update lineup."
       );
@@ -546,8 +674,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     const benchPlayers = squadPlayers.filter((p) => p.onBench).slice(0, 4); // Ensure max 4 bench players
     // Sort bench players: GK always first, then others maintain their order
     return benchPlayers.sort((a, b) => {
-      if (a.position === 'GK' && b.position !== 'GK') return -1;
-      if (a.position !== 'GK' && b.position === 'GK') return 1;
+      if (a.position === "GK" && b.position !== "GK") return -1;
+      if (a.position !== "GK" && b.position === "GK") return 1;
       return 0; // Maintain original order for non-GK players
     });
   }, [squadPlayers]);
@@ -559,11 +687,11 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   const handleSendToBench = () => {
     if (!selectedPlayer) return;
-    
+
     // Only show substitution modal if player is in starting 11
     if (selectedPlayer.inStarting11) {
       // Convert Player to SquadPlayer if needed
-      const squadPlayer = squadPlayers.find(p => p.id === selectedPlayer.id);
+      const squadPlayer = squadPlayers.find((p) => p.id === selectedPlayer.id);
       if (squadPlayer) {
         setReverseSubstitutionPlayer(squadPlayer);
         setShowReverseSubstitutionModal(true);
@@ -571,7 +699,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       }
       return;
     }
-    
+
     // If player is already on bench, just close the modal
     setShowPlayerDetails(false);
     setSelectedPlayer(null);
@@ -579,28 +707,36 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   const handleSubstituteClick = (player: SquadPlayer) => {
     const currentStarting11 = squadPlayers.filter((p) => p.inStarting11);
-    
+
     // If starting 11 is full, show substitution modal
     if (currentStarting11.length >= 11) {
       setSubstitutionPlayer(player);
       setShowSubstitutionModal(true);
       return;
     }
-    
+
     // Otherwise, use the regular move to starting 11 logic
     handleMoveToStarting11(player);
   };
 
-  const validateSubstitution = (playerOut: SquadPlayer, playerIn: SquadPlayer, currentStarting11: SquadPlayer[]): { isValid: boolean; errors: string[] } => {
+  const validateSubstitution = (
+    playerOut: SquadPlayer,
+    playerIn: SquadPlayer,
+    currentStarting11: SquadPlayer[]
+  ): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
     // Goalkeeper rules: must always have exactly 1 GK
-    if (playerOut.position === 'GK' && playerIn.position !== 'GK') {
-      errors.push('Cannot replace goalkeeper with a non-goalkeeper. Must always have exactly 1 goalkeeper.');
+    if (playerOut.position === "GK" && playerIn.position !== "GK") {
+      errors.push(
+        "Cannot replace goalkeeper with a non-goalkeeper. Must always have exactly 1 goalkeeper."
+      );
       return { isValid: false, errors };
     }
-    if (playerIn.position === 'GK' && playerOut.position !== 'GK') {
-      errors.push('Cannot replace a non-goalkeeper with a goalkeeper. Must always have exactly 1 goalkeeper.');
+    if (playerIn.position === "GK" && playerOut.position !== "GK") {
+      errors.push(
+        "Cannot replace a non-goalkeeper with a goalkeeper. Must always have exactly 1 goalkeeper."
+      );
       return { isValid: false, errors };
     }
 
@@ -614,24 +750,30 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
     // Count positions after substitution
     const counts = {
-      GK: simulatedStarting11.filter((p) => p.position === 'GK').length,
-      DEF: simulatedStarting11.filter((p) => p.position === 'DEF').length,
-      MID: simulatedStarting11.filter((p) => p.position === 'MID').length,
-      ATT: simulatedStarting11.filter((p) => p.position === 'ATT').length,
+      GK: simulatedStarting11.filter((p) => p.position === "GK").length,
+      DEF: simulatedStarting11.filter((p) => p.position === "DEF").length,
+      MID: simulatedStarting11.filter((p) => p.position === "MID").length,
+      ATT: simulatedStarting11.filter((p) => p.position === "ATT").length,
     };
 
     // Validate formation rules
     if (counts.GK !== 1) {
-      errors.push('Starting 11 must have exactly 1 goalkeeper');
+      errors.push("Starting 11 must have exactly 1 goalkeeper");
     }
     if (counts.DEF < 3 || counts.DEF > 5) {
-      errors.push(`Starting 11 must have between 3 and 5 defenders (would have ${counts.DEF} after substitution)`);
+      errors.push(
+        `Starting 11 must have between 3 and 5 defenders (would have ${counts.DEF} after substitution)`
+      );
     }
     if (counts.MID < 2 || counts.MID > 5) {
-      errors.push(`Starting 11 must have between 2 and 5 midfielders (would have ${counts.MID} after substitution)`);
+      errors.push(
+        `Starting 11 must have between 2 and 5 midfielders (would have ${counts.MID} after substitution)`
+      );
     }
     if (counts.ATT < 1 || counts.ATT > 3) {
-      errors.push(`Starting 11 must have between 1 and 3 forwards (would have ${counts.ATT} after substitution)`);
+      errors.push(
+        `Starting 11 must have between 1 and 3 forwards (would have ${counts.ATT} after substitution)`
+      );
     }
 
     return {
@@ -640,21 +782,36 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     };
   };
 
-  const handleSubstitute = async (playerOut: SquadPlayer, playerIn: SquadPlayer) => {
+  const handleSubstitute = async (
+    playerOut: SquadPlayer,
+    playerIn: SquadPlayer
+  ) => {
     // Validate substitution using formation rules
     const validation = validateSubstitution(playerOut, playerIn, starting11);
     if (!validation.isValid) {
-      toast.error(`Cannot perform substitution: ${validation.errors.join(', ')}`);
+      toast.error(
+        `Cannot perform substitution: ${validation.errors.join(", ")}`
+      );
       return;
     }
 
     // Perform the substitution
     const updatedSquad = squadPlayers.map((p) => {
       if (p.id === playerOut.id) {
-        return { ...p, inStarting11: false, onBench: true, squadPosition: "bench" as const };
+        return {
+          ...p,
+          inStarting11: false,
+          onBench: true,
+          squadPosition: "bench" as const,
+        };
       }
       if (p.id === playerIn.id) {
-        return { ...p, inStarting11: true, onBench: false, squadPosition: "starting" as const };
+        return {
+          ...p,
+          inStarting11: true,
+          onBench: false,
+          squadPosition: "starting" as const,
+        };
       }
       return p;
     });
@@ -662,7 +819,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     // Final validation after substitution
     const finalValidation = validateMatchday11(updatedSquad);
     if (!finalValidation.isValid) {
-      toast.error(`Cannot perform substitution: ${finalValidation.errors.join(', ')}`);
+      toast.error(
+        `Cannot perform substitution: ${finalValidation.errors.join(", ")}`
+      );
       return;
     }
 
@@ -675,42 +834,56 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const handleMoveToStarting11 = async (player: SquadPlayer) => {
     const currentStarting11 = squadPlayers.filter((p) => p.inStarting11);
     const currentBench = squadPlayers.filter((p) => p.onBench);
-    
+
     // Check if we already have 11 players
     if (currentStarting11.length >= 11 && !player.inStarting11) {
       // If bench is full (4 players), we need to swap
       if (currentBench.length >= 4) {
-        toast.error('Starting 11 is full and bench is full. You must swap players.');
+        toast.error(
+          "Starting 11 is full and bench is full. You must swap players."
+        );
         return;
       }
-      toast.error('Starting 11 is full. Move a player to bench first.');
+      toast.error("Starting 11 is full. Move a player to bench first.");
       return;
     }
 
     // If moving a GK to starting 11, ensure we don't end up with 2 GKs
-    if (player.position === 'GK' && player.onBench) {
+    if (player.position === "GK" && player.onBench) {
       const startingGK = squadPlayers.find(
-        (p) => p.position === 'GK' && p.inStarting11
+        (p) => p.position === "GK" && p.inStarting11
       );
       if (startingGK) {
         // Swap: move current starting GK to bench, move this GK to starting 11
         const updatedSquad = squadPlayers.map((p) => {
           if (p.id === player.id) {
-            return { ...p, inStarting11: true, onBench: false, squadPosition: "starting" as const };
+            return {
+              ...p,
+              inStarting11: true,
+              onBench: false,
+              squadPosition: "starting" as const,
+            };
           }
           if (p.id === startingGK.id) {
-            return { ...p, inStarting11: false, onBench: true, squadPosition: "bench" as const };
+            return {
+              ...p,
+              inStarting11: false,
+              onBench: true,
+              squadPosition: "bench" as const,
+            };
           }
           return p;
         });
-        
+
         // Validate matchday 11 after swap (includes bench limit check)
         const validation = validateMatchday11(updatedSquad);
         if (!validation.isValid) {
-          toast.error(`Cannot swap goalkeepers: ${validation.errors.join(', ')}`);
+          toast.error(
+            `Cannot swap goalkeepers: ${validation.errors.join(", ")}`
+          );
           return;
         }
-        
+
         setSquadPlayers(updatedSquad);
         await persistLineup(updatedSquad);
         return;
@@ -721,29 +894,41 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     if (currentStarting11.length >= 11 && !player.inStarting11) {
       // Find a player in starting 11 to swap with
       // Prefer non-GK players if moving a non-GK, or handle GK swap above
-      const playerToSwap = currentStarting11.find((p) => 
-        p.position !== 'GK' || (player.position === 'GK' && p.position === 'GK')
+      const playerToSwap = currentStarting11.find(
+        (p) =>
+          p.position !== "GK" ||
+          (player.position === "GK" && p.position === "GK")
       );
-      
+
       if (playerToSwap) {
         // Swap players
         const updatedSquad = squadPlayers.map((p) => {
           if (p.id === player.id) {
-            return { ...p, inStarting11: true, onBench: false, squadPosition: "starting" as const };
+            return {
+              ...p,
+              inStarting11: true,
+              onBench: false,
+              squadPosition: "starting" as const,
+            };
           }
           if (p.id === playerToSwap.id) {
-            return { ...p, inStarting11: false, onBench: true, squadPosition: "bench" as const };
+            return {
+              ...p,
+              inStarting11: false,
+              onBench: true,
+              squadPosition: "bench" as const,
+            };
           }
           return p;
         });
-        
+
         // Validate matchday 11 after swap
         const validation = validateMatchday11(updatedSquad);
         if (!validation.isValid) {
-          toast.error(`Cannot swap players: ${validation.errors.join(', ')}`);
+          toast.error(`Cannot swap players: ${validation.errors.join(", ")}`);
           return;
         }
-        
+
         setSquadPlayers(updatedSquad);
         await persistLineup(updatedSquad);
         return;
@@ -752,14 +937,21 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
     const updatedSquad = squadPlayers.map((p) =>
       p.id === player.id
-        ? { ...p, inStarting11: true, onBench: false, squadPosition: "starting" as const }
+        ? {
+            ...p,
+            inStarting11: true,
+            onBench: false,
+            squadPosition: "starting" as const,
+          }
         : p
     );
 
     // Validate matchday 11 after moving to starting (includes bench limit check)
     const validation = validateMatchday11(updatedSquad);
     if (!validation.isValid) {
-      toast.error(`Cannot add player to starting 11: ${validation.errors.join(', ')}`);
+      toast.error(
+        `Cannot add player to starting 11: ${validation.errors.join(", ")}`
+      );
       return;
     }
 
@@ -768,13 +960,14 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   };
 
   const handleAssignRole = async (role: PlayerRole) => {
-    const target = roleMenuState.player ?? (selectedPlayer as SquadPlayer | null);
+    const target =
+      roleMenuState.player ?? (selectedPlayer as SquadPlayer | null);
     if (!target) return;
     if (!target.inStarting11) {
       toast.error("Roles can only be assigned to starting players");
       return;
     }
-    
+
     let updatedSquad: SquadPlayer[] = [];
 
     setSquadPlayers((prev) => {
@@ -793,7 +986,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       updatedSquad = next;
       return next;
     });
-    
+
     setRoleMenuState({ isOpen: false, player: null, position: { x: 0, y: 0 } });
     setShowPlayerDetails(false);
 
@@ -803,7 +996,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       }
     } catch (error) {
       const message =
-        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
         (error as { message?: string })?.message ||
         "Failed to update roles. Please try again.";
       toast.error(message);
@@ -811,7 +1009,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   };
 
   const handleToggleSpecialist = async (type: "penalty" | "free-kick") => {
-    const target = roleMenuState.player ?? (selectedPlayer as SquadPlayer | null);
+    const target =
+      roleMenuState.player ?? (selectedPlayer as SquadPlayer | null);
     if (!target) return;
     if (!target.inStarting11) {
       toast.error("Roles can only be assigned to starting players");
@@ -855,14 +1054,22 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       }
     } catch (error) {
       const message =
-        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
         (error as { message?: string })?.message ||
         "Failed to update roles. Please try again.";
       toast.error(message);
     }
   };
 
-  const handlePlayerRoleMenu = (player: SquadPlayer, event: React.MouseEvent) => {
+  const handlePlayerRoleMenu = (
+    player: SquadPlayer,
+    event: React.MouseEvent
+  ) => {
     event.stopPropagation();
     if (!player.inStarting11) {
       toast.error("Roles can only be assigned to starting players");
@@ -877,8 +1084,18 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
   const handleLoadMoreTransferPlayers = useCallback(() => {
     if (isLoadingTransferPlayers || !canLoadMoreTransferPlayers) return;
-    fetchTransferPlayers({ page: transferPlayersPage + 1, append: true, search: transferSearchTerm });
-  }, [isLoadingTransferPlayers, canLoadMoreTransferPlayers, fetchTransferPlayers, transferPlayersPage, transferSearchTerm]);
+    fetchTransferPlayers({
+      page: transferPlayersPage + 1,
+      append: true,
+      search: transferSearchTerm,
+    });
+  }, [
+    isLoadingTransferPlayers,
+    canLoadMoreTransferPlayers,
+    fetchTransferPlayers,
+    transferPlayersPage,
+    transferSearchTerm,
+  ]);
 
   const handleTransferSearch = useCallback((term: string) => {
     setTransferSearchTerm(term);
@@ -954,7 +1171,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       toast.success("Transfer completed");
     } catch (error) {
       const message =
-        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
         (error as { message?: string })?.message ||
         "Failed to complete transfer.";
       toast.error(message);
@@ -980,7 +1202,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   }, [allPlayersForSquad]);
 
   const sortedTeamHistory = useMemo(
-    () => [...teamHistory].sort((a, b) => (b.dateValue ?? 0) - (a.dateValue ?? 0)),
+    () =>
+      [...teamHistory].sort((a, b) => (b.dateValue ?? 0) - (a.dateValue ?? 0)),
     [teamHistory]
   );
 
@@ -1001,12 +1224,22 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       const matchDay = t.gameweek?.name || t.gameweek?.code || "Match Day";
       const dateSource = t.gameweek?.firstKickoffAt || t.createdAt;
       const dateLabel = dateSource
-        ? new Date(dateSource).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+        ? new Date(dateSource).toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
         : "—";
       const outName =
-        t.playerOut?.commonName || t.playerOut?.name || playerNameById.get(String(t.playerOutId)) || "—";
+        t.playerOut?.commonName ||
+        t.playerOut?.name ||
+        playerNameById.get(String(t.playerOutId)) ||
+        "—";
       const inName =
-        t.playerIn?.commonName || t.playerIn?.name || playerNameById.get(String(t.playerInId)) || "—";
+        t.playerIn?.commonName ||
+        t.playerIn?.name ||
+        playerNameById.get(String(t.playerInId)) ||
+        "—";
 
       return {
         id: t.id ?? `transfer-${idx}`,
@@ -1014,7 +1247,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         dateLabel,
         outName,
         inName,
-        amountLabel: formatAmount(t.netAmount ?? t.amountIn ?? t.amountOut ?? null),
+        amountLabel: formatAmount(
+          t.netAmount ?? t.amountIn ?? t.amountOut ?? null
+        ),
         outImage: t.playerOut?.image,
         inImage: t.playerIn?.image,
       };
@@ -1046,133 +1281,136 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   }, [squadPlayers, availablePlayers, transferPlayers]);
 
   return (
-    <div className="min-h-screen ">      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
-        {/* Header */}
-        <div className="mb-6">
-          {/* <h1 className="text-3xl font-bold text-gray-900 mb-4">My Team</h1> */}
-          <div className="flex justify-end">
-            <div className="px-4 py-2 bg-[#F5EBEB] rounded-full">
-              <span className="text-[#800000] font-semibold">
-                ${(team.budgetRemaining / 1000000).toFixed(1)}M Budget
-              </span>
+    <div className="min-h-screen ">
+      {" "}
+      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
+        <div className="flex flex-col md:flex-row justify-between items-start">
+          {/* Team Card */}
+          <div className="p-6 mb-6">
+            <div className="flex items-center space-x-4 mb-4">
+              {team.logo ? (
+                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                  <Image
+                    src={team.logo}
+                    alt={team.name}
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 via-yellow-500 to-green-500 flex items-center justify-center text-white font-bold text-xl">
+                  {team.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {team.name}
+                </h2>
+                <div className="mt-1">
+                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                    {team.points} points
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              {/* Tabs */}
+              <div className="flex space-x-6 border-b border-gray-200">
+                {(["my-team", "transfers", "team-history"] as TabType[]).map(
+                  (tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`pb-3 px-1 font-medium text-sm transition-colors ${
+                        activeTab === tab
+                          ? "text-green-600 border-b-2 border-green-600"
+                          : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      {tab === "my-team"
+                        ? "My Team"
+                        : tab === "transfers"
+                        ? "Transfers"
+                        : "Team History"}
+                    </button>
+                  )
+                )}
+              </div>
+              {/* Appoint Starting 11 Button */}
+              {activeTab === "my-team" && squadPlayers.length === 0 && (
+                <div className="flex justify-center">
+                  <button
+                    onClick={() => {
+                      onAssignModalOpen?.();
+                      setShowAssignModal(true);
+                    }}
+                    className="px-4 py-1 bg-[#4AA96C] text-white rounded-full font-semibold text-base"
+                  >
+                    Appoint starting 11
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Team Card */}
-        <div className="p-6 mb-6">
-          <div className="flex items-center space-x-4 mb-4">
-            {team.logo ? (
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
-                <Image
-                  src={team.logo}
-                  alt={team.name}
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 via-yellow-500 to-green-500 flex items-center justify-center text-white font-bold text-xl">
-                {team.name.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                {team.name}
-              </h2>
-              <div className="mt-1">
-                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                  {team.points} points
+          <div className="mb-6">
+            {/* <h1 className="text-3xl font-bold text-gray-900 mb-4">My Team</h1> */}
+            <div className="flex justify-end">
+              <div className="px-4 py-2 bg-[#F5EBEB] rounded-full">
+                <span className="text-[#800000] font-semibold">
+                  ${(team.budgetRemaining / 1000000).toFixed(1)}M Budget
                 </span>
               </div>
             </div>
-          </div>
-
-          <div className="flex justify-between items-center">
-            {/* Tabs */}
-            <div className="flex space-x-6 border-b border-gray-200">
-              {(["my-team", "transfers", "team-history"] as TabType[]).map(
-                (tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-3 px-1 font-medium text-sm transition-colors ${
-                      activeTab === tab
-                        ? "text-green-600 border-b-2 border-green-600"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    {tab === "my-team"
-                      ? "My Team"
-                      : tab === "transfers"
-                      ? "Transfers"
-                      : "Team History"}
-                  </button>
-                )
-              )}
-            </div>
-            {/* Appoint Starting 11 Button */}
-            {activeTab === "my-team" && squadPlayers.length === 0 && (
-              <div className="flex justify-center">
-                <button
-                  onClick={() => {
-                    onAssignModalOpen?.();
-                    setShowAssignModal(true);
-                  }}
-                  className="px-4 py-1 bg-[#4AA96C] text-white rounded-full font-semibold text-base"
-                >
-                  Appoint starting 11
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
         {/* Main Content */}
         {activeTab === "my-team" && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Squad Management */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Layout: Squad Management on left, Pitch on right */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Squad Management */}
-                <SquadManagement
-                  players={bench}
-                  onPlayerClick={handlePlayerClick}
-                  onMoveToStarting11={handleSubstituteClick}
-                  searchQuery={searchQuery}
-                  onSearchChange={setSearchQuery}
-                  selectedPosition={localSelectedPosition}
-                  onPositionChange={(val) => {
-                    setLocalSelectedPosition(val);
-                    onPositionChange?.(val);
-                  }}
-                  selectedCountry={selectedCountry}
-                  onCountryChange={setSelectedCountry}
-                />
-                {/* Football Pitch */}
-                <div className="">
-                  <FootballPitch
-                    starting11={starting11}
-                    bench={bench}
-                    onPlayerClick={handlePlayerClick}
-                    onPlayerRoleMenu={handlePlayerRoleMenu}
-                  />
-                </div>
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+            {/* Squad Management - 2 columns */}
+            <div className="lg:col-span-2">
+              <SquadManagement
+                players={bench}
+                onPlayerClick={handlePlayerClick}
+                onMoveToStarting11={handleSubstituteClick}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedPosition={localSelectedPosition}
+                onPositionChange={(val) => {
+                  setLocalSelectedPosition(val);
+                  onPositionChange?.(val);
+                }}
+                selectedCountry={selectedCountry}
+                onCountryChange={setSelectedCountry}
+              />
             </div>
 
-        {(isSavingLineup || isProcessingTransfer) && (
-          <div className="mb-4 px-4 py-2 rounded-lg border border-[#F1F2F4] bg-white flex items-center gap-2 text-sm text-[#070A11]">
-            <Spinner size={16} className="text-[#4AA96C]" />
-            <span>{isSavingLineup ? "Updating lineup..." : "Processing transfer..."}</span>
-          </div>
-        )}
+            {/* Football Pitch - 3 columns */}
+            <div className="lg:col-span-3">
+              <FootballPitch
+                starting11={starting11}
+                bench={bench}
+                onPlayerClick={handlePlayerClick}
+                onPlayerRoleMenu={handlePlayerRoleMenu}
+              />
+            </div>
 
-            {/* Right Column - Boosts and Fixtures */}
-            <div className="space-y-6">
-              {/* Boost/Fixture Tabs */}
+            {(isSavingLineup || isProcessingTransfer) && (
+              <div className="mb-4 px-4 py-2 rounded-lg border border-[#F1F2F4] bg-white flex items-center gap-2 text-sm text-[#070A11]">
+                <Spinner size={16} className="text-[#4AA96C]" />
+                <span>
+                  {isSavingLineup
+                    ? "Updating lineup..."
+                    : "Processing transfer..."}
+                </span>
+              </div>
+            )}
+
+            {/* Boost/Fixture Tab - 2 columns */}
+            <div className="lg:col-span-2 space-y-6">
               <div className="rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex space-x-6 border-b border-gray-200 mb-4">
                   {(["boosts", "fixtures"] as BoostTabType[]).map((tab) => (
@@ -1191,9 +1429,16 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                 </div>
 
                 {activeBoostTab === "boosts" ? (
-                  <TeamBoosts boosts={boosts} onUseBoost={handleUseBoost} isLoading={isLoadingBoosts} />
+                  <TeamBoosts
+                    boosts={boosts}
+                    onUseBoost={handleUseBoost}
+                    isLoading={isLoadingBoosts}
+                  />
                 ) : (
-                  <UpcomingFixtures fixtures={fixtures} isLoading={isLoadingFixtures} />
+                  <UpcomingFixtures
+                    fixtures={fixtures}
+                    isLoading={isLoadingFixtures}
+                  />
                 )}
               </div>
             </div>
@@ -1211,7 +1456,10 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               onClearPendingOut={() => setPendingTransferOut(null)}
               onTransferIn={handleTransferIn}
               onTransferOut={handleTransferOut}
-              transfersUsed={transferHistory.filter((t) => t.fixtureId === defaultFixtureId).length}
+              transfersUsed={
+                transferHistory.filter((t) => t.fixtureId === defaultFixtureId)
+                  .length
+              }
               transferLimit={4}
               isLoadingAvailable={isLoadingTransferPlayers}
               onLoadMoreAvailable={handleLoadMoreTransferPlayers}
@@ -1222,8 +1470,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-gray-900">Transfer History</h3>
-                {isLoadingHistory && <span className="text-xs text-gray-500">Loading...</span>}
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Transfer History
+                </h3>
+                {isLoadingHistory && (
+                  <span className="text-xs text-gray-500">Loading...</span>
+                )}
               </div>
               {transferHistory.length === 0 ? (
                 <p className="text-sm text-gray-500">No transfers yet.</p>
@@ -1232,22 +1484,42 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                   <table className="min-w-full text-sm">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-3 py-2 text-left text-gray-600">Out</th>
-                        <th className="px-3 py-2 text-left text-gray-600">In</th>
-                        <th className="px-3 py-2 text-left text-gray-600">Type</th>
-                        <th className="px-3 py-2 text-left text-gray-600">Fixture</th>
-                        <th className="px-3 py-2 text-left text-gray-600">Date</th>
+                        <th className="px-3 py-2 text-left text-gray-600">
+                          Out
+                        </th>
+                        <th className="px-3 py-2 text-left text-gray-600">
+                          In
+                        </th>
+                        <th className="px-3 py-2 text-left text-gray-600">
+                          Type
+                        </th>
+                        <th className="px-3 py-2 text-left text-gray-600">
+                          Fixture
+                        </th>
+                        <th className="px-3 py-2 text-left text-gray-600">
+                          Date
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {transferHistory.map((t) => (
                         <tr key={t.id}>
-                          <td className="px-3 py-2 text-gray-800">{t.playerOutId ?? '—'}</td>
-                          <td className="px-3 py-2 text-gray-800">{t.playerInId ?? '—'}</td>
-                          <td className="px-3 py-2 text-gray-600">{t.type ?? 'TRANSFER'}</td>
-                          <td className="px-3 py-2 text-gray-600">{t.fixtureId ?? '—'}</td>
+                          <td className="px-3 py-2 text-gray-800">
+                            {t.playerOutId ?? "—"}
+                          </td>
+                          <td className="px-3 py-2 text-gray-800">
+                            {t.playerInId ?? "—"}
+                          </td>
                           <td className="px-3 py-2 text-gray-600">
-                            {t.createdAt ? new Date(t.createdAt).toLocaleString() : '—'}
+                            {t.type ?? "TRANSFER"}
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">
+                            {t.fixtureId ?? "—"}
+                          </td>
+                          <td className="px-3 py-2 text-gray-600">
+                            {t.createdAt
+                              ? new Date(t.createdAt).toLocaleString()
+                              : "—"}
                           </td>
                         </tr>
                       ))}
@@ -1263,7 +1535,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         {activeTab === "team-history" && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Team History</h3>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Team History
+              </h3>
               {isLoadingTeamHistory && (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <Spinner size={16} className="text-[#4AA96C]" />
@@ -1286,7 +1560,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                   {tab === "performance"
                     ? "Performance"
                     : tab === "transfers"
-                    ? "Transfers" : null}
+                    ? "Transfers"
+                    : null}
                 </button>
               ))}
             </div>
@@ -1316,26 +1591,38 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                         <div className="space-y-1 text-sm">
                           <div>
                             <span className="text-[#656E81]">Captain </span>
-                            <span className="font-semibold text-[#070A11]">{item.captain || "—"}</span>
+                            <span className="font-semibold text-[#070A11]">
+                              {item.captain || "—"}
+                            </span>
                           </div>
                           <div>
-                            <span className="text-[#656E81]">Vice Captain </span>
-                            <span className="font-semibold text-[#070A11]">{item.viceCaptain || "—"}</span>
+                            <span className="text-[#656E81]">
+                              Vice Captain{" "}
+                            </span>
+                            <span className="font-semibold text-[#070A11]">
+                              {item.viceCaptain || "—"}
+                            </span>
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between text-sm text-[#070A11]">
                           <div>
                             <p className="text-xs text-[#656E81]">Points</p>
-                            <p className="text-lg font-semibold text-[#800000]">{item.points ?? "—"}</p>
+                            <p className="text-lg font-semibold text-[#800000]">
+                              {item.points ?? "—"}
+                            </p>
                           </div>
                           <div>
                             <p className="text-xs text-[#656E81]">Rank</p>
-                            <p className="text-lg font-semibold text-[#800000]">{item.rank ?? "—"}</p>
+                            <p className="text-lg font-semibold text-[#800000]">
+                              {item.rank ?? "—"}
+                            </p>
                           </div>
                           <div>
                             <p className="text-xs text-[#656E81]">Transfers</p>
-                            <p className="text-lg font-semibold text-[#800000]">{item.transfers ?? 0}</p>
+                            <p className="text-lg font-semibold text-[#800000]">
+                              {item.transfers ?? 0}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1360,7 +1647,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-[#1D2939] font-medium">{item.dateLabel}</span>
+                            <span className="text-sm text-[#1D2939] font-medium">
+                              {item.dateLabel}
+                            </span>
                           </div>
                           {item.amountLabel && (
                             <span className="px-3 py-1 rounded-full bg-[#F5EBEB] text-[#800000] text-xs font-semibold">
@@ -1371,10 +1660,19 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Image src={item.outImage ?? ""} alt={item.outName} width={20} height={20} />
+                            <Image
+                              src={item.outImage ?? ""}
+                              alt={item.outName}
+                              width={20}
+                              height={20}
+                            />
                             <div className="flex flex-col">
-                              <span className="text-sm font-semibold text-[#FE5E41]">{item.outName}</span>
-                              <span className="text-xs text-[#667085]">Out</span>
+                              <span className="text-sm font-semibold text-[#FE5E41]">
+                                {item.outName}
+                              </span>
+                              <span className="text-xs text-[#667085]">
+                                Out
+                              </span>
                             </div>
                           </div>
 
@@ -1383,9 +1681,16 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <Image src={item.inImage ?? ""} alt={item.inName} width={20} height={20} />
+                            <Image
+                              src={item.inImage ?? ""}
+                              alt={item.inName}
+                              width={20}
+                              height={20}
+                            />
                             <div className="flex flex-col items-start">
-                              <span className="text-sm font-semibold text-[#12B76A]">{item.inName}</span>
+                              <span className="text-sm font-semibold text-[#12B76A]">
+                                {item.inName}
+                              </span>
                               <span className="text-xs text-[#667085]">In</span>
                             </div>
                           </div>
@@ -1425,7 +1730,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
             setSelectedPlayer(null);
           }}
           player={selectedPlayer}
-          onSendToBench={selectedPlayer?.inStarting11 ? handleSendToBench : undefined}
+          onSendToBench={
+            selectedPlayer?.inStarting11 ? handleSendToBench : undefined
+          }
           onAssignRole={handleAssignRole}
           onTogglePenalty={() => handleToggleSpecialist("penalty")}
           onToggleFreeKick={() => handleToggleSpecialist("free-kick")}
@@ -1436,7 +1743,11 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           isOpen={roleMenuState.isOpen}
           position={roleMenuState.position}
           onClose={() =>
-            setRoleMenuState({ isOpen: false, player: null, position: { x: 0, y: 0 } })
+            setRoleMenuState({
+              isOpen: false,
+              player: null,
+              position: { x: 0, y: 0 },
+            })
           }
           onSendToBench={
             roleMenuState.player?.inStarting11

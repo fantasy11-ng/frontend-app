@@ -61,7 +61,7 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
   const statCards = useMemo(
     () => [
       {
-        label: "Global Rank",
+        label: "League Rank",
         value: `#${stats.globalRank}`,
         icon: statIcons.rank,
       },

@@ -1,50 +1,77 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import {
   ChooseLeagueModal,
   CreateLeagueModal,
   JoinLeagueModal,
   ChampionshipPage,
-} from '@/components/league';
-import { ChampionshipDetails, LeagueOption, UserLeague } from '@/types/league';
-import { leagueApi } from '@/lib/api';
-import { Spinner } from '@/components/common/Spinner';
+} from "@/components/league";
+import { ChampionshipDetails, LeagueOption, UserLeague } from "@/types/league";
+import { leagueApi, leaderboardApi } from "@/lib/api";
+import { teamApi } from "@/lib/api/team";
+import { Spinner } from "@/components/common/Spinner";
+import { useCurrentUser } from "@/lib/api/hooks/useAuth";
+import { GlobalRanking } from "@/types/ranking";
 
 const mockChampionshipDetails: ChampionshipDetails = {
-  totalPrizePool: '₦1,000,000',
-  activeManagers: '2.4M+',
-  winnerPrize: '₦1,000,000',
-  entryFee: 'FREE',
+  totalPrizePool: "₦1,000,000",
+  activeManagers: "2.4M+",
+  winnerPrize: "₦1,000,000",
+  entryFee: "FREE",
 };
+
+interface UserStats {
+  globalRank: number | null;
+  teamName: string;
+  userName: string;
+  currentGameweek: string;
+  totalPoints: number;
+  totalGoals: number;
+  totalAssists: number;
+}
 
 export default function LeaguePage() {
   const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
   const [showChooseModal, setShowChooseModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<LeagueOption | null>(null);
-  const [currentView, setCurrentView] = useState<'championship' | 'leaderboard'>('championship');
+  const [selectedOption, setSelectedOption] = useState<LeagueOption | null>(
+    null
+  );
+  const [currentView, setCurrentView] = useState<
+    "championship" | "leaderboard"
+  >("championship");
   const [currentLeague, setCurrentLeague] = useState<string | null>(null);
   const [isCreatingLeague, setIsCreatingLeague] = useState(false);
-  const [createLeagueError, setCreateLeagueError] = useState<string | null>(null);
+  const [createLeagueError, setCreateLeagueError] = useState<string | null>(
+    null
+  );
   const [myLeagues, setMyLeagues] = useState<UserLeague[]>([]);
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
   const [leaguesError, setLeaguesError] = useState<string | null>(null);
   const [isJoiningLeague, setIsJoiningLeague] = useState(false);
   const [joinLeagueError, setJoinLeagueError] = useState<string | null>(null);
   const [initialLeaguesLoading, setInitialLeaguesLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(24);
   const [copyingLeagueId, setCopyingLeagueId] = useState<string | null>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [isLoadingUserStats, setIsLoadingUserStats] = useState(false);
   const ready = true;
 
   const getErrorMessage = useCallback((error: unknown, fallback: string) => {
     return (
-      (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
+      (
+        error as {
+          response?: { data?: { message?: string } };
+          message?: string;
+        }
+      )?.response?.data?.message ||
       (error as { message?: string })?.message ||
       fallback
     );
@@ -58,7 +85,7 @@ export default function LeaguePage() {
       setMyLeagues(leagues);
       return leagues;
     } catch (error) {
-      setLeaguesError(getErrorMessage(error, 'Failed to load your leagues.'));
+      setLeaguesError(getErrorMessage(error, "Failed to load your leagues."));
       return [];
     } finally {
       setIsLoadingLeagues(false);
@@ -69,6 +96,53 @@ export default function LeaguePage() {
   useEffect(() => {
     fetchUserLeagues();
   }, [fetchUserLeagues]);
+
+  // Fetch user stats (global rank, points, goals, assists)
+  useEffect(() => {
+    const fetchUserStats = async () => {
+      setIsLoadingUserStats(true);
+      try {
+        // Fetch global leaderboard to get user's stats
+        const { items, me } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 50 });
+        
+        // Try to get team info
+        let teamName = "—";
+        const currentGameweek = "GW 1";
+        try {
+          const teamData = await teamApi.getMyTeam();
+          teamName = teamData?.team?.name ?? "—";
+        } catch {
+          // Team may not exist yet
+        }
+
+        // Find user's entry in leaderboard for full stats
+        const userEntry = me?.teamId 
+          ? items.find((item: GlobalRanking) => item.id === me.teamId)
+          : null;
+
+        const userName = currentUser?.fullName ?? 
+          (currentUser?.firstName && currentUser?.lastName 
+            ? `${currentUser.firstName} ${currentUser.lastName}` 
+            : currentUser?.email ?? "Manager");
+
+        setUserStats({
+          globalRank: me?.rank ?? userEntry?.rank ?? null,
+          teamName,
+          userName,
+          currentGameweek,
+          totalPoints: me?.totalPoints ?? userEntry?.totalPoints ?? 0,
+          totalGoals: userEntry?.goals ?? 0,
+          totalAssists: userEntry?.assists ?? 0,
+        });
+      } catch (error) {
+        console.error("Failed to fetch user stats:", error);
+      } finally {
+        setIsLoadingUserStats(false);
+      }
+    };
+
+    fetchUserStats();
+  }, [currentUser]);
 
   const handleSelectLeague = (league: UserLeague) => {
     if (!league?.id) return;
@@ -82,7 +156,7 @@ export default function LeaguePage() {
     return myLeagues.filter(
       (league) =>
         league.name.toLowerCase().includes(term) ||
-        (league.inviteCode ?? '').toLowerCase().includes(term)
+        (league.inviteCode ?? "").toLowerCase().includes(term)
     );
   }, [myLeagues, searchTerm]);
 
@@ -115,13 +189,13 @@ export default function LeaguePage() {
 
     setShowChooseModal(false);
 
-    if (selectedOption === 'create') {
+    if (selectedOption === "create") {
       setShowCreateModal(true);
-    } else if (selectedOption === 'join') {
+    } else if (selectedOption === "join") {
       setJoinLeagueError(null);
       setShowJoinModal(true);
-    } else if (selectedOption === 'championship') {
-      router.push('/league/leaderboard');
+    } else if (selectedOption === "championship") {
+      router.push("/league/leaderboard");
     }
   };
 
@@ -132,15 +206,18 @@ export default function LeaguePage() {
       const league = await leagueApi.createLeague({ name: leagueName });
       const leagues = await fetchUserLeagues();
       const createdLeague =
-        leagues.find((l) => l.id === league.id) ?? leagues.find((l) => l.name === league.name);
+        leagues.find((l) => l.id === league.id) ??
+        leagues.find((l) => l.name === league.name);
       setCurrentLeague(createdLeague?.name ?? league?.name ?? leagueName);
-      setCurrentView('leaderboard');
+      setCurrentView("leaderboard");
       if (createdLeague?.id) {
         router.push(`/league/${createdLeague.id}`);
       }
       setShowCreateModal(false);
     } catch (error) {
-      setCreateLeagueError(getErrorMessage(error, 'Failed to create league. Please try again.'));
+      setCreateLeagueError(
+        getErrorMessage(error, "Failed to create league. Please try again.")
+      );
     } finally {
       setIsCreatingLeague(false);
     }
@@ -155,7 +232,8 @@ export default function LeaguePage() {
       const leagues = await fetchUserLeagues();
 
       const joinedLeagueName =
-        leagues.find((league) => league.inviteCode === code)?.name ?? leagues[0]?.name;
+        leagues.find((league) => league.inviteCode === code)?.name ??
+        leagues[0]?.name;
 
       const joinedLeague =
         leagues.find((league) => league.inviteCode === code) ??
@@ -163,7 +241,7 @@ export default function LeaguePage() {
 
       if (joinedLeagueName || joinedLeague) {
         setCurrentLeague(joinedLeague?.name ?? joinedLeagueName ?? null);
-        setCurrentView('leaderboard');
+        setCurrentView("leaderboard");
         if (joinedLeague?.id) {
           router.push(`/league/${joinedLeague.id}`);
         }
@@ -171,7 +249,9 @@ export default function LeaguePage() {
 
       setShowJoinModal(false);
     } catch (error) {
-      setJoinLeagueError(getErrorMessage(error, 'Failed to join league. Please try again.'));
+      setJoinLeagueError(
+        getErrorMessage(error, "Failed to join league. Please try again.")
+      );
     } finally {
       setIsJoiningLeague(false);
     }
@@ -182,7 +262,7 @@ export default function LeaguePage() {
   };
 
   const handleViewGlobalLeaderboard = () => {
-    router.push('/league/leaderboard');
+    router.push("/league/leaderboard");
   };
 
   const handleViewLeague = (league: UserLeague) => {
@@ -219,7 +299,10 @@ export default function LeaguePage() {
   }
 
   const hasLeagues = myLeagues.length > 0;
-  const showChampionship = !hasLeagues && currentView === 'championship' && !currentLeague;
+  const showChampionship =
+    !hasLeagues && currentView === "championship" && !currentLeague;
+
+    console.log(userStats)
 
   return (
     <>
@@ -244,7 +327,9 @@ export default function LeaguePage() {
             ) : (
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-dashed border-[#D4D7DD] bg-gray-50 px-4 py-6">
                 <div>
-                  <p className="text-sm font-semibold text-[#070A11]">No leagues yet</p>
+                  <p className="text-sm font-semibold text-[#070A11]">
+                    No leagues yet
+                  </p>
                   <p className="text-xs text-[#656E81]">
                     Create or join a league to see it in your list.
                   </p>
@@ -265,34 +350,18 @@ export default function LeaguePage() {
       )}
 
       {hasLeagues && (
-        <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-6">
+        <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-6 flex flex-col gap-6">
           <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6">
-            <div className="flex flex-col gap-4">
-              <div className="rounded-xl border border-dashed border-[#D4D7DD] bg-gray-50 p-4">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                  <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-[#070A11]">Global Leaderboard</h3>
-                    <p className="text-xs text-[#656E81] mt-1">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-[#070A11]">
+                      Global Leaderboard
+                    </h2>
+                    <p className="text-sm text-[#656E81]">
                       See how the top managers are performing worldwide.
                     </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-                      <div className="rounded-lg bg-white border border-[#E9EBF0] p-3">
-                        <p className="text-[11px] text-[#656E81]">Total Prize Pool</p>
-                        <p className="text-sm font-semibold text-[#070A11]">{mockChampionshipDetails.totalPrizePool}</p>
-                      </div>
-                      <div className="rounded-lg bg-white border border-[#E9EBF0] p-3">
-                        <p className="text-[11px] text-[#656E81]">Active Managers</p>
-                        <p className="text-sm font-semibold text-[#070A11]">{mockChampionshipDetails.activeManagers}</p>
-                      </div>
-                      <div className="rounded-lg bg-white border border-[#E9EBF0] p-3">
-                        <p className="text-[11px] text-[#656E81]">Winner Prize</p>
-                        <p className="text-sm font-semibold text-[#070A11]">{mockChampionshipDetails.winnerPrize}</p>
-                      </div>
-                      <div className="rounded-lg bg-white border border-[#E9EBF0] p-3">
-                        <p className="text-[11px] text-[#656E81]">Entry Fee</p>
-                        <p className="text-sm font-semibold text-[#070A11]">{mockChampionshipDetails.entryFee}</p>
-                      </div>
-                    </div>
                   </div>
                   <div className="shrink-0">
                     <button
@@ -303,17 +372,64 @@ export default function LeaguePage() {
                     </button>
                   </div>
                 </div>
+                {/* User Stats Row */}
+                <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-[#F1F2F4]">
+                  {/* Global Rank */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#F5EBEB] flex items-center justify-center">
+                      <span className="text-[#800000] font-semibold text-sm">
+                        {isLoadingUserStats ? "..." : userStats?.globalRank ? `#${userStats.globalRank}` : "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#656E81]">Global Rank</p>
+                      <p className="text-sm font-semibold text-[#070A11]">
+                        {isLoadingUserStats ? "..." : userStats?.teamName ?? "—"}
+                      </p>
+                      <p className="text-[10px] text-[#656E81]">
+                        {isLoadingUserStats ? "" : userStats?.userName ?? ""}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Stats */}
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <div className="text-center">
+                      <p className="text-lg font-semibold text-[#800000]">
+                        {isLoadingUserStats ? "..." : userStats?.totalPoints?.toLocaleString() ?? "0"}
+                      </p>
+                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">Points</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-semibold text-[#800000]">
+                        {isLoadingUserStats ? "..." : userStats?.totalGoals?.toLocaleString() ?? "0"}
+                      </p>
+                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">Goals</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-lg font-semibold text-[#800000]">
+                        {isLoadingUserStats ? "..." : userStats?.totalAssists?.toLocaleString() ?? "0"}
+                      </p>
+                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">Assists</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-
+            </div>
+          </div>
+          <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6">
+            <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold text-[#070A11]">Your Leagues</h2>
+                  <h2 className="text-xl font-semibold text-[#070A11]">
+                    Your Leagues
+                  </h2>
                   <p className="text-sm text-[#656E81]">
-                    Select a league to view its leaderboard. Showing {visibleLeagues.length} of{' '}
-                    {filteredLeagues.length}.
+                    Select a league to view its leaderboard. Showing{" "}
+                    {visibleLeagues.length} of {filteredLeagues.length}.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-center">
                   <div className="relative flex-1 min-w-[220px]">
                     <input
                       type="text"
@@ -338,16 +454,18 @@ export default function LeaguePage() {
                 </div>
               </div>
 
-            {leaguesError && (
-              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-                {leaguesError}
-              </div>
-            )}
+              {leaguesError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {leaguesError}
+                </div>
+              )}
 
               {isLoadingLeagues ? (
                 <Spinner size={24} className="text-[#4AA96C]" />
               ) : filteredLeagues.length === 0 ? (
-                <p className="text-sm text-[#656E81]">No leagues match your search.</p>
+                <p className="text-sm text-[#656E81]">
+                  No leagues match your search.
+                </p>
               ) : (
                 <>
                   <div className="divide-y divide-[#F1F2F4] border border-[#F1F2F4] rounded-xl bg-white">
@@ -355,14 +473,9 @@ export default function LeaguePage() {
                       <div
                         role="button"
                         tabIndex={0}
-                        key={league.id || league.inviteCode || league.name || index}
-                        // onClick={() => handleSelectLeague(league)}
-                        // onKeyDown={(e) => {
-                        //   if (e.key === "Enter" || e.key === " ") {
-                        //     e.preventDefault();
-                        //     handleSelectLeague(league);
-                        //   }
-                        // }}
+                        key={
+                          league.id || league.inviteCode || league.name || index
+                        }
                         className="w-full text-left px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
                       >
                         <div className="flex-1 min-w-0">
@@ -371,19 +484,26 @@ export default function LeaguePage() {
                               {league.name}
                             </h3>
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#F1F2F4] text-[#4AA96C] font-semibold">
-                              {league.isOwner ? 'Owner' : 'Member'}
+                              {league.isOwner ? "Owner" : "Member"}
                             </span>
                           </div>
                           <p className="text-xs text-[#656E81] mt-1">
-                            {league.participantCount ?? '—'} participant{league.participantCount === 1 ? '' : 's'}
-                            {league.maxParticipants ? ` / ${league.maxParticipants}` : ''}
-                            {league.ownerName ? ` • Admin: ${league.ownerName}` : ''}
+                            {league.participantCount ?? "—"} participant
+                            {league.participantCount === 1 ? "" : "s"}
+                            {league.maxParticipants
+                              ? ` / ${league.maxParticipants}`
+                              : ""}
+                            {league.ownerName
+                              ? ` • Admin: ${league.ownerName}`
+                              : ""}
                           </p>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           {league.inviteCode && (
                             <div className="flex items-center gap-2">
-                              <p className="text-xs text-[#070A11] font-mono">{league.inviteCode}</p>
+                              <p className="text-xs text-[#070A11] font-mono">
+                                {league.inviteCode}
+                              </p>
                               <button
                                 type="button"
                                 onClick={(e) => {
@@ -392,7 +512,9 @@ export default function LeaguePage() {
                                 }}
                                 className="text-xs font-semibold text-[#4AA96C] hover:text-[#3c8b58] transition-colors"
                               >
-                                {copyingLeagueId === league.id ? 'Copied' : 'Copy'}
+                                {copyingLeagueId === league.id
+                                  ? "Copied"
+                                  : "Copy"}
                               </button>
                             </div>
                           )}
@@ -458,9 +580,9 @@ export default function LeaguePage() {
         leagueDetails={
           showJoinModal
             ? {
-                name: 'Lion Champs',
-                members: '12/50',
-                admin: 'Ahmed Hassan',
+                name: "Lion Champs",
+                members: "12/50",
+                admin: "Ahmed Hassan",
               }
             : null
         }
