@@ -1,125 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import GlobalRankingsTable from '@/components/ranking/GlobalRankingsTable';
 import AthleteRankingsTable from '@/components/ranking/AthleteRankingsTable';
 import { GlobalRanking, AthleteRanking } from '@/types/ranking';
-
-// Mock data - replace with actual API call
-const mockGlobalRankings: GlobalRanking[] = [
-  {
-    id: '1',
-    rank: 1,
-    team: 'Chullz ligaaaa',
-    manager: 'Sefu Juma',
-    totalPoints: 127,
-    cleansheet: 7,
-    goals: 7,
-    assists: 4,
-    cards: 1,
-  },
-  {
-    id: '2',
-    rank: 2,
-    team: 'Desert Warriors',
-    manager: 'Amina Diallo',
-    totalPoints: 114,
-    cleansheet: 6,
-    goals: 6,
-    assists: 5,
-    cards: 0,
-  },
-  {
-    id: '3',
-    rank: 3,
-    team: "Pharaoh's XI",
-    manager: 'Juma Karanja',
-    totalPoints: 109,
-    cleansheet: 4,
-    goals: 4,
-    assists: 6,
-    cards: 2,
-  },
-  {
-    id: '4',
-    rank: 4,
-    team: 'Super Eagles FC',
-    manager: 'Kwame Asante',
-    totalPoints: 42,
-    cleansheet: 8,
-    goals: 8,
-    assists: 2,
-    cards: 1,
-  },
-  {
-    id: '5',
-    rank: 5,
-    team: 'Lions of Teranga',
-    manager: 'Fatima Ndiaye',
-    totalPoints: 76,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: '6',
-    rank: 6,
-    team: 'Atlas Lions',
-    manager: 'Hassan Alami',
-    totalPoints: 53,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: '7',
-    rank: 7,
-    team: 'Carthage Eagles',
-    manager: 'Sami Trabelsi',
-    totalPoints: 29,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: '8',
-    rank: 8,
-    team: 'Indomitable Lions',
-    manager: 'Paul Biya',
-    totalPoints: 67,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: '9',
-    rank: 9,
-    team: 'Black Stars',
-    manager: 'Kofi Mensah',
-    totalPoints: 58,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: '10',
-    rank: 10,
-    team: 'Bafana Bafana',
-    manager: 'Thabo Mbeki',
-    totalPoints: 88,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-];
+import { leaderboardApi } from '@/lib/api';
+import { Spinner } from '@/components/common/Spinner';
 
 const mockAthleteRankings: AthleteRanking[] = [
   {
@@ -238,7 +126,43 @@ type TabType = 'global' | 'athlete';
 
 export default function RankingPage() {
   const [activeTab, setActiveTab] = useState<TabType>('global');
+  const [globalRankings, setGlobalRankings] = useState<GlobalRanking[]>([]);
+  const [loadingGlobal, setLoadingGlobal] = useState<boolean>(true);
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const ready = true;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchGlobalLeaderboard = async () => {
+      setLoadingGlobal(true);
+      setGlobalError(null);
+      try {
+        const { items } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 50 });
+        if (isMounted) {
+          setGlobalRankings(items);
+        }
+      } catch (error) {
+        const message =
+          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ??
+          (error as { message?: string })?.message ??
+          'Failed to load global leaderboard.';
+        if (isMounted) {
+          setGlobalError(message);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingGlobal(false);
+        }
+      }
+    };
+
+    fetchGlobalLeaderboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <>
@@ -276,7 +200,21 @@ export default function RankingPage() {
 
             <div>
               {activeTab === 'global' && (
-                <GlobalRankingsTable rankings={mockGlobalRankings} />
+                <>
+                  {loadingGlobal ? (
+                    <div className="flex justify-center py-10">
+                      <Spinner size={24} className="text-[#4AA96C]" />
+                    </div>
+                  ) : globalError ? (
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                      {globalError}
+                    </div>
+                  ) : globalRankings.length === 0 ? (
+                    <p className="text-sm text-[#656E81]">No global leaderboard data available.</p>
+                  ) : (
+                    <GlobalRankingsTable rankings={globalRankings} />
+                  )}
+                </>
               )}
               {activeTab === 'athlete' && (
                 <AthleteRankingsTable rankings={mockAthleteRankings} />

@@ -127,22 +127,46 @@ export const leagueApi = {
     leagueId: string;
     page?: number;
     limit?: number;
-  }): Promise<LeagueMember[]> => {
+  }): Promise<{
+    members: LeagueMember[];
+    meta?: {
+      totalItems?: number;
+      itemCount?: number;
+      itemsPerPage?: number;
+      totalPages?: number;
+      currentPage?: number;
+    };
+    me?: {
+      teamId?: string;
+      rank?: number;
+      totalPoints?: number;
+      budgetRemaining?: number | string;
+    };
+  }> => {
     const response = await apiClient.get(`/fantasy/leagues/${leagueId}/leaderboard/season`, {
       params: { page, limit },
     });
 
-    const raw = response.data;
+    const raw = response.data ?? {};
     const entries: RawLeaderboardEntry[] = Array.isArray(raw)
       ? (raw as RawLeaderboardEntry[])
-      : raw?.data?.leagues ??
-        raw?.data?.leaderboard ??
-        raw?.leaderboard ??
-        raw?.leagues ??
-        raw?.items ??
-        [];
+      : Array.isArray(raw.data)
+        ? raw.data
+        : Array.isArray(raw.data?.data)
+          ? raw.data.data
+          : Array.isArray(raw.data?.leaderboard)
+            ? raw.data.leaderboard
+            : Array.isArray(raw.leaderboard)
+              ? raw.leaderboard
+              : Array.isArray(raw.data?.leagues)
+                ? raw.data.leagues
+                : Array.isArray(raw.leagues)
+                  ? raw.leagues
+                  : Array.isArray(raw.items)
+                    ? raw.items
+                    : [];
 
-    return entries.map((entry, index) => {
+    const members = entries.map((entry, index) => {
       const teamName = entry.team?.name ?? entry.teamName ?? "Unknown Team";
       const managerName =
         entry.manager ??
@@ -165,6 +189,18 @@ export const leagueApi = {
         cards: entry.cards ?? 0,
       };
     });
+
+    const meta =
+      raw?.meta ??
+      raw?.data?.meta ??
+      raw?.data?.data?.meta;
+
+    const me =
+      raw?.me ??
+      raw?.data?.me ??
+      raw?.data?.data?.me;
+
+    return { members, meta, me };
   },
 
   leaveLeague: async (leagueId: string): Promise<void> => {
