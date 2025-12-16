@@ -1284,9 +1284,9 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     <div className="min-h-screen ">
       {" "}
       <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start">
+        <div className="relative flex flex-col md:flex-row justify-between items-start">
           {/* Team Card */}
-          <div className="p-6 mb-6">
+          <div className="lg:p-6 mb-6">
             <div className="flex items-center space-x-4 mb-4">
               {team.logo ? (
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
@@ -1315,7 +1315,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               </div>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col lg:flex-row justify-between lg:items-center">
               {/* Tabs */}
               <div className="flex space-x-6 border-b border-gray-200">
                 {(["my-team", "transfers", "team-history"] as TabType[]).map(
@@ -1340,7 +1340,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               </div>
               {/* Appoint Starting 11 Button */}
               {activeTab === "my-team" && squadPlayers.length === 0 && (
-                <div className="flex justify-center">
+                <div className="relative right-0 lg:absolute flex lg:justify-center mt-6 lg:mt-0">
                   <button
                     onClick={() => {
                       onAssignModalOpen?.();

@@ -253,7 +253,10 @@ export default function HomePage() {
   useEffect(() => {
     const loadGlobalRank = async () => {
       try {
-        const { me } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 1 });
+        const { me } = await leaderboardApi.getGlobalLeaderboard({
+          page: 1,
+          limit: 1,
+        });
         setGlobalRank(me?.rank ?? null);
       } catch {
         setGlobalRank(null);
@@ -379,7 +382,7 @@ export default function HomePage() {
               {/* Content */}
               <div className="p-6 relative z-10">
                 <p className="text-base text-[#800000] mb-1">Team Name</p>
-                <p className="text-3xl text-[#800000]">{team?.name || '--'}</p>
+                <p className="text-3xl text-[#800000]">{team?.name || "--"}</p>
               </div>
             </div>
           </div>
@@ -476,7 +479,7 @@ export default function HomePage() {
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Total points</p>
                 <p className="text-3xl text-[#800000]">
-                  {team?.points ?? "--"} pts
+                  {team?.points ?? "--"}
                 </p>
               </div>
             </div>
@@ -574,7 +577,7 @@ export default function HomePage() {
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Global Ranking</p>
                 <p className="text-3xl text-[#800000]">
-                  {globalRank ? `#${globalRank}` : "—"}
+                  {globalRank ? `${globalRank}` : "--"}
                 </p>
               </div>
             </div>
@@ -672,7 +675,7 @@ export default function HomePage() {
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Remaining</p>
                 <p className="text-3xl text-[#800000]">
-                  ${team?.budgetRemaining ?? "--"}M
+                  {team?.budgetRemaining ? `${team?.budgetRemaining}M` : "--"}
                 </p>
               </div>
             </div>
@@ -770,14 +773,14 @@ export default function HomePage() {
                     <div className="flex items-center gap-3">
                       <div className="w-[38px] h-[38px] bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
                         {player.position}
-
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-[#070A11] text-sm mb-1">
                           {player.name}
                         </p>
                         <p className="text-xs text-[#656E81]">
-                          {player.country} • ${(player.price / 1000000).toFixed(1)}M
+                          {player.country} • $
+                          {(player.price / 1000000).toFixed(1)}M
                         </p>
                       </div>
                     </div>
@@ -903,7 +906,9 @@ export default function HomePage() {
                           </div>
                         )}
                         <div>
-                          <p className="text-[#070A11] text-sm">{player.name}</p>
+                          <p className="text-[#070A11] text-sm">
+                            {player.name}
+                          </p>
                           <p className="text-xs text-[#656E81]">
                             {player.country} • {player.position}
                           </p>
