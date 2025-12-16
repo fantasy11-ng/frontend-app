@@ -19,7 +19,7 @@ import { GlobalRanking } from "@/types/ranking";
 
 const mockChampionshipDetails: ChampionshipDetails = {
   totalPrizePool: "₦1,000,000",
-  activeManagers: "2.4M+",
+  activeManagers: "1K+",
   winnerPrize: "₦1,000,000",
   entryFee: "FREE",
 };
@@ -360,7 +360,7 @@ export default function LeaguePage() {
                       Global Leaderboard
                     </h2>
                     <p className="text-sm text-[#656E81]">
-                      See how the top managers are performing worldwide.
+                      See how all managers are performing on the global league.
                     </p>
                   </div>
                   <div className="shrink-0">
@@ -383,7 +383,7 @@ export default function LeaguePage() {
                     </div>
                     <div>
                       <p className="text-xs text-[#656E81]">Global Rank</p>
-                      <p className="text-sm font-semibold text-[#070A11]">
+                      <p className="text-sm font-semibold text-[#070A11] truncate max-w-[100px]">
                         {isLoadingUserStats ? "..." : userStats?.teamName ?? "—"}
                       </p>
                       <p className="text-[10px] text-[#656E81]">
@@ -490,9 +490,6 @@ export default function LeaguePage() {
                           <p className="text-xs text-[#656E81] mt-1">
                             {league.participantCount ?? "—"} participant
                             {league.participantCount === 1 ? "" : "s"}
-                            {league.maxParticipants
-                              ? ` / ${league.maxParticipants}`
-                              : ""}
                             {league.ownerName
                               ? ` • Admin: ${league.ownerName}`
                               : ""}

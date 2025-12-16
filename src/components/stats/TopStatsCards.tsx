@@ -214,7 +214,7 @@ const renderCardBackground = (variant: string) => {
 
 export default function TopStatsCards({ stats }: TopStatsCardsProps) {
   return (
-    <div className="flex w-full gap-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+    <div className="flex w-full gap-4 justify-between overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
       {stats.map((stat) => {
         const icon = ICONS[stat.icon] ?? ICONS.points;
         return (
@@ -227,7 +227,7 @@ export default function TopStatsCards({ stats }: TopStatsCardsProps) {
               <p className="text-sm text-[#070A11]">{stat.title}</p>
             </div>
 
-            <div className="relative max-h-[150px] overflow-hidden rounded-xl border-2 border-white bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+            <div className="relative max-h-[150px] overflow-hidden rounded-xl">
               {renderCardBackground(stat.icon)}
               <div className="relative z-10 p-6 text-[#800000]">
                 <p className="text-sm tracking-wide mb-4 text-[#800000]">{stat.country}</p>

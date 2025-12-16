@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import GlobalRankingsTable from '@/components/ranking/GlobalRankingsTable';
-import AthleteRankingsTable from '@/components/ranking/AthleteRankingsTable';
-import { GlobalRanking, AthleteRanking } from '@/types/ranking';
-import { leaderboardApi } from '@/lib/api';
-import { Spinner } from '@/components/common/Spinner';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import GlobalRankingsTable from "@/components/ranking/GlobalRankingsTable";
+import AthleteRankingsTable from "@/components/ranking/AthleteRankingsTable";
+import { GlobalRanking, AthleteRanking } from "@/types/ranking";
+import { leaderboardApi } from "@/lib/api";
+import { Spinner } from "@/components/common/Spinner";
 
 const mockAthleteRankings: AthleteRanking[] = [
   {
-    id: '1',
+    id: "1",
     rank: 1,
-    player: 'Mohammed Salah',
-    country: 'Egypt',
+    player: "Mohammed Salah",
+    country: "Egypt",
     points: 127,
     cleansheet: 7,
     goals: 7,
@@ -22,10 +22,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 1,
   },
   {
-    id: '2',
+    id: "2",
     rank: 2,
-    player: 'Sadio Mané',
-    country: 'Senegal',
+    player: "Sadio Mané",
+    country: "Senegal",
     points: 114,
     cleansheet: 6,
     goals: 6,
@@ -33,10 +33,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 0,
   },
   {
-    id: '3',
+    id: "3",
     rank: 3,
-    player: 'Riyad Mahrez',
-    country: 'Algeria',
+    player: "Riyad Mahrez",
+    country: "Algeria",
     points: 109,
     cleansheet: 4,
     goals: 4,
@@ -44,10 +44,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 2,
   },
   {
-    id: '4',
+    id: "4",
     rank: 4,
-    player: 'Victor Osimhen',
-    country: 'Nigeria',
+    player: "Victor Osimhen",
+    country: "Nigeria",
     points: 91,
     cleansheet: 8,
     goals: 8,
@@ -55,10 +55,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 1,
   },
   {
-    id: '5',
+    id: "5",
     rank: 5,
-    player: 'Achraf Hakimi',
-    country: 'Morocco',
+    player: "Achraf Hakimi",
+    country: "Morocco",
     points: 84,
     cleansheet: 2,
     goals: 2,
@@ -66,10 +66,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 3,
   },
   {
-    id: '6',
+    id: "6",
     rank: 6,
-    player: 'Amadou Diallo',
-    country: 'Morocco',
+    player: "Amadou Diallo",
+    country: "Morocco",
     points: 78,
     cleansheet: 2,
     goals: 2,
@@ -77,10 +77,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 3,
   },
   {
-    id: '7',
+    id: "7",
     rank: 7,
-    player: 'Hakim Ziyech',
-    country: 'Morocco',
+    player: "Hakim Ziyech",
+    country: "Morocco",
     points: 69,
     cleansheet: 2,
     goals: 2,
@@ -88,10 +88,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 3,
   },
   {
-    id: '8',
+    id: "8",
     rank: 8,
-    player: 'Samuel Chukwueze',
-    country: 'Morocco',
+    player: "Samuel Chukwueze",
+    country: "Morocco",
     points: 72,
     cleansheet: 2,
     goals: 2,
@@ -99,10 +99,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 3,
   },
   {
-    id: '9',
+    id: "9",
     rank: 9,
-    player: 'Mohammed Kudus',
-    country: 'Morocco',
+    player: "Mohammed Kudus",
+    country: "Morocco",
     points: 65,
     cleansheet: 2,
     goals: 2,
@@ -110,10 +110,10 @@ const mockAthleteRankings: AthleteRanking[] = [
     cards: 3,
   },
   {
-    id: '10',
+    id: "10",
     rank: 10,
-    player: 'Ilias Chair',
-    country: 'Morocco',
+    player: "Ilias Chair",
+    country: "Morocco",
     points: 87,
     cleansheet: 2,
     goals: 2,
@@ -122,10 +122,10 @@ const mockAthleteRankings: AthleteRanking[] = [
   },
 ];
 
-type TabType = 'global' | 'athlete';
+type TabType = "global" | "athlete";
 
 export default function RankingPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('global');
+  const [activeTab, setActiveTab] = useState<TabType>("global");
   const [globalRankings, setGlobalRankings] = useState<GlobalRanking[]>([]);
   const [loadingGlobal, setLoadingGlobal] = useState<boolean>(true);
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -138,15 +138,23 @@ export default function RankingPage() {
       setLoadingGlobal(true);
       setGlobalError(null);
       try {
-        const { items } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 50 });
+        const { items } = await leaderboardApi.getGlobalLeaderboard({
+          page: 1,
+          limit: 50,
+        });
         if (isMounted) {
           setGlobalRankings(items);
         }
       } catch (error) {
         const message =
-          (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ??
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ??
           (error as { message?: string })?.message ??
-          'Failed to load global leaderboard.';
+          "Failed to load global leaderboard.";
         if (isMounted) {
           setGlobalError(message);
         }
@@ -168,7 +176,7 @@ export default function RankingPage() {
     <>
       {ready ? (
         <div className="min-h-screen bg-gray-50">
-          <div className="max-w-[1440px] mx-auto px-4 py-8">
+          <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Ranking</h1>
             </div>
@@ -176,21 +184,21 @@ export default function RankingPage() {
             <div className="mb-8">
               <div className="flex space-x-8 border-b border-gray-200">
                 <button
-                  onClick={() => setActiveTab('global')}
+                  onClick={() => setActiveTab("global")}
                   className={`pb-4 px-1 text-sm font-medium transition-colors ${
-                    activeTab === 'global'
-                      ? 'text-gray-900 border-b-2 border-green-500'
-                      : 'text-gray-500 hover:text-gray-700'
+                    activeTab === "global"
+                      ? "text-gray-900 border-b-2 border-green-500"
+                      : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   Global Rankings
                 </button>
                 <button
-                  onClick={() => setActiveTab('athlete')}
+                  onClick={() => setActiveTab("athlete")}
                   className={`pb-4 px-1 text-sm font-medium transition-colors ${
-                    activeTab === 'athlete'
-                      ? 'text-gray-900 border-b-2 border-green-500'
-                      : 'text-gray-500 hover:text-gray-700'
+                    activeTab === "athlete"
+                      ? "text-gray-900 border-b-2 border-green-500"
+                      : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   Athlete Rankings
@@ -199,7 +207,7 @@ export default function RankingPage() {
             </div>
 
             <div>
-              {activeTab === 'global' && (
+              {activeTab === "global" && (
                 <>
                   {loadingGlobal ? (
                     <div className="flex justify-center py-10">
@@ -210,13 +218,15 @@ export default function RankingPage() {
                       {globalError}
                     </div>
                   ) : globalRankings.length === 0 ? (
-                    <p className="text-sm text-[#656E81]">No global leaderboard data available.</p>
+                    <p className="text-sm text-[#656E81]">
+                      No global leaderboard data available.
+                    </p>
                   ) : (
                     <GlobalRankingsTable rankings={globalRankings} />
                   )}
                 </>
               )}
-              {activeTab === 'athlete' && (
+              {activeTab === "athlete" && (
                 <AthleteRankingsTable rankings={mockAthleteRankings} />
               )}
             </div>
