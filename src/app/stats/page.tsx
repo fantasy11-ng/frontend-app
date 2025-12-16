@@ -5,33 +5,9 @@ import TopStatsCards from '@/components/stats/TopStatsCards';
 import PlayersTable from '@/components/stats/PlayersTable';
 import { TopStat, Player, PlayerListMeta } from '@/types/stats';
 import { statsApi } from '@/lib/api/stats';
+import { getCountryName } from '@/lib/constants';
 import Image from 'next/image';
 import Link from 'next/link';
-
-// Mock data for top stats - can be replaced with actual API call later
-const mockTopStats: TopStat[] = [
-  {
-    title: 'Most Points',
-    country: 'Egypt',
-    playerName: 'Mohammed Salah',
-    value: '127 points',
-    icon: 'points',
-  },
-  {
-    title: 'Most Goals',
-    country: 'Nigeria',
-    playerName: 'Mohammed Salah',
-    value: '8 goals',
-    icon: 'goals',
-  },
-  {
-    title: 'Most Assists',
-    country: 'Algeria',
-    playerName: 'Mohammed Salah',
-    value: '6 assists',
-    icon: 'assists',
-  },
-];
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -39,6 +15,7 @@ export default function StatsPage() {
   const ready = true;
   
   const [players, setPlayers] = useState<Player[]>([]);
+  const [topStats, setTopStats] = useState<TopStat[]>([]);
   const [meta, setMeta] = useState<PlayerListMeta>({
     itemsPerPage: DEFAULT_PAGE_SIZE,
     totalItems: 0,
@@ -49,6 +26,7 @@ export default function StatsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [positionFilter, setPositionFilter] = useState<number | undefined>(undefined);
   const [countryFilter, setCountryFilter] = useState<number | undefined>(undefined);
+  const [sortBy, setSortBy] = useState('points:DESC');
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchPlayers = useCallback(async () => {
@@ -60,6 +38,7 @@ export default function StatsPage() {
         search: searchQuery || undefined,
         positionId: positionFilter,
         countryId: countryFilter,
+        sortBy: sortBy,
       });
       
       setPlayers(result.players);
@@ -69,11 +48,65 @@ export default function StatsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, searchQuery, positionFilter, countryFilter]);
+  }, [currentPage, searchQuery, positionFilter, countryFilter, sortBy]);
+
+  const fetchTopStats = useCallback(async () => {
+    try {
+      // Fetch top player for each category in parallel
+      const [pointsResult, goalsResult, assistsResult] = await Promise.all([
+        statsApi.getPlayers({ limit: 1, sortBy: 'points:DESC' }),
+        statsApi.getPlayers({ limit: 1, sortBy: 'goals:DESC' }),
+        statsApi.getPlayers({ limit: 1, sortBy: 'assists:DESC' }),
+      ]);
+
+      const stats: TopStat[] = [];
+
+      if (pointsResult.players[0]) {
+        const player = pointsResult.players[0];
+        stats.push({
+          title: 'Most Points',
+          country: getCountryName(player.countryId),
+          playerName: player.commonName || player.name,
+          value: `${player.points} points`,
+          icon: 'points',
+        });
+      }
+
+      if (goalsResult.players[0]) {
+        const player = goalsResult.players[0];
+        stats.push({
+          title: 'Most Goals',
+          country: getCountryName(player.countryId),
+          playerName: player.commonName || player.name,
+          value: `${player.goals} goals`,
+          icon: 'goals',
+        });
+      }
+
+      if (assistsResult.players[0]) {
+        const player = assistsResult.players[0];
+        stats.push({
+          title: 'Most Assists',
+          country: getCountryName(player.countryId),
+          playerName: player.commonName || player.name,
+          value: `${player.assists} assists`,
+          icon: 'assists',
+        });
+      }
+
+      setTopStats(stats);
+    } catch (error) {
+      console.error('Failed to fetch top stats:', error);
+    }
+  }, []);
 
   useEffect(() => {
     fetchPlayers();
   }, [fetchPlayers]);
+
+  useEffect(() => {
+    fetchTopStats();
+  }, [fetchTopStats]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -94,6 +127,11 @@ export default function StatsPage() {
     setCurrentPage(1); // Reset to first page on filter change
   };
 
+  const handleSortChange = (newSortBy: string) => {
+    setSortBy(newSortBy);
+    setCurrentPage(1); // Reset to first page on sort change
+  };
+
   return (
     <>
     {ready ? 
@@ -105,7 +143,7 @@ export default function StatsPage() {
         </div>
 
         {/* Top Stats Cards */}
-        <TopStatsCards stats={mockTopStats} />
+        <TopStatsCards stats={topStats} />
 
         {/* Players Table Section */}
         <PlayersTable 
@@ -116,6 +154,7 @@ export default function StatsPage() {
           onSearch={handleSearch}
           onPositionFilter={handlePositionFilter}
           onCountryFilter={handleCountryFilter}
+          onSortChange={handleSortChange}
           isLoading={isLoading}
         />
       </div>

@@ -59,7 +59,7 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
     }
   };
 
-  const positions: (PlayerPosition | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'FWD'];
+  const positions: (PlayerPosition | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'ATT'];
 
   const countries = useMemo(() => {
     const uniqueCountries = Array.from(new Set(players.map((p) => p.country).filter(Boolean)));

@@ -103,8 +103,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     if (code.includes("GK") || code.includes("GOAL")) return "GK";
     if (code.includes("DEF")) return "DEF";
     if (code.includes("MID")) return "MID";
-    if (code.includes("FWD") || code.includes("ATT") || code.includes("STR") || code.includes("FOR"))
-      return "FWD";
+    if (code.includes("ATT") || code.includes("FWD") || code.includes("STR") || code.includes("FOR"))
+      return "ATT";
     return "MID";
   };
   useEffect(() => {
@@ -332,7 +332,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       GK: starting11.filter((p) => p.position === 'GK').length,
       DEF: starting11.filter((p) => p.position === 'DEF').length,
       MID: starting11.filter((p) => p.position === 'MID').length,
-      FWD: starting11.filter((p) => p.position === 'FWD').length,
+      ATT: starting11.filter((p) => p.position === 'ATT').length,
     };
 
     // Matchday validation rules
@@ -345,8 +345,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     if (counts.MID < 2 || counts.MID > 5) {
       errors.push(`Starting 11 must have between 2 and 5 midfielders (currently ${counts.MID})`);
     }
-    if (counts.FWD < 1 || counts.FWD > 3) {
-      errors.push(`Starting 11 must have between 1 and 3 forwards (currently ${counts.FWD})`);
+    if (counts.ATT < 1 || counts.ATT > 3) {
+      errors.push(`Starting 11 must have between 1 and 3 forwards (currently ${counts.ATT})`);
     }
 
     return {
@@ -358,7 +358,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
   const deriveFormation = (players: SquadPlayer[]) => {
     const def = players.filter((p) => p.inStarting11 && p.position === "DEF").length;
     const mid = players.filter((p) => p.inStarting11 && p.position === "MID").length;
-    const fwd = players.filter((p) => p.inStarting11 && p.position === "FWD").length;
+    const fwd = players.filter((p) => p.inStarting11 && p.position === "ATT").length;
     return `${def}-${mid}-${fwd}`;
   };
 
@@ -389,7 +389,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     const gks = players.filter((p) => p.position === "GK");
     const defs = players.filter((p) => p.position === "DEF");
     const mids = players.filter((p) => p.position === "MID");
-    const fwds = players.filter((p) => p.position === "FWD");
+    const fwds = players.filter((p) => p.position === "ATT");
 
     const errors: string[] = [];
     if (gks.length < 1) errors.push("You need at least 1 goalkeeper in your squad.");
@@ -590,7 +590,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
       GK: simulatedStarting11.filter((p) => p.position === 'GK').length,
       DEF: simulatedStarting11.filter((p) => p.position === 'DEF').length,
       MID: simulatedStarting11.filter((p) => p.position === 'MID').length,
-      FWD: simulatedStarting11.filter((p) => p.position === 'FWD').length,
+      ATT: simulatedStarting11.filter((p) => p.position === 'ATT').length,
     };
 
     // Validate formation rules
@@ -603,8 +603,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     if (counts.MID < 2 || counts.MID > 5) {
       errors.push(`Starting 11 must have between 2 and 5 midfielders (would have ${counts.MID} after substitution)`);
     }
-    if (counts.FWD < 1 || counts.FWD > 3) {
-      errors.push(`Starting 11 must have between 1 and 3 forwards (would have ${counts.FWD} after substitution)`);
+    if (counts.ATT < 1 || counts.ATT > 3) {
+      errors.push(`Starting 11 must have between 1 and 3 forwards (would have ${counts.ATT} after substitution)`);
     }
 
     return {

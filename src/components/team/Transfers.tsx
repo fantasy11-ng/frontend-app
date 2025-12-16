@@ -62,7 +62,7 @@ const Transfers: React.FC<TransfersProps> = ({
 
   const limitReached = transfersUsed >= transferLimit;
 
-  const positions: (Player['position'] | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'FWD'];
+  const positions: (Player['position'] | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'ATT'];
 
   const countries = useMemo(() => {
     const allCountries = [

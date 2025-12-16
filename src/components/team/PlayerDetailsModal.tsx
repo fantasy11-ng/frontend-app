@@ -45,7 +45,7 @@ const PlayerDetailsModal: React.FC<PlayerDetailsModalProps> = ({
       GK: 'Goalkeeper',
       DEF: 'Defender',
       MID: 'Midfielder',
-      FWD: 'Forward',
+      ATT: 'Attacker',
     };
     return labels[position] || position;
   };

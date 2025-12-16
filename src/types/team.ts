@@ -28,7 +28,7 @@ export interface Fixture {
   date: string;
 }
 
-export type PlayerPosition = 'GK' | 'DEF' | 'MID' | 'FWD';
+export type PlayerPosition = 'GK' | 'DEF' | 'MID' | 'ATT';
 export type PlayerRole = 'captain' | 'vice-captain' | null;
 
 export interface Player {

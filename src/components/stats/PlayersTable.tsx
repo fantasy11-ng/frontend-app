@@ -20,6 +20,7 @@ interface PlayersTableProps {
   onSearch?: (query: string) => void;
   onPositionFilter?: (positionId: number | undefined) => void;
   onCountryFilter?: (countryId: number | undefined) => void;
+  onSortChange?: (sortBy: string) => void;
   isLoading?: boolean;
 }
 
@@ -36,6 +37,14 @@ const formatPrice = (price: number): string => {
   return `$${price}`;
 };
 
+// Map dropdown labels to API sortBy values
+const SORT_OPTIONS = [
+  { label: 'Points', sortBy: 'points:DESC' },
+  { label: 'Price', sortBy: 'price:DESC' },
+  { label: 'Goals', sortBy: 'goals:DESC' },
+  { label: 'Assists', sortBy: 'assists:DESC' },
+] as const;
+
 export default function PlayersTable({ 
   players, 
   meta,
@@ -44,6 +53,7 @@ export default function PlayersTable({
   onSearch,
   onPositionFilter,
   onCountryFilter,
+  onSortChange,
   isLoading = false,
 }: PlayersTableProps) {
   const [activeTab, setActiveTab] = useState<TabType>('performance');
@@ -141,7 +151,7 @@ export default function PlayersTable({
         </div>
 
         {/* Search + Filters */}
-        <div className="flex w-full flex-col md:flex-row gap-3 sm:w-auto sm:items-center sm:justify-end sm:gap-3 xl:gap-4">
+        <div className="flex w-full flex-col lg:flex-row gap-3 sm:w-auto  sm:justify-end sm:gap-3 xl:gap-4">
           <div className="relative w-full lg:w-72 flex items-center">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A0A6B1]" />
             <input
@@ -161,7 +171,7 @@ export default function PlayersTable({
             )}
           </div>
 
-          <div className="flex gap-2 sm:flex-row flex-wrap sm:justify-end sm:gap-3">
+          <div className="flex gap-2 sm:flex-row flex-wrap justify-end sm:gap-3">
             <div className="relative">
               <button
                 onClick={() => {
@@ -255,16 +265,19 @@ export default function PlayersTable({
               {showPointsFilter && (
                 <div className="absolute top-full mt-2 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
                   <div className="p-2">
-                    {['Points', 'Goals', 'Assists', 'Cards'].map((filter) => (
+                    {SORT_OPTIONS.map((option) => (
                       <button
-                        key={filter}
+                        key={option.label}
                         onClick={() => {
-                          setSelectedPointsFilter(filter);
+                          setSelectedPointsFilter(option.label);
                           setShowPointsFilter(false);
+                          onSortChange?.(option.sortBy);
                         }}
-                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                          selectedPointsFilter === option.label ? 'bg-gray-100 text-[#4AA96C] font-medium' : 'text-gray-700'
+                        }`}
                       >
-                        {filter}
+                        {option.label}
                       </button>
                     ))}
                   </div>

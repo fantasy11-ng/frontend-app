@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import { Team } from "@/types/team";
+import { POSITION_CODE_TO_ID } from "@/lib/constants/positions";
 
 export type TransferRequest = {
   fixtureId: number;
@@ -156,7 +157,16 @@ export const teamApi = {
   },
 
   getPlayers: async (params?: { page?: number; limit?: number; search?: string; position?: string }) => {
-    const response = await apiClient.get<GetPlayersResponse>("/players", { params });
+    // Build query params - need to use filter.X format for NestJS paginate
+    const queryParams: Record<string, string | number> = {};
+    if (params?.page) queryParams.page = params.page;
+    if (params?.limit) queryParams.limit = params.limit;
+    if (params?.search) queryParams.search = params.search;
+    if (params?.position && POSITION_CODE_TO_ID[params.position]) {
+      queryParams['filter.positionId'] = POSITION_CODE_TO_ID[params.position];
+    }
+
+    const response = await apiClient.get<GetPlayersResponse>("/players", { params: queryParams });
     const payload = (response.data as GetPlayersResponse)?.data;
 
     return {
