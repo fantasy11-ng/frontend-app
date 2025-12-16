@@ -5,7 +5,7 @@ import { Crown, Clock } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useBlogPosts } from "@/lib/api";
+import { useBlogPosts, leaderboardApi } from "@/lib/api";
 import { teamApi } from "@/lib/api/team";
 import { BlogPostListItem } from "@/types/news";
 import { Fixture, Team } from "@/types/team";
@@ -83,6 +83,9 @@ export default function HomePage() {
       points: number;
     }>
   >([]);
+
+  // Global ranking
+  const [globalRank, setGlobalRank] = useState<number | null>(null);
 
   // Fetch team data
   useEffect(() => {
@@ -244,6 +247,20 @@ export default function HomePage() {
     };
 
     loadTopPlayers();
+  }, []);
+
+  // Fetch global ranking
+  useEffect(() => {
+    const loadGlobalRank = async () => {
+      try {
+        const { me } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 1 });
+        setGlobalRank(me?.rank ?? null);
+      } catch {
+        setGlobalRank(null);
+      }
+    };
+
+    loadGlobalRank();
   }, []);
 
   return (
@@ -556,7 +573,9 @@ export default function HomePage() {
               </svg>
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Global Ranking</p>
-                <p className="text-3xl text-[#800000]">1247</p>
+                <p className="text-3xl text-[#800000]">
+                  {globalRank ? `#${globalRank}` : "—"}
+                </p>
               </div>
             </div>
           </div>

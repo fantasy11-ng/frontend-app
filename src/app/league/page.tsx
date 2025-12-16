@@ -382,7 +382,6 @@ export default function LeaguePage() {
                       </span>
                     </div>
                     <div>
-                      <p className="text-xs text-[#656E81]">Global Rank</p>
                       <p className="text-sm font-semibold text-[#070A11] truncate max-w-[100px]">
                         {isLoadingUserStats ? "..." : userStats?.teamName ?? "—"}
                       </p>
