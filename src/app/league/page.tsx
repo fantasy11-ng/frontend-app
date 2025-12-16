@@ -121,8 +121,7 @@ export default function LeaguePage() {
       setJoinLeagueError(null);
       setShowJoinModal(true);
     } else if (selectedOption === 'championship') {
-      setCurrentView('leaderboard');
-      setCurrentLeague('Fantasy Global League');
+      router.push('/league/leaderboard');
     }
   };
 
