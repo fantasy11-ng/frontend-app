@@ -37,14 +37,14 @@ export default function TeamPage() {
       if (pos === 24) return 'GK';
       if (pos === 25) return 'DEF';
       if (pos === 26) return 'MID';
-      if (pos === 27) return 'FWD';
+      if (pos === 27) return 'ATT';
     }
 
     const code = (pos || '').toString().toUpperCase();
     if (code.includes('GK') || code.includes('GOAL')) return 'GK';
     if (code.includes('DEF')) return 'DEF';
     if (code.includes('MID')) return 'MID';
-    if (code.includes('FWD') || code.includes('ATT') || code.includes('STR') || code.includes('FOR')) return 'FWD';
+    if (code.includes('FWD') || code.includes('ATT') || code.includes('STR') || code.includes('FOR')) return 'ATT';
     return 'MID';
   };
 

@@ -855,7 +855,7 @@ export default function HomePage() {
                     rank: 1,
                     name: "Mohammed Salah",
                     country: "Egypt",
-                    position: "FWD",
+                    position: "ATT",
                     points: 156,
                     isCrown: true,
                   },

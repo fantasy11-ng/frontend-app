@@ -8,6 +8,14 @@ export const POSITION_ID_MAP: Record<string, number> = {
   'Attacker': 27,
 };
 
+// Short code to ID mapping (used in team/squad UI)
+export const POSITION_CODE_TO_ID: Record<string, number> = {
+  'GK': 24,
+  'DEF': 25,
+  'MID': 26,
+  'ATT': 27,
+};
+
 // Reverse map: position ID to name (for displaying in UI)
 export const POSITION_NAME_MAP: Record<number, string> = Object.entries(POSITION_ID_MAP).reduce(
   (acc, [name, id]) => ({ ...acc, [id]: name }),

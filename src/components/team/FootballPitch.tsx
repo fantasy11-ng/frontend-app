@@ -30,7 +30,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
       GK: starting11.filter((p) => p.position === "GK"),
       DEF: starting11.filter((p) => p.position === "DEF"),
       MID: starting11.filter((p) => p.position === "MID"),
-      FWD: starting11.filter((p) => p.position === "FWD"),
+      ATT: starting11.filter((p) => p.position === "ATT"),
     };
 
     // Helper function to evenly distribute players horizontally
@@ -104,11 +104,11 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
 
     // Forwards - evenly distributed (y: 70% from top)
     const fwdXPositions = distributePlayers(
-      playersByPosition.FWD.length,
+      playersByPosition.ATT.length,
       15,
       85
     );
-    playersByPosition.FWD.forEach((player, index) => {
+    playersByPosition.ATT.forEach((player, index) => {
       result.push({
         player,
         x: player.formationPosition?.x ?? fwdXPositions[index],
@@ -258,7 +258,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
           <h4 className="text-white mb-3">
             Bench ({bench.length})
           </h4>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap justify-between gap-3">
             {[...bench].sort((a, b) => {
               // GK always first
               if (a.position === 'GK' && b.position !== 'GK') return -1;
@@ -268,7 +268,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
               <div
                 key={player.id}
                 onClick={() => onPlayerClick?.(player)}
-                className="relative cursor-pointer group"
+                className="relative cursor-pointer group flex flex-col items-center"
               >
                 <div className="w-8 h-8 bg-white rounded-full border-2 border-gray-600 flex items-center justify-center shadow-md relative overflow-hidden">
                   {player.countryFlag ? (
@@ -285,7 +285,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                 </div>
                 <div className="mt-1 text-center">
                   <div className="bg-black text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap">
-                    <div className="truncate max-w-[60px]">
+                    <div className="truncate max-w-[60px] lg:max-w-[80px]">
                       {getPlayerDisplayName(player)}
                     </div>
                     <div className="text-[8px]">{player.position}</div>

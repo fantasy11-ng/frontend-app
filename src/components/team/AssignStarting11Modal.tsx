@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { X, Search, Plus, Check } from 'lucide-react';
-import { Player, PlayerPosition, SquadValidation } from '@/types/team';
-import toast from 'react-hot-toast';
-import { Spinner } from '../common/Spinner';
+import React, { useState, useMemo, useCallback } from "react";
+import { X, Search, Plus, Check } from "lucide-react";
+import { Player, PlayerPosition, SquadValidation } from "@/types/team";
+import toast from "react-hot-toast";
+import { Spinner } from "../common/Spinner";
 
 interface AssignStarting11ModalProps {
   isOpen: boolean;
@@ -26,13 +26,13 @@ const SQUAD_RULES = {
     GK: 2,
     DEF: 5,
     MID: 5,
-    FWD: 3,
+    ATT: 3,
   },
   matchday: {
     GK: { min: 0, max: 1 },
     DEF: { min: 3, max: 5 },
     MID: { min: 2, max: 5 },
-    FWD: { min: 1, max: 3 },
+    ATT: { min: 1, max: 3 },
   },
 };
 
@@ -47,14 +47,20 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
   isLoadingMore = false,
   onSearchChange,
   onPositionChange,
-  selectedPosition = 'All',
+  selectedPosition = "All",
   isLoadingList = false,
 }) => {
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showMySquad, setShowMySquad] = useState(false);
 
-  const positions: (PlayerPosition | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'FWD'];
+  const positions: (PlayerPosition | "All")[] = [
+    "All",
+    "GK",
+    "DEF",
+    "MID",
+    "ATT",
+  ];
 
   const filteredPlayers = useMemo(() => {
     // Only local filter is "My Squad" view; search/position are handled via API
@@ -68,7 +74,8 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
   const handleScroll = useCallback(
     (e: React.UIEvent<HTMLDivElement>) => {
       const target = e.currentTarget;
-      const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 100;
+      const nearBottom =
+        target.scrollTop + target.clientHeight >= target.scrollHeight - 100;
       if (nearBottom && canLoadMore && !isLoadingMore) {
         onLoadMore?.();
       }
@@ -90,10 +97,10 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
     const warnings: string[] = [];
 
     const counts = {
-      GK: getPositionCount('GK'),
-      DEF: getPositionCount('DEF'),
-      MID: getPositionCount('MID'),
-      FWD: getPositionCount('FWD'),
+      GK: getPositionCount("GK"),
+      DEF: getPositionCount("DEF"),
+      MID: getPositionCount("MID"),
+      ATT: getPositionCount("ATT"),
     };
 
     const total = selectedPlayers.length;
@@ -103,23 +110,33 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
       errors.push(`Squad must have exactly 15 players (currently ${total})`);
     } else {
       if (counts.GK !== SQUAD_RULES.squad.GK) {
-        errors.push(`Squad must have exactly ${SQUAD_RULES.squad.GK} goalkeepers (currently ${counts.GK})`);
+        errors.push(
+          `Squad must have exactly ${SQUAD_RULES.squad.GK} goalkeepers (currently ${counts.GK})`
+        );
       }
       if (counts.DEF !== SQUAD_RULES.squad.DEF) {
-        errors.push(`Squad must have exactly ${SQUAD_RULES.squad.DEF} defenders (currently ${counts.DEF})`);
+        errors.push(
+          `Squad must have exactly ${SQUAD_RULES.squad.DEF} defenders (currently ${counts.DEF})`
+        );
       }
       if (counts.MID !== SQUAD_RULES.squad.MID) {
-        errors.push(`Squad must have exactly ${SQUAD_RULES.squad.MID} midfielders (currently ${counts.MID})`);
+        errors.push(
+          `Squad must have exactly ${SQUAD_RULES.squad.MID} midfielders (currently ${counts.MID})`
+        );
       }
-      if (counts.FWD !== SQUAD_RULES.squad.FWD) {
-        errors.push(`Squad must have exactly ${SQUAD_RULES.squad.FWD} forwards (currently ${counts.FWD})`);
+      if (counts.ATT !== SQUAD_RULES.squad.ATT) {
+        errors.push(
+          `Squad must have exactly ${SQUAD_RULES.squad.ATT} forwards (currently ${counts.ATT})`
+        );
       }
     }
 
     // Budget validation
     const remaining = getRemainingBudget();
     if (remaining < 0) {
-      errors.push(`Budget exceeded by $${Math.abs(remaining / 1000000).toFixed(1)}M`);
+      errors.push(
+        `Budget exceeded by $${Math.abs(remaining / 1000000).toFixed(1)}M`
+      );
     }
 
     return {
@@ -139,19 +156,21 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
     } else {
       // Check squad limits
       if (total >= 15) {
-        toast.error('Squad is full (15 players maximum)');
+        toast.error("Squad is full (15 players maximum)");
         return;
       }
 
       const maxForPosition = SQUAD_RULES.squad[player.position];
       if (positionCount >= maxForPosition) {
-        toast.error(`Maximum ${maxForPosition} ${player.position} players allowed in squad`);
+        toast.error(
+          `Maximum ${maxForPosition} ${player.position} players allowed in squad`
+        );
         return;
       }
 
       // Check budget
       if (getRemainingBudget() < player.price) {
-        toast.error('Insufficient budget');
+        toast.error("Insufficient budget");
         return;
       }
 
@@ -162,7 +181,7 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
   const handleSave = () => {
     const validation = validateSquad();
     if (!validation.isValid) {
-      toast.error(validation.errors.join('\n'));
+      toast.error(validation.errors.join("\n"));
       return;
     }
     onSave(selectedPlayers);
@@ -185,10 +204,17 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
         <div className="px-6 pt-6 pb-4 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Assign starting 11</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Assign starting 11
+              </h2>
               <p className="text-sm text-gray-600">
-                Select up to 15 players for your squad (11 starting + 4 bench) • Budget:{' '}
-                <span className={remainingBudget >= 0 ? 'text-green-600' : 'text-red-600'}>
+                Select up to 15 players for your squad (11 starting + 4 bench) •
+                Budget:{" "}
+                <span
+                  className={
+                    remainingBudget >= 0 ? "text-green-600" : "text-red-600"
+                  }
+                >
                   {formatPrice(remainingBudget)} remaining
                 </span>
               </p>
@@ -210,22 +236,22 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
               <input
                 type="text"
                 value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-            onSearchChange?.(e.target.value);
-          }}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  onSearchChange?.(e.target.value);
+                }}
                 placeholder="Search players or teams..."
                 className="text-[#070A11] w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
             <select
-          value={selectedPosition}
-          onChange={(e) => onPositionChange?.(e.target.value)}
+              value={selectedPosition}
+              onChange={(e) => onPositionChange?.(e.target.value)}
               className="text-[#070A11] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               {positions.map((pos) => (
                 <option key={pos} value={pos}>
-                  {pos === 'All' ? 'Position' : pos}
+                  {pos === "All" ? "Position" : pos}
                 </option>
               ))}
             </select>
@@ -233,8 +259,8 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
               onClick={() => setShowMySquad(!showMySquad)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 showMySquad
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? "bg-green-500 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
               My Squad ({squadCount}/15)
@@ -243,7 +269,17 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
         </div>
 
         {/* Player List */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 relative" onScroll={handleScroll}>
+        <div
+          className={`flex-1 px-6 py-4 relative ${isLoadingList ? 'overflow-hidden' : 'overflow-y-auto'}`}
+          onScroll={handleScroll}
+        >
+          {/* Loading overlay - covers full container and blocks interaction */}
+          {isLoadingList && (
+            <div className="absolute inset-0 bg-white/80 flex justify-center items-center z-10">
+              <Spinner size={24} className="text-[#4AA96C]" />
+            </div>
+          )}
+
           {isLoadingList && filteredPlayers.length === 0 ? (
             <div className="flex justify-center items-center py-12 text-gray-500">
               <Spinner size={24} className="text-[#4AA96C]" />
@@ -257,23 +293,30 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
               ) : (
                 <div className="space-y-3">
                   {filteredPlayers.map((player) => {
-                    const isSelected = selectedPlayers.find((p) => p.id === player.id);
+                    const isSelected = selectedPlayers.find(
+                      (p) => p.id === player.id
+                    );
                     const positionCount = getPositionCount(player.position);
                     const maxForPosition = SQUAD_RULES.squad[player.position];
-                    const canAdd = !isSelected && positionCount < maxForPosition && squadCount < 15;
+                    const canAdd =
+                      !isSelected &&
+                      positionCount < maxForPosition &&
+                      squadCount < 15;
 
                     return (
                       <div
                         key={player.id}
                         className={`flex items-center justify-between p-4 border rounded-lg transition-colors ${
                           isSelected
-                            ? 'border-green-500 bg-green-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? "border-green-500 bg-green-50"
+                            : "border-gray-200 hover:border-gray-300"
                         }`}
                       >
                         <div className="flex-1">
                           <div className="flex items-center space-x-3">
-                            <h3 className="font-semibold text-gray-900">{player.name}</h3>
+                            <h3 className="font-semibold text-gray-900">
+                              {player.name}
+                            </h3>
                             {isSelected && (
                               <Check className="w-5 h-5 text-green-500" />
                             )}
@@ -296,10 +339,10 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
                             disabled={!canAdd && !isSelected}
                             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                               isSelected
-                                ? 'bg-green-500 text-white hover:bg-green-600'
+                                ? "bg-green-500 text-white hover:bg-green-600"
                                 : canAdd
-                                ? 'bg-green-500 text-white hover:bg-green-600'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                ? "bg-green-500 text-white hover:bg-green-600"
+                                : "bg-gray-300 text-gray-500 cursor-not-allowed"
                             }`}
                           >
                             {isSelected ? (
@@ -322,7 +365,9 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
               )}
 
               {isLoadingMore && !isLoadingList && (
-                <div className="text-center py-3 text-sm text-gray-500">Loading more players...</div>
+                <div className="text-center py-3 text-sm text-gray-500">
+                  Loading more players...
+                </div>
               )}
             </>
           )}
@@ -333,9 +378,11 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
               <p>
-                Squad: {squadCount}/15 • GK: {getPositionCount('GK')}/{SQUAD_RULES.squad.GK} • DEF:{' '}
-                {getPositionCount('DEF')}/{SQUAD_RULES.squad.DEF} • MID: {getPositionCount('MID')}/
-                {SQUAD_RULES.squad.MID} • FWD: {getPositionCount('FWD')}/{SQUAD_RULES.squad.FWD}
+                Squad: {squadCount}/15 • GK: {getPositionCount("GK")}/
+                {SQUAD_RULES.squad.GK} • DEF: {getPositionCount("DEF")}/
+                {SQUAD_RULES.squad.DEF} • MID: {getPositionCount("MID")}/
+                {SQUAD_RULES.squad.MID} • ATT: {getPositionCount("ATT")}/
+                {SQUAD_RULES.squad.ATT}
               </p>
             </div>
             <div className="flex space-x-3">
@@ -350,8 +397,8 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
                 disabled={squadCount !== 15}
                 className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${
                   squadCount === 15
-                    ? 'bg-green-500 hover:bg-green-600'
-                    : 'bg-gray-300 cursor-not-allowed'
+                    ? "bg-green-500 hover:bg-green-600"
+                    : "bg-gray-300 cursor-not-allowed"
                 }`}
               >
                 Approve starting 11
@@ -365,4 +412,3 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
 };
 
 export default AssignStarting11Modal;
-
