@@ -35,6 +35,7 @@ export type PlayerRole = 'captain' | 'vice-captain' | null;
 export interface Player {
   id: string;
   name: string;
+  commonName?: string;
   position: PlayerPosition;
   country?: string;
   countryId?: number;

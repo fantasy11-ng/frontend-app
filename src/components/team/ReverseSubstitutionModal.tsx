@@ -175,7 +175,7 @@ const ReverseSubstitutionModal: React.FC<ReverseSubstitutionModalProps> = ({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
             {selectedPlayerIn && (
               <div className="flex items-center space-x-4 text-sm text-gray-600">
                 <div className="flex items-center space-x-2">
@@ -201,7 +201,7 @@ const ReverseSubstitutionModal: React.FC<ReverseSubstitutionModalProps> = ({
                     : 'bg-gray-300 cursor-not-allowed'
                 }`}
               >
-                Confirm Substitution
+                Confirm
               </button>
             </div>
           </div>

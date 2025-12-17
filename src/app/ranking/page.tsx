@@ -194,7 +194,7 @@ function RankingPageContent() {
                 >
                   Global Rankings
                 </button>
-                <button
+                {/* <button
                   onClick={() => setActiveTab("athlete")}
                   className={`pb-4 px-1 text-sm font-medium transition-colors ${
                     activeTab === "athlete"
@@ -203,7 +203,7 @@ function RankingPageContent() {
                   }`}
                 >
                   Athlete Rankings
-                </button>
+                </button> */}
               </div>
             </div>
 

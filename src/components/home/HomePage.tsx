@@ -69,6 +69,7 @@ export default function HomePage() {
     Array<{
       id: string | number;
       name: string;
+      commonName: string;
       position: string;
       points: number;
       country: string;
@@ -81,6 +82,7 @@ export default function HomePage() {
     Array<{
       id: string | number;
       name: string;
+      commonName: string;
       country: string;
       position: string;
       points: number;
@@ -115,6 +117,7 @@ export default function HomePage() {
           player?: {
             id?: number | string;
             name?: string;
+            commonName?: string;
             positionId?: number;
             countryId?: number;
             position?: {
@@ -144,6 +147,7 @@ export default function HomePage() {
           .map((p) => ({
             id: p.player?.id ?? Math.random(),
             name: p.player?.name ?? "Unknown",
+            commonName: p.player?.commonName ?? "Unknown",
             position: p.position ?? "N/A",
             points: p.player?.points ?? 0,
             country: getCountryName(p.player?.countryId),
@@ -243,6 +247,7 @@ export default function HomePage() {
           id: p.id ?? Math.random(),
           name: p.commonName || p.name || "Unknown",
           country: getCountryName(p.countryId),
+          commonName: p.commonName ?? "Unknown",
           position: p.position?.code ?? "N/A",
           points: p.points ?? 0,
         }));
@@ -779,7 +784,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-medium text-[#070A11] text-sm mb-1">
-                          {player.name}
+                          {player.commonName}
                         </p>
                         <p className="text-xs text-[#656E81]">
                           {player.country} • $
