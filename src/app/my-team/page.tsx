@@ -90,7 +90,8 @@ function TeamPageContent() {
       p.position?.developer_name ||
       p.position?.name ||
       sp.position ||
-      p.positionId;
+      p.positionId ||
+      p.commonName;
 
     const role: PlayerRole =
       sp.isCaptain ? 'captain' :
@@ -111,7 +112,8 @@ function TeamPageContent() {
     return {
       id: String(p.id ?? sp.playerId ?? Math.random()),
       squadEntryId: sp.id ? String(sp.id) : undefined,
-      name: p.commonName || p.name || 'Player',
+      name: p.name || 'Player',
+      commonName: p.commonName || 'Player',
       position: normalizePosition(pos),
       image: p.image,
       country: p.country?.name || '',
@@ -203,6 +205,7 @@ function TeamPageContent() {
           return {
             id: String(p.id ?? Math.random()),
             name: p.commonName || p.name || 'Player',
+            commonName: p.commonName || 'Player',
             position: normalizePosition(pos),
             country: '',
             price: p.price ?? 0,

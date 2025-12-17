@@ -23,7 +23,12 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
   const [hoveredPlayer, setHoveredPlayer] = useState<string | null>(null);
 
   const getFormationPositions = () => {
-    const result: Array<{ player: SquadPlayer; x: number; y: number }> = [];
+    const result: Array<{
+      player: SquadPlayer;
+      x: number;
+      y: number;
+      rowCount: number;
+    }> = [];
 
     // Group players by position
     const playersByPosition = {
@@ -71,6 +76,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
         player,
         x: player.formationPosition?.x ?? 50,
         y: player.formationPosition?.y ?? 3,
+        rowCount: playersByPosition.GK.length,
       });
     });
 
@@ -85,6 +91,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
         player,
         x: player.formationPosition?.x ?? defXPositions[index],
         y: player.formationPosition?.y ?? 26,
+        rowCount: playersByPosition.DEF.length,
       });
     });
 
@@ -99,6 +106,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
         player,
         x: player.formationPosition?.x ?? midXPositions[index],
         y: player.formationPosition?.y ?? 48,
+        rowCount: playersByPosition.MID.length,
       });
     });
 
@@ -113,6 +121,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
         player,
         x: player.formationPosition?.x ?? fwdXPositions[index],
         y: player.formationPosition?.y ?? 72,
+        rowCount: playersByPosition.ATT.length,
       });
     });
 
@@ -158,10 +167,10 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
     );
   };
 
-  const getPlayerDisplayName = (player: SquadPlayer) => {
-    const nameParts = player.name.split(" ");
-    return nameParts.length > 1 ? nameParts[nameParts.length - 1] : player.name;
-  };
+  // const getPlayerDisplayName = (player: SquadPlayer) => {
+  //   const nameParts = player.name.split(" ");
+  //   return nameParts.length > 1 ? nameParts[nameParts.length - 1] : player.name;
+  // };
 
   const playerPositions = getFormationPositions();
 
@@ -182,7 +191,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
         {/* Players overlay */}
         {playerPositions.length > 0 ? (
           <div className="absolute inset-0">
-            {playerPositions.map(({ player, x, y }, index) => (
+            {playerPositions.map(({ player, x, y, rowCount }, index) => (
               <div
                 key={player.id}
                 className="absolute transform -translate-x-1/2 cursor-pointer group"
@@ -218,10 +227,12 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                     {/* Upper section - dark gray/black with player name */}
                     <div className="bg-gray-900 text-white px-3 py-2 rounded-t-lg min-w-[65px]">
                       <div
-                        className="text-xs whitespace-nowrap text-center"
+                        className={`text-xs whitespace-nowrap text-center truncate ${
+                          rowCount >= 5 ? "max-w-[40px]" : "max-w-[60px]"
+                        } md:max-w-[50px] xl:max-w-[75px]`}
                         style={{ fontFamily: "sans-serif" }}
                       >
-                        {player.name}
+                        {player.commonName}
                       </div>
                     </div>
                     {/* Lower section - light green with position */}
@@ -269,7 +280,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
       {bench.length > 0 && (
         <div className="bg-gray-800 p-4">
           <h4 className="text-white mb-3">Bench ({bench.length})</h4>
-          <div className="flex flex-wrap justify-between gap-3 mx-4">
+          <div className="flex flex-wrap justify-between">
             {[...bench]
               .sort((a, b) => {
                 // GK always first

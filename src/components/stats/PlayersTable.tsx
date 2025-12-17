@@ -357,7 +357,7 @@ export default function PlayersTable({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-[#070A11] text-sm font-medium">{player.name}</div>
+                        <div className="text-[#070A11] text-sm font-medium">{player.commonName}</div>
                       </div>
                     </td>
                     {activeTab === 'performance' && (
