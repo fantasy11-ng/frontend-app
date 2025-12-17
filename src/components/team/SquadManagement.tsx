@@ -50,10 +50,7 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
     }
   };
 
-
   const positions: (PlayerPosition | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'ATT'];
-
-
 
   const filteredPlayers = useMemo(() => {
     return players.filter((player) => {

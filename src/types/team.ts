@@ -36,9 +36,9 @@ export interface Player {
   id: string;
   name: string;
   position: PlayerPosition;
-  country: string;
+  country?: string;
+  countryId?: number;
   image?: string;
-  countryFlag?: string;
   club?: string;
   jerseyNumber?: number;
   price: number;

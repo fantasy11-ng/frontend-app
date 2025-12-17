@@ -10,8 +10,11 @@ interface PlayerRoleMenuProps {
   onClose: () => void;
   onSendToBench?: () => void;
   onAssignRole?: (role: PlayerRole) => void;
-  onTogglePenalty?: () => void;
-  onToggleFreeKick?: () => void;
+  onAssignPenalty?: () => void;
+  onAssignFreeKick?: () => void;
+  currentRole?: PlayerRole;
+  isPenaltyTaker?: boolean;
+  isFreeKickTaker?: boolean;
 }
 
 const PlayerRoleMenu: React.FC<PlayerRoleMenuProps> = ({
@@ -20,8 +23,11 @@ const PlayerRoleMenu: React.FC<PlayerRoleMenuProps> = ({
   onClose,
   onSendToBench,
   onAssignRole,
-  onTogglePenalty,
-  onToggleFreeKick,
+  onAssignPenalty,
+  onAssignFreeKick,
+  currentRole,
+  isPenaltyTaker,
+  isFreeKickTaker,
 }) => {
   if (!isOpen) return null;
 
@@ -63,39 +69,43 @@ const PlayerRoleMenu: React.FC<PlayerRoleMenuProps> = ({
             </>
           )}
           <p className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">ASSIGN ROLE</p>
-          <button
-            onClick={() => handleRoleSelect('captain')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center space-x-2"
-          >
-            <Crown className="w-4 h-4 text-yellow-500" />
-            <span>Set as Captain</span>
-          </button>
-          <button
-            onClick={() => handleRoleSelect('vice-captain')}
-            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-          >
-            Set as Vice Captain
-          </button>
-          {onTogglePenalty && (
+          {currentRole !== 'captain' && currentRole !== 'vice-captain' && (
             <button
-              onClick={() => {
-                onTogglePenalty();
-                onClose();
-              }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+              onClick={() => handleRoleSelect('captain')}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center space-x-2"
             >
-              Toggle Penalty Taker
+              <Crown className="w-4 h-4 text-yellow-500" />
+              <span>Set as Captain</span>
             </button>
           )}
-          {onToggleFreeKick && (
+          {currentRole !== 'captain' && currentRole !== 'vice-captain' && (
+            <button
+              onClick={() => handleRoleSelect('vice-captain')}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            >
+              Set as Vice Captain
+            </button>
+          )}
+          {onAssignPenalty && !isPenaltyTaker && (
             <button
               onClick={() => {
-                onToggleFreeKick();
+                onAssignPenalty();
                 onClose();
               }}
               className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
             >
-              Toggle Free Kick Taker
+              Assign as Penalty Taker
+            </button>
+          )}
+          {onAssignFreeKick && !isFreeKickTaker && (
+            <button
+              onClick={() => {
+                onAssignFreeKick();
+                onClose();
+              }}
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+            >
+              Assign as Free Kick Taker
             </button>
           )}
         </div>

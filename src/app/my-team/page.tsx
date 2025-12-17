@@ -68,6 +68,18 @@ export default function TeamPage() {
       points?: number;
       price?: number;
       image?: string;
+      countryId?: number;
+      country?: { id?: number; name?: string; code?: string; flag?: string };
+      goals?: number;
+      assists?: number;
+      yellowCards?: number;
+      redCards?: number;
+      jerseyNumber?: number;
+      age?: number;
+      height?: string;
+      weight?: string;
+      club?: string;
+      dateOfBirth?: string;
     };
   }): SquadPlayer | null => {
     const p = sp.player;
@@ -84,13 +96,25 @@ export default function TeamPage() {
       sp.isViceCaptain ? 'vice-captain' :
       null;
 
+    // Calculate age from dateOfBirth if not provided
+    let age = p.age;
+    if (!age && p.dateOfBirth) {
+      const birthDate = new Date(p.dateOfBirth);
+      const today = new Date();
+      age = today.getFullYear() - birthDate.getFullYear();
+    }
+
+    // Calculate total cards
+    const cards = (p.yellowCards ?? 0) + (p.redCards ?? 0);
+
     return {
       id: String(p.id ?? sp.playerId ?? Math.random()),
       squadEntryId: sp.id ? String(sp.id) : undefined,
       name: p.commonName || p.name || 'Player',
       position: normalizePosition(pos),
       image: p.image,
-      country: '',
+      country: p.country?.name || '',
+      countryId: p.countryId,
       price: p.price ?? 0,
       points: p.points ?? 0,
       rating: p.rating ?? 0,
@@ -102,6 +126,15 @@ export default function TeamPage() {
       role,
       isPenaltyTaker: Boolean(sp.isPenaltyTaker),
       isFreeKickTaker: Boolean(sp.isFreeKickTaker),
+      // Additional player details
+      goals: p.goals ?? 0,
+      assists: p.assists ?? 0,
+      cards,
+      jerseyNumber: p.jerseyNumber,
+      age,
+      height: p.height,
+      weight: p.weight,
+      club: p.club,
     };
   };
 

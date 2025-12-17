@@ -209,6 +209,16 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         points?: number;
         rating?: number;
         image?: string;
+        countryId?: number;
+        jerseyNumber?: number;
+        age?: number;
+        height?: string;
+        weight?: string;
+        goals?: number;
+        assists?: number;
+        cards?: number;
+        club?: string;
+        dateOfBirth?: string;
       }>
     ): Player[] => {
       return (apiPlayers ?? []).map((p) => {
@@ -217,16 +227,34 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           p.position?.developer_name ||
           p.position?.name ||
           p.positionId;
+
+        // Calculate age from dateOfBirth if age not provided
+        let age = p.age;
+        if (!age && p.dateOfBirth) {
+          const birthDate = new Date(p.dateOfBirth);
+          const today = new Date();
+          age = today.getFullYear() - birthDate.getFullYear();
+        }
+
         return {
           id: String(p.id ?? Math.random()),
           name: p.commonName || p.name || "Player",
           position: normalizePosition(pos),
-          country: "",
+          countryId: p.countryId,
           price: p.price ?? 0,
           points: p.points ?? 0,
           rating: p.rating ?? 0,
           image: p.image,
           selected: false,
+          // Additional details from API
+          jerseyNumber: p.jerseyNumber,
+          age,
+          height: p.height,
+          weight: p.weight,
+          goals: p.goals ?? 0,
+          assists: p.assists ?? 0,
+          cards: p.cards ?? 0,
+          club: p.club,
         };
       });
     },
@@ -1149,22 +1177,33 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         ],
       });
 
-      // Swap locally
-      setSquadPlayers((prev) => {
-        const next = prev
-          .filter((p) => p.id !== pendingTransferOut.id)
-          .concat({
-            ...player,
-            inSquad: true,
-            inStarting11: pendingTransferOut.inStarting11,
-            onBench: pendingTransferOut.onBench,
-            squadPosition: pendingTransferOut.squadPosition,
-            role: null,
-            isPenaltyTaker: false,
-            isFreeKickTaker: false,
-          });
-        return next;
-      });
+      // Swap locally - transfer roles from outgoing to incoming player
+      const newPlayer: SquadPlayer = {
+        ...player,
+        inSquad: true,
+        inStarting11: pendingTransferOut.inStarting11,
+        onBench: pendingTransferOut.onBench,
+        squadPosition: pendingTransferOut.squadPosition,
+        // Inherit roles from transferred out player
+        role: pendingTransferOut.role,
+        isPenaltyTaker: pendingTransferOut.isPenaltyTaker,
+        isFreeKickTaker: pendingTransferOut.isFreeKickTaker,
+      };
+
+      const updatedSquad = squadPlayers
+        .filter((p) => p.id !== pendingTransferOut.id)
+        .concat(newPlayer);
+
+      setSquadPlayers(updatedSquad);
+
+      // Sync roles with API if the transferred out player had any roles
+      if (
+        pendingTransferOut.role ||
+        pendingTransferOut.isPenaltyTaker ||
+        pendingTransferOut.isFreeKickTaker
+      ) {
+        await syncRolesWithApi(updatedSquad);
+      }
 
       setPendingTransferOut(null);
       await loadTransferHistory();
@@ -1280,6 +1319,28 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
     return source.filter((p) => !squadPlayerIds.has(p.id));
   }, [squadPlayers, availablePlayers, transferPlayers]);
 
+  const missingAssignments = useMemo(() => {
+    const missing: string[] = [];
+    const starters = squadPlayers.filter((p) => p.inStarting11);
+
+    if (starters.length === 0) return missing;
+
+    if (!starters.some((p) => p.role === "captain")) {
+      missing.push("Captain");
+    }
+    if (!starters.some((p) => p.role === "vice-captain")) {
+      missing.push("Vice-Captain");
+    }
+    if (!starters.some((p) => p.isPenaltyTaker)) {
+      missing.push("Penalty Taker");
+    }
+    if (!starters.some((p) => p.isFreeKickTaker)) {
+      missing.push("Free Kick Taker");
+    }
+
+    return missing;
+  }, [squadPlayers]);
+
   return (
     <div className="min-h-screen ">
       {" "}
@@ -1369,80 +1430,109 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
 
         {/* Main Content */}
         {activeTab === "my-team" && (
-          <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
-            {/* Squad Management - 2 columns */}
-            <div className="lg:col-span-2">
-              <SquadManagement
-                players={bench}
-                onPlayerClick={handlePlayerClick}
-                onMoveToStarting11={handleSubstituteClick}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                selectedPosition={localSelectedPosition}
-                onPositionChange={(val) => {
-                  setLocalSelectedPosition(val);
-                  onPositionChange?.(val);
-                }}
-                selectedCountry={selectedCountry}
-                onCountryChange={setSelectedCountry}
-              />
-            </div>
-
-            {/* Football Pitch - 3 columns */}
-            <div className="lg:col-span-3">
-              <FootballPitch
-                starting11={starting11}
-                bench={bench}
-                onPlayerClick={handlePlayerClick}
-                onPlayerRoleMenu={handlePlayerRoleMenu}
-              />
-            </div>
-
-            {(isSavingLineup || isProcessingTransfer) && (
-              <div className="mb-4 px-4 py-2 rounded-lg border border-[#F1F2F4] bg-white flex items-center gap-2 text-sm text-[#070A11]">
-                <Spinner size={16} className="text-[#4AA96C]" />
-                <span>
-                  {isSavingLineup
-                    ? "Updating lineup..."
-                    : "Processing transfer..."}
-                </span>
-              </div>
-            )}
-
-            {/* Boost/Fixture Tab - 2 columns */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex space-x-6 border-b border-gray-200 mb-4">
-                  {(["boosts", "fixtures"] as BoostTabType[]).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveBoostTab(tab)}
-                      className={`pb-3 px-1 font-medium text-sm transition-colors ${
-                        activeBoostTab === tab
-                          ? "text-green-600 border-b-2 border-green-600"
-                          : "text-gray-600 hover:text-gray-900"
-                      }`}
-                    >
-                      {tab === "boosts" ? "Team Boosts" : "Upcoming Fixtures"}
-                    </button>
-                  ))}
+          <>
+            {/* Missing Assignments Warning Banner */}
+            {missingAssignments.length > 0 &&
+              squadPlayers.filter((p) => p.inStarting11).length > 0 && (
+                <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-800">
+                        We noticed one or more key roles haven&apos;t been
+                        assigned to your starting 11 yet. Tap on a player in
+                        your starting 11 to assign roles.
+                      </p>
+                      <ul className="mt-2 space-y-1">
+                        {missingAssignments.map((assignment) => (
+                          <li
+                            key={assignment}
+                            className="flex items-center gap-2 text-sm text-amber-700"
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                            {assignment}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                {activeBoostTab === "boosts" ? (
-                  <TeamBoosts
-                    boosts={boosts}
-                    onUseBoost={handleUseBoost}
-                    isLoading={isLoadingBoosts}
-                  />
-                ) : (
-                  <UpcomingFixtures
-                    fixtures={fixtures}
-                    isLoading={isLoadingFixtures}
-                  />
-                )}
+            <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
+              {/* Squad Management - 2 columns */}
+              <div className="lg:col-span-2">
+                <SquadManagement
+                  players={bench}
+                  onPlayerClick={handlePlayerClick}
+                  onMoveToStarting11={handleSubstituteClick}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                  selectedPosition={localSelectedPosition}
+                  onPositionChange={(val) => {
+                    setLocalSelectedPosition(val);
+                    onPositionChange?.(val);
+                  }}
+                  selectedCountry={selectedCountry}
+                  onCountryChange={setSelectedCountry}
+                />
+              </div>
+
+              {/* Football Pitch - 3 columns */}
+              <div className="lg:col-span-3">
+                <FootballPitch
+                  starting11={starting11}
+                  bench={bench}
+                  onPlayerClick={handlePlayerClick}
+                  onPlayerRoleMenu={handlePlayerRoleMenu}
+                />
+              </div>
+
+              {(isSavingLineup || isProcessingTransfer) && (
+                <div className="mb-4 px-4 py-2 rounded-lg border border-[#F1F2F4] bg-white flex items-center gap-2 text-sm text-[#070A11]">
+                  <Spinner size={16} className="text-[#4AA96C]" />
+                  <span>
+                    {isSavingLineup
+                      ? "Updating lineup..."
+                      : "Processing transfer..."}
+                  </span>
+                </div>
+              )}
+
+              {/* Boost/Fixture Tab - 2 columns */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div className="flex space-x-6 border-b border-gray-200 mb-4">
+                    {(["boosts", "fixtures"] as BoostTabType[]).map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveBoostTab(tab)}
+                        className={`pb-3 px-1 font-medium text-sm transition-colors ${
+                          activeBoostTab === tab
+                            ? "text-green-600 border-b-2 border-green-600"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
+                      >
+                        {tab === "boosts" ? "Team Boosts" : "Upcoming Fixtures"}
+                      </button>
+                    ))}
+                  </div>
+
+                  {activeBoostTab === "boosts" ? (
+                    <TeamBoosts
+                      boosts={boosts}
+                      onUseBoost={handleUseBoost}
+                      isLoading={isLoadingBoosts}
+                    />
+                  ) : (
+                    <UpcomingFixtures
+                      fixtures={fixtures}
+                      isLoading={isLoadingFixtures}
+                    />
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
 
         {/* Transfers Tab */}
@@ -1734,9 +1824,12 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
             selectedPlayer?.inStarting11 ? handleSendToBench : undefined
           }
           onAssignRole={handleAssignRole}
-          onTogglePenalty={() => handleToggleSpecialist("penalty")}
-          onToggleFreeKick={() => handleToggleSpecialist("free-kick")}
+          onAssignPenalty={() => handleToggleSpecialist("penalty")}
+          onAssignFreeKick={() => handleToggleSpecialist("free-kick")}
           isOnBench={selectedPlayer?.onBench || false}
+          currentRole={(selectedPlayer as SquadPlayer | null)?.role}
+          isPenaltyTaker={(selectedPlayer as SquadPlayer | null)?.isPenaltyTaker}
+          isFreeKickTaker={(selectedPlayer as SquadPlayer | null)?.isFreeKickTaker}
         />
 
         <PlayerRoleMenu
@@ -1765,8 +1858,11 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               : undefined
           }
           onAssignRole={handleAssignRole}
-          onTogglePenalty={() => handleToggleSpecialist("penalty")}
-          onToggleFreeKick={() => handleToggleSpecialist("free-kick")}
+          onAssignPenalty={() => handleToggleSpecialist("penalty")}
+          onAssignFreeKick={() => handleToggleSpecialist("free-kick")}
+          currentRole={roleMenuState.player?.role}
+          isPenaltyTaker={roleMenuState.player?.isPenaltyTaker}
+          isFreeKickTaker={roleMenuState.player?.isFreeKickTaker}
         />
 
         <SubstitutionModal

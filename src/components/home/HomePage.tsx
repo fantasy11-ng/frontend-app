@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBlogPosts, leaderboardApi } from "@/lib/api";
 import { teamApi } from "@/lib/api/team";
+import { statsApi } from "@/lib/api/stats";
 import { BlogPostListItem } from "@/types/news";
 import { Fixture, Team } from "@/types/team";
 import { getCountryName } from "@/lib/constants/countries";
@@ -229,23 +230,23 @@ export default function HomePage() {
   }, []);
 
   // Fetch top 5 players by points
+  // Fetch top 5 players by points using statsApi with proper sorting
   useEffect(() => {
     const loadTopPlayers = async () => {
       try {
-        const response = await teamApi.getPlayers({ limit: 50 });
+        const response = await statsApi.getPlayers({
+          limit: 5,
+          sortBy: "points:DESC",
+        });
         const players = response.players ?? [];
-        // Sort by points descending and take top 5
-        const sorted = [...players]
-          .sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
-          .slice(0, 5)
-          .map((p) => ({
-            id: p.id ?? Math.random(),
-            name: p.commonName || p.name || "Unknown",
-            country: getCountryName(p.countryId),
-            position: p.position?.code ?? "N/A",
-            points: p.points ?? 0,
-          }));
-        setTopPlayers(sorted);
+        const mapped = players.map((p) => ({
+          id: p.id ?? Math.random(),
+          name: p.commonName || p.name || "Unknown",
+          country: getCountryName(p.countryId),
+          position: p.position?.code ?? "N/A",
+          points: p.points ?? 0,
+        }));
+        setTopPlayers(mapped);
       } catch {
         setTopPlayers([]);
       }

@@ -95,18 +95,46 @@ interface GetMyTeamResponse {
     currentSquad?: {
       gameweekId?: number;
       players?: Array<{
+        id?: string;
+        squadId?: string;
+        playerId?: number;
+        position?: string;
+        isStarting?: boolean;
+        isCaptain?: boolean;
+        isViceCaptain?: boolean;
+        isPenaltyTaker?: boolean;
+        isFreeKickTaker?: boolean;
         player?: {
           id?: number | string;
           name?: string;
+          commonName?: string;
           image?: string;
           position?: {
             code?: string;
             developer_name?: string;
             name?: string;
           };
+          positionId?: number;
           rating?: number;
           points?: number;
           price?: number;
+          countryId?: number;
+          country?: {
+            id?: number;
+            name?: string;
+            code?: string;
+            flag?: string;
+          };
+          goals?: number;
+          assists?: number;
+          yellowCards?: number;
+          redCards?: number;
+          jerseyNumber?: number;
+          age?: number;
+          height?: string;
+          weight?: string;
+          club?: string;
+          dateOfBirth?: string;
         };
       }>;
     };
@@ -142,10 +170,26 @@ type PlayerApiItem = {
     developer_name?: string;
   };
   countryId?: number;
+  country?: {
+    id?: number;
+    name?: string;
+    code?: string;
+    flag?: string;
+  };
   externalId?: number;
   rating?: number;
   points?: number;
   price?: number;
+  // Additional player details
+  jerseyNumber?: number;
+  age?: number;
+  height?: string;
+  weight?: string;
+  goals?: number;
+  assists?: number;
+  cards?: number;
+  club?: string;
+  dateOfBirth?: string;
 };
 
 type GetPlayersResponse = {
