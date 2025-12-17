@@ -193,7 +193,7 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
                     : 'bg-gray-300 cursor-not-allowed'
                 }`}
               >
-                Confirm Substitution
+                Confirm
               </button>
             </div>
           </div>

@@ -200,7 +200,7 @@ const Transfers: React.FC<TransfersProps> = ({
                   className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
                 >
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{player.name}</h4>
+                    <h4 className="font-semibold text-gray-900">{player.commonName}</h4>
                     <p className="text-sm text-gray-600">
                       {player.country} • {formatPrice(player.price)} • {player.position}
                     </p>
