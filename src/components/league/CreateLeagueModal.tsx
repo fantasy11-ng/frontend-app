@@ -6,28 +6,31 @@ import { X } from 'lucide-react';
 interface CreateLeagueModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateLeague: (leagueName: string) => void;
+  onCreateLeague: (leagueName: string) => Promise<void>;
+  isSubmitting?: boolean;
+  errorMessage?: string | null;
 }
 
 const CreateLeagueModal: React.FC<CreateLeagueModalProps> = ({
   isOpen,
   onClose,
   onCreateLeague,
+  isSubmitting,
+  errorMessage,
 }) => {
   const [leagueName, setLeagueName] = useState('');
-  const [invitationCode] = useState('FL11-1BRRX4'); // This would come from API
 
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (leagueName.trim()) {
-      onCreateLeague(leagueName);
+      await onCreateLeague(leagueName);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#656E81CC] bg-opacity-50 backdrop-blur-sm">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 relative">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-[450px] md:max-w-[514px] mx-4 relative">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -38,8 +41,8 @@ const CreateLeagueModal: React.FC<CreateLeagueModalProps> = ({
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Create New League</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className="text-2xl font-semibold text-[#070A11] mb-1">Create New League</h2>
+          <p className="text-sm text-[#656E81]">
             Set up your private fantasy league and get an invitation code to share with friends
           </p>
         </div>
@@ -48,9 +51,7 @@ const CreateLeagueModal: React.FC<CreateLeagueModalProps> = ({
         <div className="px-6 pb-6 space-y-4">
           {/* League Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              League Name
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">League Name</label>
             <input
               type="text"
               value={leagueName}
@@ -60,42 +61,31 @@ const CreateLeagueModal: React.FC<CreateLeagueModalProps> = ({
             />
           </div>
 
-          {/* Invitation Code */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Your Invitation Code:
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={invitationCode}
-                readOnly
-                className="text-[#070A11] w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-center font-mono text-gray-900"
-              />
+          {/* Error */}
+          {errorMessage && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {errorMessage}
             </div>
-            <p className="text-xs text-gray-600 mt-2">
-              Share this code with your friends to join your league
-            </p>
-          </div>
+          )}
 
           {/* Buttons */}
           <div className="flex space-x-3 pt-4">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-lg font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors"
+              className="flex-1 h-10 rounded-full font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!leagueName.trim()}
-              className={`flex-1 py-3 rounded-lg font-semibold text-white transition-colors ${
-                leagueName.trim()
-                  ? 'bg-green-500 hover:bg-green-600'
+              disabled={!leagueName.trim() || isSubmitting}
+              className={`flex-1 h-10 text-xs px-2 sm:text-base rounded-full font-semibold text-white transition-colors ${
+                leagueName.trim() && !isSubmitting
+                  ? 'bg-[#4AA96C] hover:bg-[#3c8b58]'
                   : 'bg-gray-300 cursor-not-allowed'
               }`}
             >
-              Create & Join League
+              {isSubmitting ? 'Creating...' : 'Create & Join League'}
             </button>
           </div>
         </div>

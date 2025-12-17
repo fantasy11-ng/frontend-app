@@ -1,0 +1,408 @@
+import { apiClient } from "./client";
+import { Team } from "@/types/team";
+import { POSITION_CODE_TO_ID } from "@/lib/constants/positions";
+
+export type TransferRequest = {
+  fixtureId: number;
+  transfers: Array<{
+    playerOutId: number | string;
+    playerInId: number | string;
+  }>;
+};
+
+export type TransferHistoryItem = {
+  id: string;
+  teamId?: string;
+  playerOutId?: number | string;
+  playerInId?: number | string;
+  playerOut?: {
+    id?: number | string;
+    name?: string;
+    commonName?: string;
+    image?: string;
+    positionId?: number;
+    position?: { id?: number; name?: string; code?: string; developer_name?: string };
+    countryId?: number;
+    price?: number;
+  };
+  playerIn?: {
+    id?: number | string;
+    name?: string;
+    commonName?: string;
+    image?: string;
+    positionId?: number;
+    position?: { id?: number; name?: string; code?: string; developer_name?: string };
+    countryId?: number;
+    price?: number;
+  };
+  amountOut?: number;
+  amountIn?: number;
+  netAmount?: number;
+  type?: string;
+  fixtureId?: number | string;
+  triggeredByUserId?: string;
+  createdAt?: string;
+  gameweek?: {
+    id?: number;
+    code?: string;
+    name?: string;
+    firstKickoffAt?: string;
+  };
+};
+
+export type FixturePerformanceItem = {
+  fixtureId?: number;
+  gameweekId?: number;
+  fixture?: {
+    id?: number;
+    startingAt?: string;
+  };
+  gameweek?: {
+    id?: number;
+    code?: string;
+    name?: string;
+    firstKickoffAt?: string;
+  };
+  totalPoints?: number;
+  cumulativePoints?: number;
+  ranking?: {
+    rank?: number;
+    totalPoints?: number;
+  };
+  captain?: {
+    player?: { id?: number | string; name?: string; commonName?: string };
+  };
+  viceCaptain?: {
+    player?: { id?: number | string; name?: string; commonName?: string };
+  };
+  transfers?: TransferHistoryItem[];
+};
+
+export interface CreateTeamPayload {
+  name: string;
+  logoUrl?: string;
+}
+
+interface CreateTeamResponse {
+  success?: boolean;
+  data: Team & { logoUrl?: string };
+}
+
+interface GetMyTeamResponse {
+  success?: boolean;
+  data: {
+    team?: Team & { logoUrl?: string; budgetTotal?: number; budgetRemaining?: number };
+    currentSquad?: {
+      gameweekId?: number;
+      players?: Array<{
+        id?: string;
+        squadId?: string;
+        playerId?: number;
+        position?: string;
+        isStarting?: boolean;
+        isCaptain?: boolean;
+        isViceCaptain?: boolean;
+        isPenaltyTaker?: boolean;
+        isFreeKickTaker?: boolean;
+        player?: {
+          id?: number | string;
+          name?: string;
+          commonName?: string;
+          image?: string;
+          position?: {
+            code?: string;
+            developer_name?: string;
+            name?: string;
+          };
+          positionId?: number;
+          rating?: number;
+          points?: number;
+          price?: number;
+          countryId?: number;
+          country?: {
+            id?: number;
+            name?: string;
+            code?: string;
+            flag?: string;
+          };
+          goals?: number;
+          assists?: number;
+          yellowCards?: number;
+          redCards?: number;
+          jerseyNumber?: number;
+          age?: number;
+          height?: string;
+          weight?: string;
+          club?: string;
+          dateOfBirth?: string;
+        };
+      }>;
+    };
+  };
+}
+
+type PlayerListMeta = {
+  itemsPerPage?: number;
+  totalItems?: number;
+  currentPage?: number;
+  totalPages?: number;
+  sortBy?: [string, string][];
+};
+
+type PlayerListLinks = {
+  current?: string;
+  next?: string;
+  last?: string;
+  prev?: string;
+};
+
+type PlayerApiItem = {
+  id?: number | string;
+  name?: string;
+  commonName?: string;
+  image?: string;
+  pool?: string;
+  positionId?: number;
+  position?: {
+    id?: number;
+    code?: string;
+    name?: string;
+    developer_name?: string;
+  };
+  countryId?: number;
+  country?: {
+    id?: number;
+    name?: string;
+    code?: string;
+    flag?: string;
+  };
+  externalId?: number;
+  rating?: number;
+  points?: number;
+  price?: number;
+  // Additional player details
+  jerseyNumber?: number;
+  age?: number;
+  height?: string;
+  weight?: string;
+  goals?: number;
+  assists?: number;
+  cards?: number;
+  club?: string;
+  dateOfBirth?: string;
+};
+
+type GetPlayersResponse = {
+  success?: boolean;
+  data?: {
+    data?: PlayerApiItem[];
+    meta?: PlayerListMeta;
+    links?: PlayerListLinks;
+  };
+};
+
+export type TeamHistoryEvent = {
+  id?: string | number;
+  createdAt?: string;
+  fixtureId?: number | string;
+  type?: string;
+  team?: {
+    id?: string;
+    name?: string;
+    logoUrl?: string;
+    transfers?: Array<TransferHistoryItem>;
+    squads?: Array<{
+      gameweek?: {
+        id?: number;
+        name?: string;
+        code?: string;
+        firstKickoffAt?: string;
+      };
+      players?: Array<{
+        player?: { name?: string };
+        isCaptain?: boolean;
+        isViceCaptain?: boolean;
+      }>;
+    }>;
+    rankings?: Array<{
+      gameweekId?: number;
+      totalPoints?: number;
+      rank?: number;
+    }>;
+  };
+};
+
+type TeamHistoryResponse = {
+  success?: boolean;
+  data?: {
+    events?: TeamHistoryEvent[];
+  };
+};
+
+export const teamApi = {
+  createTeam: async (payload: CreateTeamPayload): Promise<Team> => {
+    const response = await apiClient.post<CreateTeamResponse>("/fantasy/team", payload);
+    const data = (response.data as CreateTeamResponse).data ?? (response.data as unknown as Team);
+
+    return {
+      ...data,
+      logo: data.logo ?? (data as { logoUrl?: string }).logoUrl,
+    };
+  },
+
+  getMyTeam: async (): Promise<GetMyTeamResponse["data"]> => {
+    const response = await apiClient.get<GetMyTeamResponse>("/fantasy/team/me");
+    return (response.data as GetMyTeamResponse).data ?? (response.data as unknown as GetMyTeamResponse["data"]);
+  },
+
+  getPlayers: async (params?: { page?: number; limit?: number; search?: string; position?: string }) => {
+    // Build query params - need to use filter.X format for NestJS paginate
+    const queryParams: Record<string, string | number> = {};
+    if (params?.page) queryParams.page = params.page;
+    if (params?.limit) queryParams.limit = params.limit;
+    if (params?.search) queryParams.search = params.search;
+    if (params?.position && POSITION_CODE_TO_ID[params.position]) {
+      queryParams['filter.positionId'] = POSITION_CODE_TO_ID[params.position];
+    }
+
+    const response = await apiClient.get<GetPlayersResponse>("/players", { params: queryParams });
+    const currentGameweek = response;
+    const payload = (response.data as GetPlayersResponse)?.data;
+
+    return {
+      players: payload?.data ?? [],
+      meta: payload?.meta,
+      links: payload?.links,
+      gameweekId: currentGameweek?.data,
+    };
+  },
+
+  getTeamBoosts: async () => {
+    const response = await apiClient.get<{
+      success?: boolean;
+      data?: {
+        availableBoosts?: string[];
+        boosts?: Array<{
+          id?: string | number;
+          type?: string;
+          used?: boolean;
+          gameweekId?: number;
+        }>;
+      };
+    }>("/fantasy/team/boosts");
+
+    const payload = response.data?.data ?? {};
+    return {
+      availableBoosts: payload.availableBoosts ?? [],
+      boosts: payload.boosts ?? [],
+    };
+  },
+
+  applyTeamBoost: async (
+    type: string
+  ): Promise<{ message: string; type?: string; gameweekId?: number }> => {
+    try {
+      const response = await apiClient.post<{ message?: string; type?: string; gameweekId?: number }>(
+        "/fantasy/team/boost",
+        { type }
+      );
+      const payload = response.data ?? {};
+      return {
+        message: payload.message ?? "Boost applied",
+        type: payload.type,
+        gameweekId: payload.gameweekId,
+      };
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string; error?: { message?: string } } } };
+      const message =
+        axiosErr?.response?.data?.error?.message ||
+        axiosErr?.response?.data?.message ||
+        (err as { message?: string })?.message ||
+        "Failed to apply boost.";
+      throw new Error(message);
+    }
+  },
+
+  createSquad: async (payload: {
+    formation: string;
+    squad: Array<{
+      playerId: number;
+      isStarting: boolean;
+      isCaptain?: boolean;
+      isViceCaptain?: boolean;
+      isPenaltyTaker?: boolean;
+      isFreeKickTaker?: boolean;
+    }>;
+  }): Promise<void> => {
+    await apiClient.post("/fantasy/team/squad", payload);
+  },
+
+  updateLineup: async (payload: {
+    formation: string;
+    startingPlayerIds: Array<number>;
+    benchPlayerIds: Array<string | number>;
+    fixtureId: number;
+  }): Promise<void> => {
+    await apiClient.post("/fantasy/team/lineup", payload);
+  },
+
+  updateRoles: async (payload: {
+    captainId?: string | number;
+    viceCaptainId?: string | number;
+    penaltyTakerId?: string | number;
+    freeKickTakerId?: string | number;
+    fixtureId: number;
+  }): Promise<void> => {
+    await apiClient.post("/fantasy/team/roles", payload);
+  },
+
+  getUpcomingFixtures: async (params?: { limit?: number }) => {
+    const response = await apiClient.get<{
+      data?: Array<{
+        id?: number | string;
+        startingAt?: string;
+        stageId?: number;
+        gameweekId?: number;
+        participants?: Array<{
+          id?: number | string;
+          name?: string;
+          short?: string;
+          logo?: string;
+        }>;
+      }>;
+    }>("/fantasy/fixtures/upcoming", { params });
+
+    return response.data?.data ?? [];
+  },
+
+  makeTransfers: async (payload: TransferRequest) => {
+    await apiClient.post("/fantasy/team/transfers", payload);
+  },
+
+  getTransferHistory: async (): Promise<TransferHistoryItem[]> => {
+    const response = await apiClient.get<{ data?: TransferHistoryItem[] }>("/fantasy/team/transfers");
+    const payload = response.data;
+    const items = Array.isArray(payload) ? (payload as TransferHistoryItem[]) : payload?.data ?? [];
+    return items.map((item, index) => ({
+      ...item,
+      id: String(item.id ?? `${item.teamId ?? "transfer"}-${index}`),
+    }));
+  },
+
+  getFixturePerformance: async (params?: { limit?: number }): Promise<FixturePerformanceItem[]> => {
+    const response = await apiClient.get<{ data?: FixturePerformanceItem[] }>("/fantasy/team/fixtures/performance", {
+      params,
+    });
+    const payload = response.data;
+    return (payload?.data ?? ([] as FixturePerformanceItem[])).map((item, index) => ({
+      ...item,
+      fixtureId: item.fixtureId ?? item.fixture?.id ?? index,
+    }));
+  },
+
+  getTeamHistory: async (): Promise<TeamHistoryEvent[]> => {
+    const response = await apiClient.get<TeamHistoryResponse>("/fantasy/team/history");
+    const payload = response.data?.data;
+    return payload?.events ?? [];
+  },
+};

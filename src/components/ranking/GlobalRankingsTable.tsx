@@ -78,7 +78,7 @@ export default function GlobalRankingsTable({ rankings }: GlobalRankingsTablePro
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-[#F1F2F4] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50">
@@ -138,36 +138,36 @@ export default function GlobalRankingsTable({ rankings }: GlobalRankingsTablePro
               <tr key={ranking.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   {ranking.rank <= 3 ? (
-                    <div className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center">
-                      <span className="text-white font-bold">{ranking.rank}</span>
+                    <div className="w-5 h-5 rounded-full bg-[#800000] flex items-center justify-center">
+                      <span className="text-white text-[10px] font-semibold">{ranking.rank}</span>
                     </div>
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-white" />
+                    <div className="w-5 h-5 rounded-full bg-[#800000] flex items-center justify-center">
+                      <Crown className="w-3 h-3 text-white" />
                     </div>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="font-semibold text-gray-900">{ranking.team}</div>
+                  <div className="text-[#070A11] text-sm">{ranking.team}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{ranking.manager}</div>
+                  <div className="text-sm text-[#070A11]">{ranking.manager}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold">
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <span className="px-3 py-1 bg-[#F5EBEB] text-[#800000] rounded-full text-sm">
                     {ranking.totalPoints}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-[#070A11]">
                   {ranking.cleansheet}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-red-600 font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-[#FE5E41] font-medium">
                   {ranking.goals}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-blue-600 font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-[#4961B9] font-medium">
                   {ranking.assists}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-green-600 font-medium">
+                <td className="px-6 py-4 whitespace-nowrap text-left text-sm text-[#0EC76A] font-medium">
                   {ranking.cards}
                 </td>
               </tr>

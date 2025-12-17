@@ -3,9 +3,21 @@
 import Link from "next/link";
 import { Crown, Clock } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useBlogPosts } from "@/lib/api";
+import { useBlogPosts, leaderboardApi } from "@/lib/api";
+import { teamApi } from "@/lib/api/team";
+import { statsApi } from "@/lib/api/stats";
 import { BlogPostListItem } from "@/types/news";
+import { Fixture, Team } from "@/types/team";
+import { getCountryName } from "@/lib/constants/countries";
+import { Spinner } from "../common/Spinner";
+
+type HomeFixture = Fixture & {
+  time?: string;
+  status?: "LIVE" | null;
+  startsAt?: string;
+};
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -46,36 +58,226 @@ export default function HomePage() {
   const { data: newsData } = useBlogPosts({ status: "published", limit: 4 });
   const newsArticles = newsData?.items || [];
 
-  // Toggle between empty and data states (for demo purposes)
-  const hasWins = true; // Set to false to show empty state
-  const hasTeamUpdates = true; // Set to false to show empty state
+  const [fixtures, setFixtures] = useState<HomeFixture[]>([]);
+  const [isLoadingFixtures, setIsLoadingFixtures] = useState(false);
+  const [fixturesError, setFixturesError] = useState<string | null>(null);
 
-  return (
-    <div className="h-screen flex justify-center items-center">
-      <div className="flex flex-col items-center justify-center">
-        <Image
-          src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764948169/CominSoonBlue_b9r5cs.png"
-          alt="Coming Soon"
-          width={350}
-          height={350}
-        />
-        <Link
-          href="/predictor"
-          className="bg-[#4AA96C] text-sm inline-flex items-center px-6 py-2 text-white font-medium rounded-full transition-colors"
-        >
-          Play Our Predictor Now
-        </Link>
-      </div>
-    </div>
-  );
+  // Team card info
+  const [team, setTeam] = useState<Team | null>(null);
+  const [currentGameweek, setCurrentGameweek] = useState<number | null>(null);
+  const [squadPlayers, setSquadPlayers] = useState<
+    Array<{
+      id: string | number;
+      name: string;
+      position: string;
+      points: number;
+      country: string;
+      price: number;
+    }>
+  >([]);
 
-  // Ignored for Now Until the API is ready
+  // Top 5 players by points
+  const [topPlayers, setTopPlayers] = useState<
+    Array<{
+      id: string | number;
+      name: string;
+      country: string;
+      position: string;
+      points: number;
+    }>
+  >([]);
+
+  // Global ranking
+  const [globalRank, setGlobalRank] = useState<number | null>(null);
+
+  // Fetch team data
+  useEffect(() => {
+    const loadTeamData = async () => {
+      try {
+        const teamData = await teamApi.getMyTeam();
+        if (teamData?.team) {
+          setTeam({
+            id: teamData.team.id ?? "",
+            name: teamData.team.name ?? "",
+            points: teamData.team.points ?? 0,
+            budget: teamData.team.budgetTotal ?? 0,
+            budgetRemaining:
+              Number((teamData.team.budgetRemaining / 1000000).toFixed(1)) ?? 0,
+            manager: teamData.team.manager ?? "",
+            logo: teamData.team.logo ?? teamData.team.logoUrl,
+          });
+        }
+
+        // Map squad players - filter for starting 11 and sort by position
+        const players = (teamData?.currentSquad?.players ?? []) as Array<{
+          isStarting?: boolean;
+          position?: string;
+          player?: {
+            id?: number | string;
+            name?: string;
+            positionId?: number;
+            countryId?: number;
+            position?: {
+              code?: string;
+              developer_name?: string;
+              name?: string;
+            };
+            points?: number;
+            price?: number;
+          };
+        }>;
+        const positionOrder: Record<string, number> = {
+          // Abbreviations
+          gk: 1,
+          def: 2,
+          mid: 3,
+          att: 4,
+          // Full names
+          goalkeeper: 1,
+          defender: 2,
+          midfielder: 3,
+          attacker: 4,
+        };
+
+        const mapped = players
+          .filter((p) => p.isStarting === true)
+          .map((p) => ({
+            id: p.player?.id ?? Math.random(),
+            name: p.player?.name ?? "Unknown",
+            position: p.position ?? "N/A",
+            points: p.player?.points ?? 0,
+            country: getCountryName(p.player?.countryId),
+            price: p.player?.price ?? 0,
+          }))
+          .sort((a, b) => {
+            const posA = a.position.toString().toLowerCase();
+            const posB = b.position.toString().toLowerCase();
+            const orderA = positionOrder[posA] ?? 99;
+            const orderB = positionOrder[posB] ?? 99;
+            return orderA - orderB;
+          });
+        setSquadPlayers(mapped);
+        setCurrentGameweek(teamData?.currentSquad?.gameweekId ?? null);
+      } catch {
+        // User may not have a team yet
+        setTeam(null);
+        setSquadPlayers([]);
+        setCurrentGameweek(null);
+        setCurrentGameweek(null);
+      }
+    };
+
+    loadTeamData();
+  }, []);
+
+  useEffect(() => {
+    const loadFixtures = async () => {
+      setIsLoadingFixtures(true);
+      setFixturesError(null);
+      try {
+        const upcoming = await teamApi.getUpcomingFixtures({ limit: 8 });
+        const mapped: HomeFixture[] = (upcoming ?? []).map((fx) => {
+          const home = fx.participants?.[0];
+          const away = fx.participants?.[1];
+          const start = fx.startingAt ? new Date(fx.startingAt) : null;
+          const now = Date.now();
+          const time = start
+            ? start.toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })
+            : "TBD";
+          const date = start
+            ? start.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+              })
+            : "TBD";
+          const startMs = start?.getTime() ?? null;
+          // Consider LIVE within a 3h window from kickoff to avoid marking past games as live
+          const isLive = startMs
+            ? startMs <= now && now <= startMs + 3 * 60 * 60 * 1000
+            : false;
+          return {
+            id: String(fx.id ?? Math.random()),
+            homeTeam: { name: home?.name || "Home", flag: home?.logo },
+            awayTeam: { name: away?.name || "Away", flag: away?.logo },
+            matchDay: fx.gameweekId ? `GW ${fx.gameweekId}` : "Upcoming",
+            date: date,
+            time,
+            status: isLive ? "LIVE" : null,
+            startsAt: fx.startingAt ?? undefined,
+          };
+        });
+        setFixtures(mapped);
+      } catch (error) {
+        setFixturesError(
+          (
+            error as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
+            (error as { message?: string })?.message ||
+            "Failed to load fixtures."
+        );
+      } finally {
+        setIsLoadingFixtures(false);
+      }
+    };
+
+    loadFixtures();
+  }, []);
+
+  // Fetch top 5 players by points
+  // Fetch top 5 players by points using statsApi with proper sorting
+  useEffect(() => {
+    const loadTopPlayers = async () => {
+      try {
+        const response = await statsApi.getPlayers({
+          limit: 5,
+          sortBy: "points:DESC",
+        });
+        const players = response.players ?? [];
+        const mapped = players.map((p) => ({
+          id: p.id ?? Math.random(),
+          name: p.commonName || p.name || "Unknown",
+          country: getCountryName(p.countryId),
+          position: p.position?.code ?? "N/A",
+          points: p.points ?? 0,
+        }));
+        setTopPlayers(mapped);
+      } catch {
+        setTopPlayers([]);
+      }
+    };
+
+    loadTopPlayers();
+  }, []);
+
+  // Fetch global ranking
+  useEffect(() => {
+    const loadGlobalRank = async () => {
+      try {
+        const { me } = await leaderboardApi.getGlobalLeaderboard({
+          page: 1,
+          limit: 1,
+        });
+        setGlobalRank(me?.rank ?? null);
+      } catch {
+        setGlobalRank(null);
+      }
+    };
+
+    loadGlobalRank();
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FFFFFF]">
       <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Welcome Section */}
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between">
           <div className="mb-6">
             <h1 className="text-2xl font-medium text-[#070A11]">
               Welcome back, {userName}!
@@ -88,14 +290,11 @@ export default function HomePage() {
           {/* Gameweek Info Bar */}
           <div className="flex flex-wrap items-center gap-3 mb-8 pb-4">
             <span className="px-4 py-2 bg-[#F5EBEB] text-[#800000] rounded-full text-sm font-medium">
-              Gameweek 1
+              Gameweek {currentGameweek ?? "-"}
             </span>
             <div className="flex items-center text-[#656E81] border border-[#D4D7DD] rounded-full px-2 py-1">
               <Clock className="w-4 h-4 mr-2" />
               <span className="text-sm">2 days left</span>
-            </div>
-            <div className="text-[#4AA96C] border border-[#4AA96C] rounded-full px-2 py-1 text-base font-semibold">
-              Top 11
             </div>
           </div>
         </div>
@@ -115,7 +314,7 @@ export default function HomePage() {
               <p className="text-sm text-gray-700">My Team</p>
             </div>
             {/* Card with gradient background */}
-            <div className="rounded-xl border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
+            <div className="rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
               {/* SVG Background */}
               <svg
                 className="absolute inset-0 w-full h-full"
@@ -185,10 +384,8 @@ export default function HomePage() {
               </svg>
               {/* Content */}
               <div className="p-6 relative z-10">
-                <p className="text-base text-[#800000] mb-1">
-                  Players selected
-                </p>
-                <p className="text-3xl text-[#800000]">0/11</p>
+                <p className="text-base text-[#800000] mb-1">Team Name</p>
+                <p className="text-3xl text-[#800000]">{team?.name || "--"}</p>
               </div>
             </div>
           </div>
@@ -206,7 +403,7 @@ export default function HomePage() {
               <p className="text-sm font-medium text-gray-700">Points</p>
             </div>
             {/* Card with gradient background */}
-            <div className="rounded-xl border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
+            <div className="rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
               <svg
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 296 110"
@@ -284,7 +481,9 @@ export default function HomePage() {
               </svg>
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Total points</p>
-                <p className="text-3xl text-[#800000]">247 pts</p>
+                <p className="text-3xl text-[#800000]">
+                  {team?.points ?? "--"}
+                </p>
               </div>
             </div>
           </div>
@@ -302,7 +501,7 @@ export default function HomePage() {
               <p className="text-sm text-gray-700">Rank</p>
             </div>
             {/* Card with gradient background */}
-            <div className="rounded-xl border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
+            <div className="rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
               <svg
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 303 111"
@@ -380,7 +579,9 @@ export default function HomePage() {
               </svg>
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Global Ranking</p>
-                <p className="text-3xl text-[#800000]">1247</p>
+                <p className="text-3xl text-[#800000]">
+                  {globalRank ? `${globalRank}` : "--"}
+                </p>
               </div>
             </div>
           </div>
@@ -398,7 +599,7 @@ export default function HomePage() {
               <p className="text-sm font-medium text-gray-700">Budget</p>
             </div>
             {/* Card with gradient background */}
-            <div className="rounded-xl border-2 border-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
+            <div className="rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.08)] overflow-hidden bg-white max-h-[150px] relative">
               <svg
                 className="absolute inset-0 w-full h-full"
                 viewBox="0 0 303 111"
@@ -476,16 +677,18 @@ export default function HomePage() {
               </svg>
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Remaining</p>
-                <p className="text-3xl text-[#800000]">$100M</p>
+                <p className="text-3xl text-[#800000]">
+                  {team?.budgetRemaining ? `${team?.budgetRemaining}M` : "--"}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         {/* First Row: Upcoming Matches, Win Throughout Season, Team Updates */}
-        <div className="flex flex-col lg:flex-row gap-8 mb-8">
+        <div className="flex flex-col lg:flex-row gap-8 mb-8 items-stretch">
           {/* Upcoming Matches */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4]">
+          <div className="flex-1 rounded-xl p-3 lg:p-6 border border-[#F1F2F4] flex flex-col min-h-[420px]">
             <h2 className="text-xl font-bold text-[#070A11] mb-1">
               Upcoming Matches
             </h2>
@@ -493,266 +696,122 @@ export default function HomePage() {
               Next fixtures in AFCON 2025
             </p>
 
-            <div className="space-y-4">
-              {[
-                {
-                  home: "Nigeria",
-                  away: "Burundi",
-                  time: "Today, 8:00 PM",
-                  status: "LIVE",
-                  date: null,
-                },
-                {
-                  home: "Nigeria",
-                  away: "Burundi",
-                  time: "6:00 PM",
-                  status: null,
-                  date: "Dec 21",
-                },
-                {
-                  home: "Nigeria",
-                  away: "Burundi",
-                  time: "7:00 PM",
-                  status: null,
-                  date: "Dec 21",
-                },
-                {
-                  home: "Nigeria",
-                  away: "Burundi",
-                  time: "7:00 PM",
-                  status: null,
-                  date: "Dec 21",
-                },
-              ].map((match, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between px-4 py-3 rounded-lg border border-[#F1F2F4] transition-colors"
-                >
-                  <div className="">
-                    <div className="flex items-center justify-between gap-2 sm:gap-8">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                          N
+            <div className="space-y-4 flex-1 min-h-0 max-h-[420px] overflow-y-auto pr-1">
+              {isLoadingFixtures ? (
+                <Spinner size={24} className="text-[#4AA96C]" />
+              ) : fixturesError ? (
+                <p className="text-sm text-red-600">{fixturesError}</p>
+              ) : fixtures.length === 0 ? (
+                <p className="text-sm text-[#656E81]">
+                  No upcoming fixtures available.
+                </p>
+              ) : (
+                fixtures.map((match) => (
+                  <div
+                    key={match.id}
+                    className="flex items-start justify-between px-4 py-3 rounded-lg border border-[#F1F2F4] transition-colors"
+                  >
+                    <div className="">
+                      <div className="flex items-center justify-between gap-2 sm:gap-8">
+                        <div className="flex items-center gap-2 min-w-[100px] max-w-[100px] lg:min-w-[150px]">
+                          <div className="w-6 min-w-6 h-6 min-h-6 bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {match.homeTeam.name?.[0] ?? "H"}
+                          </div>
+                          <span className="font-medium text-[#070A11] text-sm truncate">
+                            {match.homeTeam.name}
+                          </span>
                         </div>
-                        <span className="font-medium text-[#070A11] text-sm">
-                          {match.home}
-                        </span>
-                      </div>
-                      <div className="text-[#070A11] text-sm font-medium">
-                        vs
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-[#800000] rounded-full flex items-center justify-center text-white text-xs font-bold">
-                          B
+                        <div className="text-[#070A11] w-6 lg:w-10 text-sm font-medium">
+                          vs
                         </div>
-                        <span className="font-medium text-gray-900 text-sm">
-                          {match.away}
+                        <div className="flex items-center gap-2 min-w-[100px] max-w-[100px] lg:min-w-[150px]">
+                          <div className="w-6 min-w-6 h-6 min-h-6 bg-[#800000] rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {match.awayTeam.name?.[0] ?? "A"}
+                          </div>
+                          <span className="font-medium text-gray-900 text-sm truncate">
+                            {match.awayTeam.name}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <span className="text-xs text-[#656E81] font-light">
+                          {match.matchDay || "Upcoming"} • {match.time || "TBD"}
                         </span>
                       </div>
                     </div>
-                    <div className="text-left">
-                      <span className="text-xs text-[#656E81] font-light">
-                        MD1 • {match.time}
-                      </span>
-                    </div>
-                  </div>
 
-                  <div className="ml-4">
-                    {match.status === "LIVE" ? (
-                      <span className="px-2 py-1 bg-[#FE5E41] text-white text-xs font-medium rounded-full flex items-center gap-1">
-                        <span className="font-black">•</span> LIVE
-                      </span>
-                    ) : (
-                      <span className="px-2 py-1 border border-[#D4D7DD] text-[#656E81] text-sm font-medium rounded-full">
-                        {match.date}
-                      </span>
-                    )}
+                    <div className="lg:ml-4">
+                      {match.status === "LIVE" ? (
+                        <span className="px-2 py-1 bg-[#FE5E41] text-white text-xs font-medium rounded-full flex items-center gap-1">
+                          <span className="font-black">•</span> LIVE
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 whitespace-nowrap border border-[#D4D7DD] text-[#656E81] text-sm font-medium rounded-full">
+                          {match.date}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
-          {/* Win Throughout Season */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4]">
-            <h2 className="text-xl font-bold text-[#070A11] mb-6">
-              Win throughout season
+          {/* Current Squad */}
+          <div className="flex-1 rounded-xl pb-0 p-3 lg:p-6 lg:pb-0 border border-[#F1F2F4] flex flex-col min-h-[420px]">
+            <h2 className="text-xl font-bold text-[#070A11] mb-1">
+              Current Squad
             </h2>
+            <p className="text-sm text-[#656E81] mb-6">
+              View your starting 11 players
+            </p>
 
-            {hasWins ? (
-              <div className="space-y-3">
-                {[
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-1_fapyuy.png",
-                    title: "Game week Winner",
-                    subtitle: "Week 3",
-                    badge: "+ 5pts",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
-                    title: "Perfect Prediction",
-                    subtitle: "Nigeria vs Egypt",
-                    badge: "+ 25pts",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Top 1000",
-                    subtitle: "Global ranking",
-                    badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Top 1000",
-                    subtitle: "Global ranking",
-                    badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                  {
-                    icon: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Top 1000",
-                    subtitle: "Global ranking",
-                    badge: "Achieved",
-                    badgeColor: "bg-[#F5EBEB]",
-                  },
-                ].map((item, index) => (
+            {squadPlayers.length > 0 ? (
+              <div className="space-y-3 flex-1 min-h-0 max-h-[420px] overflow-y-auto pr-1">
+                {squadPlayers.map((player) => (
                   <div
-                    key={index}
+                    key={player.id}
                     className="flex items-center justify-between p-3 rounded-lg border border-[#F1F2F4]"
                   >
                     <div className="flex items-center gap-3">
-                      <Image
-                        src={item.icon}
-                        alt={item.title}
-                        width={38}
-                        height={38}
-                        className="w-[38px] h-[38px] rounded-full"
-                      />
-                      <div>
-                        <p className="font-medium text-[#070A11] text-sm">
-                          {item.title}
+                      <div className="w-[38px] h-[38px] bg-[#4AA96C] rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                        {player.position}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-[#070A11] text-sm mb-1">
+                          {player.name}
                         </p>
                         <p className="text-xs text-[#656E81]">
-                          {item.subtitle}
+                          {player.country} • $
+                          {(player.price / 1000000).toFixed(1)}M
                         </p>
                       </div>
                     </div>
-                    <span
-                      className={`px-3 py-1 ${item.badgeColor} text-[#800000] text-sm font-semibold rounded-full`}
-                    >
-                      {item.badge}
+                    <span className="bg-[#F5EBEB] text-[#800000] px-3 py-1 rounded-full text-sm font-semibold">
+                      {player.points} pts
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-12 flex-1">
                 <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
                   <Image
                     src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764597186/wallet-2_eawcda.png"
-                    alt="Trophy"
+                    alt="Squad"
                     width={32}
                     height={32}
                     className="w-8 h-8 opacity-50"
                   />
                 </div>
                 <p className="text-sm text-gray-600 text-center mb-6">
-                  When you start playing, you&apos;ll see your wins here
+                  Create your squad to see your starting 11 here
                 </p>
                 <Link
-                  href="/predictor"
+                  href="/my-team"
                   className="inline-flex items-center justify-center px-6 py-2 bg-[#4AA96C] text-white font-semibold rounded-full transition-colors"
                 >
-                  Make a Prediction
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Team Updates */}
-          <div className="flex-1 rounded-xl p-6 border border-[#F1F2F4]">
-            <h2 className="text-xl font-bold text-[#070A11] mb-1">
-              Team updates
-            </h2>
-            <p className="text-sm text-[#656E81] mb-6">
-              Recent changes and notifications
-            </p>
-
-            {hasTeamUpdates ? (
-              <div className="space-y-3">
-                {[
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-1_fapyuy.png",
-                    title: "Mohamed Salah scored 12 points",
-                    time: "3 hours ago",
-                  },
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar_nm2eui.png",
-                    title: "You transferred in Sadio Mané",
-                    time: "1 day ago",
-                  },
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Your rank improved by 523 points",
-                    time: "3 days ago",
-                  },
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Your rank improved by 523 points",
-                    time: "3 days ago",
-                  },
-                  {
-                    avatar:
-                      "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764596558/avatar-2_cvfjhh.png",
-                    title: "Your rank improved by 523 points",
-                    time: "3 days ago",
-                  },
-                ].map((update, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-3 p-3 rounded-lg border border-[#F1F2F4]"
-                  >
-                    <Image
-                      src={update.avatar}
-                      alt="Avatar"
-                      width={38}
-                      height={38}
-                      className="w-[38px] h-[38px] rounded-full flex-shrink-0"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium text-[#070A11] text-sm mb-1">
-                        {update.title}
-                      </p>
-                      <p className="text-xs text-[#656E81]">{update.time}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4">
-                  <Image
-                    src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764597186/wallet-2_eawcda.png"
-                    alt="Trophy"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 opacity-50"
-                  />
-                </div>
-                <p className="text-sm text-gray-600 text-center mb-6">
-                  When you start playing, you&apos;ll see your updates here
-                </p>
-                <Link
-                  href="/league"
-                  className="inline-flex items-center justify-center px-6 py-2 bg-[#4AA96C] text-white font-semibold rounded-full transition-colors"
-                >
-                  Join a League
+                  Create Squad
                 </Link>
               </div>
             )}
@@ -764,7 +823,7 @@ export default function HomePage() {
           {/* Left Column */}
           <div className="lg:col-span-1 space-y-8">
             {/* How to Play */}
-            <div className="rounded-xl p-6 border border-[#F1F2F4]">
+            <div className="rounded-xl p-3 lg:p-6 border border-[#F1F2F4]">
               <h2 className="text-xl font-bold text-[#070A11] mb-6">
                 How to Play
               </h2>
@@ -773,7 +832,7 @@ export default function HomePage() {
                 {[
                   {
                     title: "Create your Team",
-                    desc: "Select 11 players within $100M budget",
+                    desc: "Select 15 players within $100M budget",
                   },
                   {
                     title: "Make Predictions",
@@ -825,85 +884,54 @@ export default function HomePage() {
           {/* Right Column */}
           <div className="lg:col-span-2">
             {/* Top 5 Players */}
-            <div className="rounded-xl p-6 border border-[#F1F2F4]">
+            <div className="rounded-xl p-3 lg:p-6 border border-[#F1F2F4]">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
                 Current Top 5 Players
               </h2>
 
               <div className="space-y-3">
-                {[
-                  {
-                    rank: 1,
-                    name: "Mohammed Salah",
-                    country: "Egypt",
-                    position: "FWD",
-                    points: 156,
-                    isCrown: true,
-                  },
-                  {
-                    rank: 2,
-                    name: "Sadio Mané",
-                    country: "Senegal",
-                    value: "$12.5M",
-                    points: 142,
-                  },
-                  {
-                    rank: 3,
-                    name: "Sadio Mané",
-                    country: "Senegal",
-                    value: "$12.5M",
-                    points: 142,
-                  },
-                  {
-                    rank: 4,
-                    name: "Sadio Mané",
-                    country: "Senegal",
-                    value: "$12.5M",
-                    points: 142,
-                  },
-                  {
-                    rank: 5,
-                    name: "Sadio Mané",
-                    country: "Senegal",
-                    value: "$12.5M",
-                    points: 142,
-                  },
-                ].map((player) => (
-                  <div
-                    key={player.rank}
-                    className="flex items-center justify-between p-3 rounded-lg transition-colors border border-[#F1F2F4]"
-                  >
-                    <div className="flex items-center gap-3">
-                      {player.isCrown ? (
-                        <div className="w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center">
-                          <Crown className="w-5 h-5 text-white" />
+                {topPlayers.length > 0 ? (
+                  topPlayers.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center justify-between p-3 rounded-lg transition-colors border border-[#F1F2F4]"
+                    >
+                      <div className="flex items-center gap-3">
+                        {index === 0 ? (
+                          <div className="w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center">
+                            <Crown className="w-5 h-5 text-white" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {index + 1}
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[#070A11] text-sm">
+                            {player.name}
+                          </p>
+                          <p className="text-xs text-[#656E81]">
+                            {player.country} • {player.position}
+                          </p>
                         </div>
-                      ) : (
-                        <div className="w-10 h-10 bg-[#800000] rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold text-sm">
-                            {player.rank}
-                          </span>
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-[#070A11] text-sm">{player.name}</p>
-                        <p className="text-xs text-[#656E81]">
-                          {player.country} • {player.position || player.value}
-                        </p>
                       </div>
+                      <span className="bg-[#F5EBEB] text-[#800000] px-3 py-1 rounded-full text-sm font-semibold">
+                        {player.points}pts
+                      </span>
                     </div>
-                    <span className="bg-[#F5EBEB] text-[#800000] px-3 py-1 rounded-full text-sm font-semibold">
-                      {player.points}pts
-                    </span>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <Spinner size={24} className="text-[#4AA96C]" />
+                )}
               </div>
             </div>
           </div>
         </div>
 
         {/* Latest News */}
-        <div className="mt-8 rounded-xl p-6 border border-[#F1F2F4]">
+        <div className="mt-8 rounded-xl p-3 lg:p-6 border border-[#F1F2F4]">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-[#070A11]">Latest News</h2>
             <Link href="/news" className="text-[#4AA96C] font-medium">

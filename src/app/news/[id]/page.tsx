@@ -2,10 +2,11 @@
 
 import { useState, use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Share2, Bookmark, Loader2 } from "lucide-react";
+import { ArrowLeft, Share2, Bookmark } from "lucide-react";
 import RelatedNews from "@/components/news/RelatedNews";
 import { useBlogPost } from "@/lib/api";
 import Image from "next/image";
+import { Spinner } from "@/components/common/Spinner";
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -66,7 +67,7 @@ export default function ArticlePage({
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#656E81]" />
+        <Spinner size={24} className="text-[#4AA96C]" />
       </div>
     );
   }

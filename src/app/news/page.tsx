@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, ChevronDown, Loader2 } from "lucide-react";
+import { Search, ChevronDown } from "lucide-react";
 import FeaturedArticle from "@/components/news/FeaturedArticle";
 import { NewsCard, NewsSection } from "@/components/news";
 import { useBlogPosts } from "@/lib/api";
+import { Spinner } from "@/components/common/Spinner";
 
 export default function NewsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -157,7 +158,7 @@ export default function NewsPage() {
         {/* Loading State */}
         {isLoading && (
           <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-500 mx-auto" />
+            <Spinner size={32} className="text-gray-500 mx-auto" />
           </div>
         )}
 

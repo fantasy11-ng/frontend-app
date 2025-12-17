@@ -30,7 +30,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
       GK: starting11.filter((p) => p.position === "GK"),
       DEF: starting11.filter((p) => p.position === "DEF"),
       MID: starting11.filter((p) => p.position === "MID"),
-      FWD: starting11.filter((p) => p.position === "FWD"),
+      ATT: starting11.filter((p) => p.position === "ATT"),
     };
 
     // Helper function to evenly distribute players horizontally
@@ -104,11 +104,11 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
 
     // Forwards - evenly distributed (y: 70% from top)
     const fwdXPositions = distributePlayers(
-      playersByPosition.FWD.length,
+      playersByPosition.ATT.length,
       15,
       85
     );
-    playersByPosition.FWD.forEach((player, index) => {
+    playersByPosition.ATT.forEach((player, index) => {
       result.push({
         player,
         x: player.formationPosition?.x ?? fwdXPositions[index],
@@ -120,9 +120,42 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
   };
 
   const getRoleIcon = (role?: PlayerRole) => {
-    if (role === "captain") return "©";
+    if (role === "captain") return "C";
     if (role === "vice-captain") return "VC";
     return null;
+  };
+
+  const renderRoleBadges = (player: SquadPlayer) => {
+    const badges: Array<{ label: string; bg: string; text?: string }> = [];
+
+    const roleIcon = getRoleIcon(player.role);
+    if (roleIcon)
+      badges.push({ label: roleIcon, bg: "bg-[#800000]", text: "text-white" });
+    if (player.isFreeKickTaker)
+      badges.push({ label: "FK", bg: "bg-[#800000]", text: "text-white" });
+    if (player.isPenaltyTaker)
+      badges.push({ label: "PK", bg: "bg-[#800000]", text: "text-white" });
+
+    if (!badges.length) return null;
+
+    return (
+      <div className="absolute -top-2 -right-2 flex gap-1 z-10">
+        {badges.map((badge, idx) => (
+          <div
+            key={`${badge.label}-${idx}`}
+            className={`w-6 h-6 rounded-full ${badge.bg} flex items-center justify-center shadow-md`}
+          >
+            <span
+              className={`text-[10px] font-semibold ${
+                badge.text ?? "text-gray-900"
+              }`}
+            >
+              {badge.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const getPlayerDisplayName = (player: SquadPlayer) => {
@@ -165,23 +198,23 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                 <div className="relative flex flex-col items-center">
                   {/* Country flag icon - positioned above card, slightly to the left */}
                   <div className="absolute -top-2 z-10">
-                    <div className="w-5 h-5 bg-white rounded-full border-2 border-gray-300 flex items-center justify-center shadow-md relative overflow-hidden">
-                      {player.countryFlag ? (
+                    <div className="w-10 h-10 flex items-center justify-center shadow-md relative overflow-hidden">
+                      {player.image && (
                         <div className="flex items-center justify-center w-full h-full text-xs">
-                          {player.countryFlag}
-                        </div>
-                      ) : (
-                        <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-xs text-gray-600">
-                            {player.name.charAt(0).toUpperCase()}
-                          </span>
+                          <Image
+                            src={player.image}
+                            alt={player.name}
+                            width={40}
+                            height={40}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       )}
                     </div>
                   </div>
 
                   {/* Player card with two sections */}
-                  <div className="relative mt-4">
+                  <div className="relative mt-10">
                     {/* Upper section - dark gray/black with player name */}
                     <div className="bg-gray-900 text-white px-3 py-2 rounded-t-lg min-w-[65px]">
                       <div
@@ -201,14 +234,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                       </div>
                     </div>
 
-                    {/* Role indicator */}
-                    {player.role && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center shadow-md z-10">
-                        <span className="text-[10px] text-gray-900">
-                          {getRoleIcon(player.role)}
-                        </span>
-                      </div>
-                    )}
+                    {renderRoleBadges(player)}
                   </div>
 
                   {/* Role menu button */}
@@ -242,55 +268,55 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
       {/* Bench */}
       {bench.length > 0 && (
         <div className="bg-gray-800 p-4">
-          <h4 className="text-white mb-3">
-            Bench ({bench.length})
-          </h4>
-          <div className="flex flex-wrap gap-3">
-            {[...bench].sort((a, b) => {
-              // GK always first
-              if (a.position === 'GK' && b.position !== 'GK') return -1;
-              if (a.position !== 'GK' && b.position === 'GK') return 1;
-              return 0; // Maintain original order for non-GK players
-            }).map((player) => (
-              <div
-                key={player.id}
-                onClick={() => onPlayerClick?.(player)}
-                className="relative cursor-pointer group"
-              >
-                <div className="w-8 h-8 bg-white rounded-full border-2 border-gray-600 flex items-center justify-center shadow-md relative overflow-hidden">
-                  {player.countryFlag ? (
-                    <div className="flex items-center justify-center text-xl w-full h-full">
-                      {player.countryFlag}
+          <h4 className="text-white mb-3">Bench ({bench.length})</h4>
+          <div className="flex flex-wrap justify-between gap-3 mx-4">
+            {[...bench]
+              .sort((a, b) => {
+                // GK always first
+                if (a.position === "GK" && b.position !== "GK") return -1;
+                if (a.position !== "GK" && b.position === "GK") return 1;
+                return 0; // Maintain original order for non-GK players
+              })
+              .map((player) => (
+                <div
+                  key={player.id}
+                  onClick={() => onPlayerClick?.(player)}
+                  className="relative cursor-pointer group flex flex-col items-center"
+                >
+                  <div className="w-8 h-8 bg-white rounded-full border-2 border-gray-600 flex items-center justify-center shadow-md relative overflow-hidden">
+                    {player.countryFlag ? (
+                      <div className="flex items-center justify-center text-xl w-full h-full">
+                        {player.countryFlag}
+                      </div>
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
+                        <span className="text-gray-600">
+                          {player.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-1 text-center">
+                    <div className="bg-black text-white text-[12px] px-1.5 py-0.5 rounded whitespace-nowrap">
+                      <div className="truncate max-w-[60px] lg:max-w-[80px]">
+                        {getPlayerDisplayName(player)}
+                      </div>
+                      <div className="text-[8px]">{player.position}</div>
                     </div>
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-[10px] text-gray-600">
-                        {player.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
+                  </div>
+                  {hoveredPlayer === player.id && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onPlayerRoleMenu?.(player, e);
+                      }}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-100"
+                    >
+                      <MoreVertical className="w-3 h-3 text-gray-600" />
+                    </button>
                   )}
                 </div>
-                <div className="mt-1 text-center">
-                  <div className="bg-black text-white text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap">
-                    <div className="truncate max-w-[60px]">
-                      {getPlayerDisplayName(player)}
-                    </div>
-                    <div className="text-[8px]">{player.position}</div>
-                  </div>
-                </div>
-                {hoveredPlayer === player.id && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onPlayerRoleMenu?.(player, e);
-                    }}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-100"
-                  >
-                    <MoreVertical className="w-3 h-3 text-gray-600" />
-                  </button>
-                )}
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       )}

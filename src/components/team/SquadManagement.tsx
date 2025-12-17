@@ -25,11 +25,10 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
   selectedPosition: controlledPosition,
   onPositionChange,
   selectedCountry: controlledCountry,
-  onCountryChange,
 }) => {
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [internalPosition, setInternalPosition] = useState<string>('All');
-  const [internalCountry, setInternalCountry] = useState<string>('All');
+  const [internalCountry] = useState<string>('All');
 
   const searchQuery = controlledSearchQuery !== undefined ? controlledSearchQuery : internalSearchQuery;
   const selectedPosition = controlledPosition !== undefined ? controlledPosition : internalPosition;
@@ -51,20 +50,7 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
     }
   };
 
-  const handleCountryChange = (country: string) => {
-    if (onCountryChange) {
-      onCountryChange(country);
-    } else {
-      setInternalCountry(country);
-    }
-  };
-
-  const positions: (PlayerPosition | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'FWD'];
-
-  const countries = useMemo(() => {
-    const uniqueCountries = Array.from(new Set(players.map((p) => p.country).filter(Boolean)));
-    return ['All', ...uniqueCountries.sort()];
-  }, [players]);
+  const positions: (PlayerPosition | 'All')[] = ['All', 'GK', 'DEF', 'MID', 'ATT'];
 
   const filteredPlayers = useMemo(() => {
     return players.filter((player) => {
@@ -114,7 +100,7 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
             </option>
           ))}
         </select>
-        <select
+        {/* <select
           value={selectedCountry}
           onChange={(e) => handleCountryChange(e.target.value)}
           className="text-[#070A11] flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -124,7 +110,7 @@ const SquadManagement: React.FC<SquadManagementProps> = ({
               {country === 'All' ? 'Country' : country}
             </option>
           ))}
-        </select>
+        </select> */}
       </div>
 
       {/* Player List */}

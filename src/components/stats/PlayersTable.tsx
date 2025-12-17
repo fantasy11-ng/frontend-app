@@ -1,18 +1,65 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, X, ChevronDown } from 'lucide-react';
-import { Player } from '@/types/stats';
+import { Search, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Player, PlayerListMeta } from '@/types/stats';
+import { 
+  POSITION_ID_MAP, 
+  POSITION_NAMES,
+  getPositionName,
+  COUNTRY_ID_MAP, 
+  COUNTRY_NAMES,
+  getCountryName 
+} from '@/lib/constants';
+import { Spinner } from '../common/Spinner';
 
 interface PlayersTableProps {
   players: Player[];
+  meta: PlayerListMeta;
+  currentPage: number;
+  onPageChange: (page: number) => void;
+  onSearch?: (query: string) => void;
+  onPositionFilter?: (positionId: number | undefined) => void;
+  onCountryFilter?: (countryId: number | undefined) => void;
+  onSortChange?: (sortBy: string) => void;
+  isLoading?: boolean;
 }
 
 type TabType = 'performance' | 'details';
 
-export default function PlayersTable({ players }: PlayersTableProps) {
+// Helper to format price
+const formatPrice = (price: number): string => {
+  if (price >= 1000000) {
+    return `$${(price / 1000000).toFixed(1)}M`;
+  }
+  if (price >= 1000) {
+    return `$${(price / 1000).toFixed(0)}K`;
+  }
+  return `$${price}`;
+};
+
+// Map dropdown labels to API sortBy values
+const SORT_OPTIONS = [
+  { label: 'Points', sortBy: 'points:DESC' },
+  { label: 'Price', sortBy: 'price:DESC' },
+  { label: 'Goals', sortBy: 'goals:DESC' },
+  { label: 'Assists', sortBy: 'assists:DESC' },
+] as const;
+
+export default function PlayersTable({ 
+  players, 
+  meta,
+  currentPage,
+  onPageChange,
+  onSearch,
+  onPositionFilter,
+  onCountryFilter,
+  onSortChange,
+  isLoading = false,
+}: PlayersTableProps) {
   const [activeTab, setActiveTab] = useState<TabType>('performance');
   const [searchQuery, setSearchQuery] = useState('');
+  const [countrySearchQuery, setCountrySearchQuery] = useState('');
   const [showPositionFilter, setShowPositionFilter] = useState(false);
   const [showCountryFilter, setShowCountryFilter] = useState(false);
   const [showPointsFilter, setShowPointsFilter] = useState(false);
@@ -20,231 +67,249 @@ export default function PlayersTable({ players }: PlayersTableProps) {
   const [selectedCountry, setSelectedCountry] = useState<string>('All Countries');
   const [selectedPointsFilter, setSelectedPointsFilter] = useState<string>('Points');
 
-  const positions = ['All Positions', 'Forward', 'Midfielder', 'Defender', 'Goalkeeper', 'Wingback', 'Sweeper'];
-  const countries = [
-    'All Countries',
-    'Morocco',
-    'Mali',
-    'Zambia',
-    'Comoros',
-    'Egypt',
-    'South Africa',
-    'Angola',
-    'Zimbabwe',
-    'Nigeria',
-    'Tunisia',
-    'Uganda',
-    'Senegal',
-    'DR Congo',
-    'Benin',
-    'Algeria',
-    'Burkina Faso',
-    'Equatorial Guinea',
-    'Sudan',
-    'Cote D\'Ivoire',
-    'Cameroon',
-    'Gabon',
-    'Mozambique',
-    'Tanzania',
-    'Botswana',
-    'Rwanda',
-  ];
+  const positions = ['All Positions', ...POSITION_NAMES];
+  
+  // Get countries from the constants, sorted alphabetically
+  const countries = ['All Countries', ...COUNTRY_NAMES];
+  
+  // Filter countries based on search
+  const filteredCountries = countries.filter(country => 
+    country.toLowerCase().includes(countrySearchQuery.toLowerCase())
+  );
 
-  const filteredPlayers = players.filter((player) => {
-    const matchesSearch = 
-      player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.club.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      player.country.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesPosition = selectedPosition === 'All Positions' || player.position === selectedPosition;
-    const matchesCountry = selectedCountry === 'All Countries' || player.country === selectedCountry;
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    onSearch?.(value);
+  };
 
-    return matchesSearch && matchesPosition && matchesCountry;
-  });
+  const handlePositionChange = (position: string) => {
+    setSelectedPosition(position);
+    setShowPositionFilter(false);
+    const positionId = position === 'All Positions' ? undefined : POSITION_ID_MAP[position];
+    onPositionFilter?.(positionId);
+  };
+
+  const handleCountryChange = (country: string) => {
+    setSelectedCountry(country);
+    setShowCountryFilter(false);
+    setCountrySearchQuery('');
+    const countryId = country === 'All Countries' ? undefined : COUNTRY_ID_MAP[country];
+    onCountryFilter?.(countryId);
+  };
 
   const clearSearch = () => {
     setSearchQuery('');
+    onSearch?.('');
   };
 
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < meta.totalPages) {
+      onPageChange(currentPage + 1);
+    }
+  };
+
+  // Calculate rank based on pagination
+  const getRank = (index: number): number => {
+    return (currentPage - 1) * meta.itemsPerPage + index + 1;
+  };
+
+  // Calculate showing range
+  const startIndex = (currentPage - 1) * meta.itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * meta.itemsPerPage, meta.totalItems);
+
+  const positionLabel = selectedPosition === 'All Positions' ? 'Position' : selectedPosition;
+  const countryLabel = selectedCountry === 'All Countries' ? 'Country' : selectedCountry;
+  const pointsLabel = selectedPointsFilter === 'Points' ? 'Points' : selectedPointsFilter;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-6">
       {/* Title and Subtitle */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Top 10 Players of the season
-        </h2>
-        <p className="text-gray-600">
-          Comprehensive performance statistics for AFCON 2025&apos;s top performers
+        <p className="text-sm text-[#656E81]">
+          Comprehensive performance statistics for AFCON 2025&apos;s players
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center justify-between border-b border-gray-200">
-        <div className="flex space-x-8">
+      {/* Tabs + Controls */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex space-x-8 border-b-2 border-[#F1F2F4]">
           <button
             onClick={() => setActiveTab('performance')}
-            className={`pb-4 px-1 text-sm font-medium transition-colors ${
+            className={`pb-2 text-sm font-medium transition-colors ${
               activeTab === 'performance'
-                ? 'text-gray-900 border-b-2 border-green-500'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-[#070A11] border-b-4 border-[#4AA96C]'
+                : 'text-[#656E81] hover:text-[#070A11]'
             }`}
           >
             Performance Stats
           </button>
-          <button
-            onClick={() => setActiveTab('details')}
-            className={`pb-4 px-1 text-sm font-medium transition-colors ${
-              activeTab === 'details'
-                ? 'text-gray-900 border-b-2 border-green-500'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Players Details
-          </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="relative flex-1 max-w-md ml-8">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search players or teams..."
-            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-          {searchQuery && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
+        {/* Search + Filters */}
+        <div className="flex w-full flex-col lg:flex-row gap-3 sm:w-auto  sm:justify-end sm:gap-3 xl:gap-4">
+          <div className="relative w-full lg:w-72 flex items-center">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A0A6B1]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              placeholder="Search players..."
+              className="w-full rounded-lg border border-[#D4D7DD] bg-white py-2.5 pl-11 pr-11 text-sm text-[#070A11] placeholder:text-[#A0A6B1] focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
+            />
+            {searchQuery && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A0A6B1] hover:text-[#070A11]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
-      {/* Filters */}
-      <div className="flex items-center space-x-4">
-        <div className="relative">
-          <button
-            onClick={() => {
-              setShowPositionFilter(!showPositionFilter);
-              setShowCountryFilter(false);
-              setShowPointsFilter(false);
-            }}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <span className="text-sm text-gray-700">{selectedPosition}</span>
-            <ChevronDown className="w-4 h-4 ml-2 text-gray-500" />
-          </button>
-          {showPositionFilter && (
-            <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48">
-              <div className="p-2">
-                {positions.map((position) => (
-                  <button
-                    key={position}
-                    onClick={() => {
-                      setSelectedPosition(position);
-                      setShowPositionFilter(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                  >
-                    {position}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="relative">
-          <button
-            onClick={() => {
-              setShowCountryFilter(!showCountryFilter);
-              setShowPositionFilter(false);
-              setShowPointsFilter(false);
-            }}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <span className="text-sm text-gray-700">{selectedCountry}</span>
-            <ChevronDown className="w-4 h-4 ml-2 text-gray-500" />
-          </button>
-          {showCountryFilter && (
-            <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-64 max-h-96 overflow-y-auto">
-              <div className="p-2 border-b border-gray-200">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Search countries..."
-                    className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
+          <div className="flex gap-2 sm:flex-row flex-wrap justify-end sm:gap-3">
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowPositionFilter(!showPositionFilter);
+                  setShowCountryFilter(false);
+                  setShowPointsFilter(false);
+                }}
+                className="flex items-center rounded-lg border border-[#D4D7DD] px-4 py-2 text-sm text-[#070A11] transition hover:border-[#4AA96C]"
+              >
+                <span>{positionLabel}</span>
+                <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
+              </button>
+              {showPositionFilter && (
+                <div className="absolute top-full mt-2 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
+                  <div className="p-2">
+                    {positions.map((position) => (
+                      <button
+                        key={position}
+                        onClick={() => handlePositionChange(position)}
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        {position}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div className="p-2">
-                {countries.map((country) => (
-                  <button
-                    key={country}
-                    onClick={() => {
-                      setSelectedCountry(country);
-                      setShowCountryFilter(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                  >
-                    {country}
-                  </button>
-                ))}
-              </div>
+              )}
             </div>
-          )}
-        </div>
 
-        <div className="relative">
-          <button
-            onClick={() => {
-              setShowPointsFilter(!showPointsFilter);
-              setShowPositionFilter(false);
-              setShowCountryFilter(false);
-            }}
-            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            <span className="text-sm text-gray-700">{selectedPointsFilter}</span>
-            <ChevronDown className="w-4 h-4 ml-2 text-gray-500" />
-          </button>
-          {showPointsFilter && (
-            <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 w-48">
-              <div className="p-2">
-                {['Points', 'Goals', 'Assists', 'Cards'].map((filter) => (
-                  <button
-                    key={filter}
-                    onClick={() => {
-                      setSelectedPointsFilter(filter);
-                      setShowPointsFilter(false);
-                    }}
-                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowCountryFilter(!showCountryFilter);
+                  setShowPositionFilter(false);
+                  setShowPointsFilter(false);
+                  if (showCountryFilter) setCountrySearchQuery('');
+                }}
+                className="flex items-center rounded-lg border border-[#D4D7DD] px-4 py-2 text-sm text-[#070A11] transition hover:border-[#4AA96C]"
+              >
+                <span>{countryLabel}</span>
+                <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
+              </button>
+              {showCountryFilter && (
+                <div className="absolute top-full mt-2 w-64 max-h-96 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
+                  <div className="sticky top-0 border-b border-gray-200 p-2 bg-white rounded-t-2xl">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        value={countrySearchQuery}
+                        onChange={(e) => setCountrySearchQuery(e.target.value)}
+                        placeholder="Search countries..."
+                        className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div className="p-2 max-h-72 overflow-y-auto">
+                    {filteredCountries.length > 0 ? (
+                      filteredCountries.map((country) => (
+                        <button
+                          key={country}
+                          onClick={() => handleCountryChange(country)}
+                          className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                            selectedCountry === country ? 'bg-gray-100 text-[#4AA96C] font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          {country}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="px-3 py-2 text-sm text-gray-500">No countries found</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowPointsFilter(!showPointsFilter);
+                  setShowPositionFilter(false);
+                  setShowCountryFilter(false);
+                }}
+                className="flex items-center rounded-lg border border-[#D4D7DD] px-4 py-2 text-sm text-[#070A11] transition hover:border-[#4AA96C]"
+              >
+                <span>{pointsLabel}</span>
+                <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
+              </button>
+              {showPointsFilter && (
+                <div className="absolute top-full mt-2 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
+                  <div className="p-2">
+                    {SORT_OPTIONS.map((option) => (
+                      <button
+                        key={option.label}
+                        onClick={() => {
+                          setSelectedPointsFilter(option.label);
+                          setShowPointsFilter(false);
+                          onSortChange?.(option.sortBy);
+                        }}
+                        className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                          selectedPointsFilter === option.label ? 'bg-gray-100 text-[#4AA96C] font-medium' : 'text-gray-700'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex justify-center py-12 items-center">
+          <Spinner size={24} className="text-[#4AA96C]" />
+        </div>
+      )}
 
       {/* No Results Message */}
-      {filteredPlayers.length === 0 && searchQuery && (
+      {!isLoading && players.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500">
-            Oops! It looks like we couldn&apos;t find any results for &quot;{searchQuery}&quot;. Try searching for something else!
+            {searchQuery 
+              ? `Oops! It looks like we couldn't find any results for "${searchQuery}". Try searching for something else!`
+              : 'No players found.'}
           </p>
         </div>
       )}
 
       {/* Table */}
-      {filteredPlayers.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+      {!isLoading && players.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-[#F1F2F4] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -255,7 +320,7 @@ export default function PlayersTable({ players }: PlayersTableProps) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Player
                   </th>
-                  {activeTab === 'performance' ? (
+                  {activeTab === 'performance' && (
                     <>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Position
@@ -279,88 +344,49 @@ export default function PlayersTable({ players }: PlayersTableProps) {
                         Cards
                       </th>
                     </>
-                  ) : (
-                    <>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Club
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Age
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Height
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Weight
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Index
-                      </th>
-                    </>
                   )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPlayers.map((player) => (
+                {players.map((player, index) => (
                   <tr key={player.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="w-10 h-10 rounded-full bg-red-700 flex items-center justify-center">
-                        <span className="text-white font-bold">{player.rank}</span>
+                      <div className="w-6 h-6 rounded-full bg-[#800000] flex items-center justify-center">
+                        <span className="text-white font-semibold text-[10px]">{getRank(index)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="font-semibold text-gray-900">{player.name}</div>
-                        <div className="text-sm text-gray-500">{player.country}</div>
+                        <div className="text-[#070A11] text-sm font-medium">{player.name}</div>
                       </div>
                     </td>
-                    {activeTab === 'performance' ? (
+                    {activeTab === 'performance' && (
                       <>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                            {player.position}
+                          <span className="px-3 py-1 border border-[#D4D7DD] text-[#656E81] rounded-full text-sm">
+                            {getPositionName(player.positionId)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {player.country}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#070A11]">
+                          {getCountryName(player.countryId)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {player.price}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#070A11]">
+                          {formatPrice(player.price)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-red-700 text-white rounded-full text-xs font-bold">
+                          <span className="px-3 py-1 bg-[#F5EBEB] text-[#800000] rounded-full text-sm">
                             {player.points}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#FE5E41]">
                           {player.goals}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[#4961B9]">
                           {player.assists}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-green-600 text-white rounded-full text-xs font-medium">
-                            {player.cards}
-                          </span>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {player.club}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {player.age}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {player.height}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {player.weight}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
-                            {player.index}
+                          <span className="px-3 py-1 text-[#0EC76A] text-sm font-medium">
+                            {player.yellowCards + player.redCards}
                           </span>
                         </td>
                       </>
@@ -370,9 +396,44 @@ export default function PlayersTable({ players }: PlayersTableProps) {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+            <div className="text-sm text-gray-600 hidden md:block">
+              Showing {startIndex} to {endIndex} of {meta.totalItems}
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handlePrevious}
+                disabled={currentPage === 1}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  currentPage === 1
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <ChevronLeft className="w-4 h-4 inline mr-1" />
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {currentPage} of {meta.totalPages}
+              </span>
+              <button
+                onClick={handleNext}
+                disabled={currentPage === meta.totalPages}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  currentPage === meta.totalPages
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Next
+                <ChevronRight className="w-4 h-4 inline ml-1" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
   );
 }
-

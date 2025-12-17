@@ -1,12 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Edit, Check, Loader2, User as UserIcon, UploadCloud, Trash2 } from 'lucide-react';
+import { Edit, Check, User as UserIcon, UploadCloud, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUpdateProfile, useUploadProfileImage } from '@/lib/api/hooks/useAuth';
 import type { User } from '@/lib/api/auth';
 import toast from 'react-hot-toast';
+import { Spinner } from '../common/Spinner';
 
 interface ProfileFormState {
   firstName: string;
@@ -156,7 +157,7 @@ export default function ProfileTab() {
     <div>
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-green-500 animate-spin" />
+          <Spinner size={24} className="text-[#4AA96C]" />
         </div>
       ) : !user ? (
         <div className="py-12 text-center text-gray-600">
@@ -194,7 +195,7 @@ export default function ProfileTab() {
                       disabled={isUploadingImage}
                     >
                       {isUploadingImage ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Spinner size={24} className="text-[#4AA96C]" />
                       ) : (
                         <>
                           <UploadCloud className="w-4 h-4" />
@@ -345,7 +346,7 @@ export default function ProfileTab() {
                 className="flex items-center space-x-2 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSaving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Spinner size={24} className="text-[#4AA96C]" />
                 ) : (
                   <>
                     <Check className="w-4 h-4" />

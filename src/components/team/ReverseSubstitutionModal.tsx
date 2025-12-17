@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, ArrowRight } from 'lucide-react';
 import { SquadPlayer } from '@/types/team';
+import toast from 'react-hot-toast';
 
 interface ReverseSubstitutionModalProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ const ReverseSubstitutionModal: React.FC<ReverseSubstitutionModalProps> = ({
 
   const handleSubstitute = () => {
     if (!selectedPlayerIn) {
-      alert('Please select a bench player to substitute in');
+      toast.error('Please select a bench player to substitute in');
       return;
     }
 
