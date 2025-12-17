@@ -221,7 +221,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                         className="text-xs whitespace-nowrap text-center"
                         style={{ fontFamily: "sans-serif" }}
                       >
-                        {getPlayerDisplayName(player)}
+                        {player.name}
                       </div>
                     </div>
                     {/* Lower section - light green with position */}
@@ -295,7 +295,7 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                   <div className="mt-1 text-center">
                     <div className="bg-black text-white text-[12px] px-1.5 py-0.5 rounded whitespace-nowrap">
                       <div className="truncate max-w-[60px] lg:max-w-[80px]">
-                        {getPlayerDisplayName(player)}
+                        {player.name}
                       </div>
                       <div className="text-[8px]">{player.position}</div>
                     </div>

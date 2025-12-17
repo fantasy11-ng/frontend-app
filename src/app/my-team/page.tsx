@@ -9,10 +9,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { teamApi, authApi } from '@/lib/api';
 import { Spinner } from '@/components/common/Spinner';
+import { ProtectedRoute } from '@/components/auth';
 
 
 
-export default function TeamPage() {
+function TeamPageContent() {
   const [hasTeam, setHasTeam] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [team, setTeam] = useState<Team | null>(null);
@@ -402,5 +403,13 @@ export default function TeamPage() {
       onPositionChange={handlePositionFilter}
       isPlayersListLoading={isLoadingPlayers && !isLoadingMore}
     />
+  );
+}
+
+export default function TeamPage() {
+  return (
+    <ProtectedRoute>
+      <TeamPageContent />
+    </ProtectedRoute>
   );
 }
