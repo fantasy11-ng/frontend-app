@@ -284,17 +284,13 @@ const FootballPitch: React.FC<FootballPitchProps> = ({
                   className="relative cursor-pointer group flex flex-col items-center"
                 >
                   <div className="w-8 h-8 bg-white rounded-full border-2 border-gray-600 flex items-center justify-center shadow-md relative overflow-hidden">
-                    {player.countryFlag ? (
-                      <div className="flex items-center justify-center text-xl w-full h-full">
-                        {player.countryFlag}
-                      </div>
-                    ) : (
+                    {
                       <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
                         <span className="text-gray-600">
                           {player.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
-                    )}
+                    }
                   </div>
                   <div className="mt-1 text-center">
                     <div className="bg-black text-white text-[12px] px-1.5 py-0.5 rounded whitespace-nowrap">
