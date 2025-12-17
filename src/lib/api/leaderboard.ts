@@ -25,40 +25,35 @@ type RawGlobalLeaderboardEntry = {
   cards?: number;
 };
 
-type GlobalLeaderboardResponse = {
+type LeaderboardMeta = {
+  totalItems?: number;
+  itemCount?: number;
+  itemsPerPage?: number;
+  totalPages?: number;
+  currentPage?: number;
+};
+
+type LeaderboardMe = {
+  teamId?: string;
+  rank?: number;
+  totalPoints?: number;
+  budgetRemaining?: number;
+};
+
+type NestedLeaderboardData = {
   data?: RawGlobalLeaderboardEntry[];
-  // Some responses wrap payload inside data.data
-  dataNested?: {
-    data?: RawGlobalLeaderboardEntry[];
-    meta?: {
-      totalItems?: number;
-      itemCount?: number;
-      itemsPerPage?: number;
-      totalPages?: number;
-      currentPage?: number;
-    };
-    me?: {
-      teamId?: string;
-      rank?: number;
-      totalPoints?: number;
-      budgetRemaining?: number;
-    };
-  };
+  meta?: LeaderboardMeta;
+  me?: LeaderboardMe;
+};
+
+type GlobalLeaderboardResponse = {
+  // data can be an array directly OR an object with nested data
+  data?: RawGlobalLeaderboardEntry[] | NestedLeaderboardData;
+  dataNested?: NestedLeaderboardData;
   items?: RawGlobalLeaderboardEntry[];
   leaderboard?: RawGlobalLeaderboardEntry[];
-  meta?: {
-    totalItems?: number;
-    itemCount?: number;
-    itemsPerPage?: number;
-    totalPages?: number;
-    currentPage?: number;
-  };
-  me?: {
-    teamId?: string;
-    rank?: number;
-    totalPoints?: number;
-    budgetRemaining?: number;
-  };
+  meta?: LeaderboardMeta;
+  me?: LeaderboardMe;
 };
 
 export const leaderboardApi = {
@@ -113,10 +108,13 @@ export const leaderboardApi = {
       };
     });
 
+    // Extract nested metadata if data is an object (not an array)
+    const nestedData = !Array.isArray(payload.data) ? payload.data : undefined;
+
     return {
       items,
-      meta: payload.dataNested?.meta ?? payload.data?.meta ?? payload.meta,
-      me: payload.dataNested?.me ?? payload.data?.me ?? payload.me,
+      meta: payload.dataNested?.meta ?? nestedData?.meta ?? payload.meta,
+      me: payload.dataNested?.me ?? nestedData?.me ?? payload.me,
     };
   },
 };
