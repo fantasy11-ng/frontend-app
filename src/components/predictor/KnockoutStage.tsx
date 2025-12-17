@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Loader2, Check, Crown } from 'lucide-react';
+import { Check, Crown } from 'lucide-react';
 import { useBracketSeedWithQualified, useBracketPredictions } from '@/lib/api';
 import type { RoundCode, BracketPrediction, BracketSeedFixture } from '@/types/predictorStage';
 import Image from 'next/image';
+import { Spinner } from '../common/Spinner';
 
 interface KnockoutStageProps {
   stage: 'round16' | 'quarter' | 'semi';
@@ -247,7 +248,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
   if (seedLoading) {
     return (
       <div className="p-6 text-center">
-        <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-500" />
+        <Spinner size={24} className="text-[#4AA96C]" />
       </div>
     );
   }
@@ -288,7 +289,7 @@ export default function KnockoutStage({ stage, predictions, onUpdate, onNextStag
               className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold text-sm"
             >
               {isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Spinner size={24} className="text-[#4AA96C]" />
               ) : (
                 'Next Stage'
               )}

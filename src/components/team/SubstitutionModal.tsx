@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, ArrowRight } from 'lucide-react';
 import { SquadPlayer } from '@/types/team';
+import toast from 'react-hot-toast';
 
 interface SubstitutionModalProps {
   isOpen: boolean;
@@ -51,7 +52,7 @@ const SubstitutionModal: React.FC<SubstitutionModalProps> = ({
 
   const handleSubstitute = () => {
     if (!selectedPlayerOut) {
-      alert('Please select a player to replace');
+      toast.error('Please select a player to replace');
       return;
     }
 

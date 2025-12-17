@@ -22,6 +22,17 @@ export interface League {
   type: 'private' | 'global';
 }
 
+export interface UserLeague {
+  id: string;
+  name: string;
+  inviteCode?: string;
+  isPublic?: boolean;
+  participantCount?: number;
+  maxParticipants?: number;
+  isOwner?: boolean;
+  ownerName?: string;
+}
+
 export interface LeagueStats {
   globalRank: number;
   totalPoints: number;

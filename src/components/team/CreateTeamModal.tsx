@@ -7,13 +7,17 @@ import Image from 'next/image';
 interface CreateTeamModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreateTeam: (teamName: string, logo?: File) => void;
+  onCreateTeam: (teamName: string, logo?: File) => Promise<void>;
+  isSubmitting?: boolean;
+  errorMessage?: string | null;
 }
 
 const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
   isOpen,
   onClose,
   onCreateTeam,
+  isSubmitting,
+  errorMessage,
 }) => {
   const [teamName, setTeamName] = useState('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -42,16 +46,9 @@ const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (teamName.trim()) {
-      onCreateTeam(teamName.trim(), logoFile || undefined);
-      // Reset form
-      setTeamName('');
-      setLogoFile(null);
-      setLogoPreview(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      await onCreateTeam(teamName.trim(), logoFile || undefined);
     }
   };
 
@@ -68,8 +65,8 @@ const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
 
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Create your Team</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className="text-2xl font-semibold text-[#070A11] mb-1">Create your Team</h2>
+          <p className="text-sm text-[#656E81]">
             Set up your fantasy team with a unique name and logo
           </p>
         </div>
@@ -78,7 +75,7 @@ const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
         <div className="px-6 pb-6 space-y-4">
           {/* Team Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm text-[#656E81] mb-2">
               Team name
             </label>
             <input
@@ -86,13 +83,13 @@ const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
               value={teamName}
               onChange={(e) => setTeamName(e.target.value)}
               placeholder="Enter team name"
-              className="text-[#070A11] w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+              className="text-[#070A11] w-full px-4 text-sm py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
             />
           </div>
 
           {/* Team Logo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#656E81] mb-2">
               Team Logo (Optional)
             </label>
             
@@ -132,24 +129,31 @@ const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
             />
           </div>
 
+          {/* Error */}
+          {errorMessage && (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
+
           {/* Buttons */}
           <div className="flex space-x-3 pt-4">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-lg font-semibold text-gray-700 bg-white border-2 border-gray-300 hover:bg-gray-50 transition-colors"
+              className="flex-1 h-10 rounded-full font-semibold text-[#656E81] bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!teamName.trim()}
-              className={`flex-1 py-3 rounded-lg font-semibold text-white transition-colors ${
-                teamName.trim()
-                  ? 'bg-green-500 hover:bg-green-600'
+              disabled={!teamName.trim() || isSubmitting}
+              className={`flex-1 h-10 rounded-full font-semibold text-white transition-colors ${
+                teamName.trim() && !isSubmitting
+                  ? 'bg-[#4AA96C]'
                   : 'bg-gray-300 cursor-not-allowed'
               }`}
             >
-              Create Team
+              {isSubmitting ? 'Creating...' : 'Create Team'}
             </button>
           </div>
         </div>

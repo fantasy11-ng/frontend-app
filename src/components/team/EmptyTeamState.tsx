@@ -24,12 +24,12 @@ const EmptyTeamState: React.FC<EmptyTeamStateProps> = ({ onCreateTeam }) => {
           </div>
 
           {/* Welcome Message */}
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#070A11] text-center mb-1">
             Welcome to Fantasy11
           </h2>
 
           {/* Description */}
-          <p className="text-center text-gray-600 mb-8 text-lg">
+          <p className="text-center text-[#656E81] mb-8 text-sm">
             Create your team to start competing in AFCON 2025
           </p>
 
@@ -53,7 +53,7 @@ const EmptyTeamState: React.FC<EmptyTeamStateProps> = ({ onCreateTeam }) => {
           <div className="flex justify-center">
             <button
               onClick={onCreateTeam}
-              className="px-8 py-4 bg-green-500 text-white rounded-lg font-semibold text-lg hover:bg-green-600 transition-colors"
+              className="w-full max-w-[580px] px-8 h-10 bg-[#4AA96C] text-white rounded-full font-semibold text-base"
             >
               Create Team
             </button>

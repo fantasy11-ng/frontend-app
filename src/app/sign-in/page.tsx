@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGoogleOAuth } from '@/lib/api/hooks/useOAuth';
 import AuthLogo from '@/components/auth/AuthLogo';
+import { Spinner } from '@/components/common/Spinner';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -154,7 +155,7 @@ export default function SignInPage() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin inline-block" />
+                  <Spinner size={16} className="mr-2 inline-block" />
                   Logging in...
                 </>
               ) : (

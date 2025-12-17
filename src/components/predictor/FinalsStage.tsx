@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Crown, Loader2 } from 'lucide-react';
+import { Crown } from 'lucide-react';
 import { useBracketSeed, useThirdPlaceMatchSeed, useBracketPredictions, useThirdPlaceMatchPrediction } from '@/lib/api';
 import type { BracketPrediction, BracketSeedFixture, BracketSeedTeam } from '@/types/predictorStage';
 import Image from 'next/image';
+import { Spinner } from '../common/Spinner';
 
 interface FinalsPredictions {
   thirdPlace: string; // winner team name
@@ -230,7 +231,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
   if (seedLoading) {
     return (
       <div className="p-6 text-center">
-        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-gray-500" />
+        <Spinner size={24} className="text-[#4AA96C]" />
       </div>
     );
   }
@@ -295,7 +296,7 @@ export default function FinalsStage({ predictions, onUpdate, onSave, isSubmittin
             }`}
           >
             {isSubmitting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Spinner size={24} className="text-[#4AA96C]" />
             ) : (
               'Submit Predictions'
             )}

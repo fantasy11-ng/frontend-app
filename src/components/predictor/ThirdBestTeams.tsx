@@ -2,12 +2,13 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Check, Loader2, Crown } from 'lucide-react';
+import { Check, Crown } from 'lucide-react';
 import { useThirdPlacedQualifiers } from '@/lib/api';
 import { predictorApi } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import type { Group } from '@/types/predictor';
+import { Spinner } from '../common/Spinner';
 
 interface ThirdBestTeamsProps {
   predictions: string[]; // selected team names
@@ -186,7 +187,7 @@ export default function ThirdBestTeams({
   if (isLoadingSaved) {
     return (
       <div className="p-6 text-center">
-        <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-500" />
+        <Spinner size={24} className="text-[#4AA96C]" />
       </div>
     );
   }
@@ -218,7 +219,7 @@ export default function ThirdBestTeams({
               className="px-6 py-2 bg-[#4AA96C] text-white rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center font-semibold text-sm"
             >
               {isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Spinner size={24} className="text-[#4AA96C]" />
               ) : (
                 'Next Stage'
               )}
