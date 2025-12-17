@@ -105,7 +105,7 @@ export default function LandingPage() {
                   roles to maximize points.
                 </p>
                 <Link
-                  href="/team"
+                  href="/my-team"
                   className="bg-[#4AA96C] text-sm inline-flex items-center px-3 py-2 text-white font-medium rounded-full transition-colors"
                 >
                   Build your team <ChevronRight className="w-4 h-4 ml-2" />

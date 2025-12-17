@@ -16,6 +16,7 @@ import { teamApi } from "@/lib/api/team";
 import { Spinner } from "@/components/common/Spinner";
 import { useCurrentUser } from "@/lib/api/hooks/useAuth";
 import { GlobalRanking } from "@/types/ranking";
+import { ProtectedRoute } from "@/components/auth";
 
 const mockChampionshipDetails: ChampionshipDetails = {
   totalPrizePool: "₦1,000,000",
@@ -34,7 +35,7 @@ interface UserStats {
   totalAssists: number;
 }
 
-export default function LeaguePage() {
+function LeaguePageContent() {
   const router = useRouter();
   const { data: currentUser } = useCurrentUser();
   const [showChooseModal, setShowChooseModal] = useState(false);
@@ -584,5 +585,13 @@ export default function LeaguePage() {
         }
       />
     </>
+  );
+}
+
+export default function LeaguePage() {
+  return (
+    <ProtectedRoute>
+      <LeaguePageContent />
+    </ProtectedRoute>
   );
 }

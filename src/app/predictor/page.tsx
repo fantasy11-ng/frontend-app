@@ -27,6 +27,7 @@ import type { Group } from "@/types/predictor";
 import type { RoundCode, BracketPrediction } from "@/types/predictorStage";
 import Image from "next/image";
 import { Spinner } from "@/components/common/Spinner";
+import { ProtectedRoute } from "@/components/auth";
 
 export type PredictionStage =
   | "group"
@@ -1176,14 +1177,16 @@ function PredictorPageContent() {
 
 export default function PredictorPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <Spinner size={24} className="text-[#4AA96C]" />
-        </div>
-      }
-    >
-      <PredictorPageContent />
-    </Suspense>
+    <ProtectedRoute>
+      <Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <Spinner size={24} className="text-[#4AA96C]" />
+          </div>
+        }
+      >
+        <PredictorPageContent />
+      </Suspense>
+    </ProtectedRoute>
   );
 }

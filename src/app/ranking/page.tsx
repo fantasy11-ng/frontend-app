@@ -8,6 +8,7 @@ import AthleteRankingsTable from "@/components/ranking/AthleteRankingsTable";
 import { GlobalRanking, AthleteRanking } from "@/types/ranking";
 import { leaderboardApi } from "@/lib/api";
 import { Spinner } from "@/components/common/Spinner";
+import { ProtectedRoute } from "@/components/auth";
 
 const mockAthleteRankings: AthleteRanking[] = [
   {
@@ -124,7 +125,7 @@ const mockAthleteRankings: AthleteRanking[] = [
 
 type TabType = "global" | "athlete";
 
-export default function RankingPage() {
+function RankingPageContent() {
   const [activeTab, setActiveTab] = useState<TabType>("global");
   const [globalRankings, setGlobalRankings] = useState<GlobalRanking[]>([]);
   const [loadingGlobal, setLoadingGlobal] = useState<boolean>(true);
@@ -251,5 +252,13 @@ export default function RankingPage() {
         </div>
       )}
     </>
+  );
+}
+
+export default function RankingPage() {
+  return (
+    <ProtectedRoute>
+      <RankingPageContent />
+    </ProtectedRoute>
   );
 }

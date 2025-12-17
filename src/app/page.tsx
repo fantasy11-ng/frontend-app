@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { Spinner } from '@/components/common/Spinner';
 
 export default function Home() {
+
   const { isAuthenticated, isLoading } = useAuth();
   const [mounted, setMounted] = useState(false);
   const ready = true;
