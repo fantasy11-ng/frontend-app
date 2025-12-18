@@ -207,7 +207,7 @@ function TeamPageContent() {
             name: p.commonName || p.name || 'Player',
             commonName: p.commonName || 'Player',
             position: normalizePosition(pos),
-            country: '',
+            countryId: p.countryId,
             price: p.price ?? 0,
             points: p.points ?? 0,
             rating: p.rating ?? 0,

@@ -5,6 +5,7 @@ import { X, Search, Plus, Check } from "lucide-react";
 import { Player, PlayerPosition, SquadValidation } from "@/types/team";
 import toast from "react-hot-toast";
 import { Spinner } from "../common/Spinner";
+import { getCountryName, countryImagesMap } from "@/lib/constants/countries";
 
 interface AssignStarting11ModalProps {
   isOpen: boolean;
@@ -270,7 +271,9 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
 
         {/* Player List */}
         <div
-          className={`flex-1 px-6 py-4 relative ${isLoadingList ? 'overflow-hidden' : 'overflow-y-auto'}`}
+          className={`flex-1 px-6 py-4 relative ${
+            isLoadingList ? "overflow-hidden" : "overflow-y-auto"
+          }`}
           onScroll={handleScroll}
         >
           {/* Loading overlay - covers full container and blocks interaction */}
@@ -322,7 +325,8 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
                             )}
                           </div>
                           <p className="text-sm text-gray-600 mt-1">
-                            {player.country} • {formatPrice(player.price)}
+                            {getCountryName(player.countryId)} •{" "}
+                            {formatPrice(player.price)}
                           </p>
                         </div>
                         <div className="flex items-center space-x-3">
