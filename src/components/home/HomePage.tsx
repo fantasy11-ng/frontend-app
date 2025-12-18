@@ -17,6 +17,7 @@ type HomeFixture = Fixture & {
   time?: string;
   status?: "LIVE" | null;
   startsAt?: string;
+  gameweekId?: number | null;
 };
 
 const formatDate = (dateString: string): string => {
@@ -64,7 +65,6 @@ export default function HomePage() {
 
   // Team card info
   const [team, setTeam] = useState<Team | null>(null);
-  const [currentGameweek, setCurrentGameweek] = useState<number | null>(null);
   const [squadPlayers, setSquadPlayers] = useState<
     Array<{
       id: string | number;
@@ -161,13 +161,10 @@ export default function HomePage() {
             return orderA - orderB;
           });
         setSquadPlayers(mapped);
-        setCurrentGameweek(teamData?.currentSquad?.gameweekId ?? null);
       } catch {
         // User may not have a team yet
         setTeam(null);
         setSquadPlayers([]);
-        setCurrentGameweek(null);
-        setCurrentGameweek(null);
       }
     };
 
@@ -211,6 +208,7 @@ export default function HomePage() {
             time,
             status: isLive ? "LIVE" : null,
             startsAt: fx.startingAt ?? undefined,
+            gameweekId: fx.gameweekId ?? null,
           };
         });
         setFixtures(mapped);
@@ -295,7 +293,7 @@ export default function HomePage() {
           {/* Gameweek Info Bar */}
           <div className="flex flex-wrap items-center gap-3 mb-8 pb-4">
             <span className="px-4 py-2 bg-[#F5EBEB] text-[#800000] rounded-full text-sm font-medium">
-              Gameweek {currentGameweek ?? "-"}
+              {fixtures[0]?.gameweekId ? `Gameweek ${fixtures[0].gameweekId}` : "Gameweek -"}
             </span>
             <div className="flex items-center text-[#656E81] border border-[#D4D7DD] rounded-full px-2 py-1">
               <Clock className="w-4 h-4 mr-2" />
@@ -714,7 +712,7 @@ export default function HomePage() {
                 fixtures.map((match) => (
                   <div
                     key={match.id}
-                    className="flex items-start justify-between px-4 py-3 rounded-lg border border-[#F1F2F4] transition-colors"
+                    className="flex flex-wrap gap-2 items-start justify-between px-4 py-3 rounded-lg border border-[#F1F2F4] transition-colors"
                   >
                     <div className="">
                       <div className="flex items-center justify-between gap-2 sm:gap-8">
@@ -745,7 +743,7 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    <div className="lg:ml-4">
+                    <div className="xl:ml-4">
                       {match.status === "LIVE" ? (
                         <span className="px-2 py-1 bg-[#FE5E41] text-white text-xs font-medium rounded-full flex items-center gap-1">
                           <span className="font-black">•</span> LIVE

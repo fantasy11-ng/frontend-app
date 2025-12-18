@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Player, PlayerListMeta } from '@/types/stats';
 import { 
@@ -71,6 +71,21 @@ export default function PlayersTable({
   
   // Get countries from the constants, sorted alphabetically
   const countries = ['All Countries', ...COUNTRY_NAMES];
+
+  // Disable body scroll when any dropdown is open on mobile
+  const isAnyDropdownOpen = showPositionFilter || showCountryFilter || showPointsFilter;
+  
+  useEffect(() => {
+    if (isAnyDropdownOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAnyDropdownOpen]);
   
   // Filter countries based on search
   const filteredCountries = countries.filter(country => 
@@ -172,7 +187,7 @@ export default function PlayersTable({
             )}
           </div>
 
-          <div className="flex gap-2 sm:flex-row flex-wrap justify-end sm:gap-3">
+          <div className="flex gap-2 sm:flex-row sm:flex-wrap justify-end sm:gap-3">
             <div className="relative">
               <button
                 onClick={() => {
@@ -186,19 +201,25 @@ export default function PlayersTable({
                 <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
               </button>
               {showPositionFilter && (
-                <div className="absolute top-full mt-2 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
-                  <div className="p-2">
-                    {positions.map((position) => (
-                      <button
-                        key={position}
-                        onClick={() => handlePositionChange(position)}
-                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        {position}
-                      </button>
-                    ))}
+                <>
+                  <div 
+                    className="fixed inset-0 z-40 bg-black/50 sm:hidden" 
+                    onClick={() => setShowPositionFilter(false)}
+                  />
+                  <div className="fixed left-4 right-4 top-1/3 z-50 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-48 rounded-2xl border border-gray-200 bg-white shadow-xl">
+                    <div className="p-2">
+                      {positions.map((position) => (
+                        <button
+                          key={position}
+                          onClick={() => handlePositionChange(position)}
+                          className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          {position}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
 
@@ -216,38 +237,44 @@ export default function PlayersTable({
                 <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
               </button>
               {showCountryFilter && (
-                <div className="absolute top-full mt-2 w-64 max-h-96 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
-                  <div className="sticky top-0 border-b border-gray-200 p-2 bg-white rounded-t-2xl">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                      <input
-                        type="text"
-                        value={countrySearchQuery}
-                        onChange={(e) => setCountrySearchQuery(e.target.value)}
-                        placeholder="Search countries..."
-                        className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
-                        autoFocus
-                      />
+                <>
+                  <div 
+                    className="fixed inset-0 z-40 bg-black/50 sm:hidden" 
+                    onClick={() => setShowCountryFilter(false)}
+                  />
+                  <div className="fixed left-4 right-4 top-1/3 z-50 max-h-[60vh] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-64 sm:max-h-96 rounded-2xl border border-gray-200 bg-white shadow-xl">
+                    <div className="sticky top-0 border-b border-gray-200 p-2 bg-white rounded-t-2xl">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          value={countrySearchQuery}
+                          onChange={(e) => setCountrySearchQuery(e.target.value)}
+                          placeholder="Search countries..."
+                          className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <div className="p-2 max-h-72 overflow-y-auto">
+                      {filteredCountries.length > 0 ? (
+                        filteredCountries.map((country) => (
+                          <button
+                            key={country}
+                            onClick={() => handleCountryChange(country)}
+                            className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                              selectedCountry === country ? 'bg-gray-100 text-[#4AA96C] font-medium' : 'text-gray-700'
+                            }`}
+                          >
+                            {country}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-2 text-sm text-gray-500">No countries found</p>
+                      )}
                     </div>
                   </div>
-                  <div className="p-2 max-h-72 overflow-y-auto">
-                    {filteredCountries.length > 0 ? (
-                      filteredCountries.map((country) => (
-                        <button
-                          key={country}
-                          onClick={() => handleCountryChange(country)}
-                          className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100 ${
-                            selectedCountry === country ? 'bg-gray-100 text-[#4AA96C] font-medium' : 'text-gray-700'
-                          }`}
-                        >
-                          {country}
-                        </button>
-                      ))
-                    ) : (
-                      <p className="px-3 py-2 text-sm text-gray-500">No countries found</p>
-                    )}
-                  </div>
-                </div>
+                </>
               )}
             </div>
 
@@ -264,25 +291,31 @@ export default function PlayersTable({
                 <ChevronDown className="ml-2 h-4 w-4 text-[#7C8395]" />
               </button>
               {showPointsFilter && (
-                <div className="absolute top-full mt-2 w-48 rounded-2xl border border-gray-200 bg-white shadow-xl z-10">
-                  <div className="p-2">
-                    {SORT_OPTIONS.map((option) => (
-                      <button
-                        key={option.label}
-                        onClick={() => {
-                          setSelectedPointsFilter(option.label);
-                          setShowPointsFilter(false);
-                          onSortChange?.(option.sortBy);
-                        }}
-                        className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100 ${
-                          selectedPointsFilter === option.label ? 'bg-gray-100 text-[#4AA96C] font-medium' : 'text-gray-700'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
+                <>
+                  <div 
+                    className="fixed inset-0 z-40 bg-black/50 sm:hidden" 
+                    onClick={() => setShowPointsFilter(false)}
+                  />
+                  <div className="fixed left-4 right-4 top-1/3 z-50 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-48 rounded-2xl border border-gray-200 bg-white shadow-xl">
+                    <div className="p-2">
+                      {SORT_OPTIONS.map((option) => (
+                        <button
+                          key={option.label}
+                          onClick={() => {
+                            setSelectedPointsFilter(option.label);
+                            setShowPointsFilter(false);
+                            onSortChange?.(option.sortBy);
+                          }}
+                          className={`w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-100 ${
+                            selectedPointsFilter === option.label ? 'bg-gray-100 text-[#4AA96C] font-medium' : 'text-gray-700'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
             </div>
           </div>
@@ -398,7 +431,7 @@ export default function PlayersTable({
           </div>
 
           {/* Pagination */}
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+          <div className="sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
             <div className="text-sm text-gray-600 hidden md:block">
               Showing {startIndex} to {endIndex} of {meta.totalItems}
             </div>

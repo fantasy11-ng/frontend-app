@@ -82,7 +82,7 @@ export default function NewsPage() {
     <div className="min-h-screen bg-[#FFFFFF]">
       <div className="max-w-[1440px] mx-auto px-4 md:px-12 py-8">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
+        <div className="mb-8 flex flex-col md:flex-row justify-between md:items-center">
           <div>
             <h1 className="text-3xl font-bold text-[#070A11] mb-2">
               Latest News
@@ -91,9 +91,9 @@ export default function NewsPage() {
               Stay updated with AFCON 2025 developments
             </p>
           </div>
-          <div>
+          <div className="w-full md:w-auto">
             {/* Search and Filter */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex w-full md:w-auto flex-col sm:flex-row gap-4">
               {/* Search Bar */}
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -104,7 +104,7 @@ export default function NewsPage() {
                   placeholder="Search news articles..."
                   value={searchQuery}
                   onChange={handleSearch}
-                  className="max-w-[268px] h-9 text-sm text-[#070A11] block w-full pl-10 pr-14 border border-gray-300 rounded-lg focus:border-transparent"
+                  className="md:max-w-[268px] h-9 text-sm text-[#070A11] block w-full pl-10 pr-14 border border-gray-300 rounded-lg focus:border-transparent"
                 />
                 {searchQuery && (
                   <button
@@ -122,7 +122,7 @@ export default function NewsPage() {
                   onClick={() =>
                     setIsCategoryDropdownOpen(!isCategoryDropdownOpen)
                   }
-                  className="flex items-center px-4 py-3 h-9 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:border-transparent min-w-[200px]"
+                  className="flex items-center px-4 py-3 h-9 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 focus:ring-2 focus:border-transparent w-full min-w-[200px]"
                 >
                   <span className="flex-1 text-left text-sm text-[#656E81]">
                     {selectedCategoryLabel}
