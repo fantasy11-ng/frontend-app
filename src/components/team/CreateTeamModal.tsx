@@ -47,8 +47,8 @@ const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
   };
 
   const handleSubmit = async () => {
-    if (teamName.trim()) {
-      await onCreateTeam(teamName.trim(), logoFile || undefined);
+    if (teamName.trim() && logoFile) {
+      await onCreateTeam(teamName.trim(), logoFile);
     }
   };
 
@@ -90,7 +90,7 @@ const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
           {/* Team Logo */}
           <div>
             <label className="block text-sm font-medium text-[#656E81] mb-2">
-              Team Logo (Optional)
+              Team Logo <span className="text-red-500">*</span>
             </label>
             
             {logoPreview ? (
@@ -146,9 +146,9 @@ const CreateTeamModal: React.FC<CreateTeamModalProps> = ({
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!teamName.trim() || isSubmitting}
+              disabled={!teamName.trim() || !logoFile || isSubmitting}
               className={`flex-1 h-10 rounded-full font-semibold text-white transition-colors ${
-                teamName.trim() && !isSubmitting
+                teamName.trim() && logoFile && !isSubmitting
                   ? 'bg-[#4AA96C]'
                   : 'bg-gray-300 cursor-not-allowed'
               }`}
