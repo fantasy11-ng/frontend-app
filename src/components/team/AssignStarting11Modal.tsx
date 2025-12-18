@@ -231,7 +231,7 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
 
         {/* Search and Filters */}
         <div className="px-6 py-4 border-b border-gray-200 flex-shrink-0">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-4 flex-wrap gap-y-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
@@ -242,13 +242,13 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
                   onSearchChange?.(e.target.value);
                 }}
                 placeholder="Search players or teams..."
-                className="text-[#070A11] w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="text-[#070A11] w-full min-w-[200px] pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
               />
             </div>
             <select
               value={selectedPosition}
               onChange={(e) => onPositionChange?.(e.target.value)}
-              className="text-[#070A11] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="text-[#070A11] min-w-[150px] px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               {positions.map((pos) => (
                 <option key={pos} value={pos}>
@@ -379,33 +379,35 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-y-4">
             <div className="text-sm text-gray-600">
               <p>
-                Squad: {squadCount}/15 • GK: {getPositionCount("GK")}/
-                {SQUAD_RULES.squad.GK} • DEF: {getPositionCount("DEF")}/
-                {SQUAD_RULES.squad.DEF} • MID: {getPositionCount("MID")}/
-                {SQUAD_RULES.squad.MID} • ATT: {getPositionCount("ATT")}/
-                {SQUAD_RULES.squad.ATT}
+                <span className="font-bold">GK</span>: {getPositionCount("GK")}/
+                {SQUAD_RULES.squad.GK} • <span className="font-bold">DEF</span>:{" "}
+                {getPositionCount("DEF")}/{SQUAD_RULES.squad.DEF} •{" "}
+                <span className="font-bold">MID</span>:{" "}
+                {getPositionCount("MID")}/{SQUAD_RULES.squad.MID} •{" "}
+                <span className="font-bold">ATT</span>:{" "}
+                {getPositionCount("ATT")}/{SQUAD_RULES.squad.ATT}
               </p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex justify-center w-full md:w-auto space-x-3">
               <button
                 onClick={onClose}
-                className="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="min-w-[125px] px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={squadCount !== 15}
-                className={`px-6 py-2 rounded-lg font-medium text-white transition-colors ${
+                className={`min-w-[125px] px-6 py-2 rounded-lg font-medium text-white transition-colors ${
                   squadCount === 15
                     ? "bg-green-500 hover:bg-green-600"
                     : "bg-gray-300 cursor-not-allowed"
                 }`}
               >
-                Approve starting 11
+                Approve
               </button>
             </div>
           </div>
