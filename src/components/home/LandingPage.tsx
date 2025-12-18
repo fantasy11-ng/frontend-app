@@ -49,9 +49,9 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-black/10"></div>
 
         <div className="relative min-h-screen flex flex-col">
-          <div className="flex-1 flex flex-col justify-end max-w-[1440px] mx-auto py-24 sm:py-32">
-            <div className="">
-              <div className="flex items-start space-x-4 max-w-2xl mt-32 sm:mt-40 md:mt-48">
+          <div className="flex-1 flex flex-col justify-end max-w-[1440px] mx-auto py-12 md:py-24 sm:py-32">
+            <div className="px-4 md:px-0 flex flex-col gap-8">
+              <div className="flex flex-col md:flex-row items-start space-x-4 max-w-2xl mt-32 sm:mt-40 md:mt-48">
                 <div className="flex-shrink-0">
                   <svg
                     width="80"
@@ -73,7 +73,7 @@ export default function LandingPage() {
                   incredible prizes.
                 </p>
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight capitalize">
                 Build your Dream Team
               </h1>
             </div>
@@ -93,7 +93,7 @@ export default function LandingPage() {
             {/* Feature 1 */}
             <div className="space-y-6 border border-[#F1F2F4] rounded-2xl">
               <div className="px-4 py-2">
-                <div className="flex items-center space-x-2 text-[#070A11] text-sm">
+                <div className="flex items-center gap-2 my-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-1">
@@ -111,13 +111,13 @@ export default function LandingPage() {
                   Build your team <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg md:h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Container_fppxgt.png"
                   alt="Team Builder"
                   width={758}
                   height={384}
-                  className="object-contain w-full max-w-[758px] h-[384px]"
+                  className="object-contain w-full max-w-[758px] md:h-[384px]"
                 />
               </div>
             </div>
@@ -125,7 +125,7 @@ export default function LandingPage() {
             {/* Feature 2 */}
             <div className="space-y-6 border border-[#F1F2F4] rounded-2xl md:max-w-[530px]">
               <div className="px-4 py-2">
-                <div className="flex items-center space-x-2 text-[#070A11] text-sm">
+                <div className="flex items-center gap-2 my-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -143,13 +143,13 @@ export default function LandingPage() {
                   Start predicting <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg md:h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Frame_jygnal.png"
                   alt="Team Builder"
                   width={530}
                   height={360}
-                  className="object-contain w-full max-w-[530px] h-[360px]"
+                  className="object-contain w-full max-w-[530px] md:h-[360px]"
                 />
               </div>
             </div>
@@ -157,7 +157,7 @@ export default function LandingPage() {
             {/* Feature 3 */}
             <div className="space-y-6">
               <div>
-                <div className="flex items-center space-x-2 text-[#070A11] text-sm">
+                <div className="flex items-center gap-2 my-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -175,7 +175,7 @@ export default function LandingPage() {
                   Join a league <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg md:h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267172/Container_1_yivji1.png"
                   alt="Team Builder"
@@ -188,7 +188,7 @@ export default function LandingPage() {
             {/* Feature 4 */}
             <div className="space-y-6">
               <div>
-                <div className="flex items-center space-x-2 text-[#070A11] text-sm">
+                <div className="flex items-center gap-2 my-2 text-[#070A11] text-sm">
                   <Calendar color="#800000" strokeWidth={2.5} /> Time management
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">
@@ -205,7 +205,7 @@ export default function LandingPage() {
                   See statistics <ChevronRight className="w-4 h-4 ml-2" />
                 </Link>
               </div>
-              <div className="rounded-lg h-80 flex items-center justify-center">
+              <div className="rounded-lg md:h-80 flex items-center justify-center">
                 <Image
                   src="https://res.cloudinary.com/dmfsyau8s/image/upload/v1764267173/Background_ekx6eu.png"
                   alt="Team Builder"
