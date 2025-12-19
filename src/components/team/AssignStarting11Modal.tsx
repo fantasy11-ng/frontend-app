@@ -12,7 +12,7 @@ interface AssignStarting11ModalProps {
   onClose: () => void;
   players: Player[];
   budget: number;
-  onSave: (selectedPlayers: Player[]) => void;
+  onSave: (selectedPlayers: Player[]) => Promise<void> | void;
   onLoadMore?: () => void;
   canLoadMore?: boolean;
   onSearchChange?: (value: string) => void;
@@ -54,6 +54,7 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
   const [selectedPlayers, setSelectedPlayers] = useState<Player[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [showMySquad, setShowMySquad] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const positions: (PlayerPosition | "All")[] = [
     "All",
@@ -179,14 +180,24 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const validation = validateSquad();
     if (!validation.isValid) {
       toast.error(validation.errors.join("\n"));
       return;
     }
-    onSave(selectedPlayers);
-    onClose();
+    
+    setIsSaving(true);
+    try {
+      await onSave(selectedPlayers);
+      toast.success("Squad saved successfully!");
+      onClose();
+    } catch (error) {
+      // Error is already handled in handleSaveSquad, but we catch here to prevent unhandled rejection
+      console.error("Failed to save squad:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -394,20 +405,30 @@ const AssignStarting11Modal: React.FC<AssignStarting11ModalProps> = ({
             <div className="flex justify-center w-full md:w-auto space-x-3">
               <button
                 onClick={onClose}
-                className="min-w-[125px] px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={isSaving}
+                className={`min-w-[125px] px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-700 transition-colors ${
+                  isSaving ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-50"
+                }`}
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                disabled={squadCount !== 15}
-                className={`min-w-[125px] px-6 py-2 rounded-lg font-medium text-white transition-colors ${
-                  squadCount === 15
+                disabled={squadCount !== 15 || isSaving}
+                className={`min-w-[125px] px-6 py-2 rounded-lg font-medium text-white transition-colors flex items-center justify-center gap-2 ${
+                  squadCount === 15 && !isSaving
                     ? "bg-green-500 hover:bg-green-600"
                     : "bg-gray-300 cursor-not-allowed"
                 }`}
               >
-                Approve
+                {isSaving ? (
+                  <>
+                    <Spinner size={16} className="text-white" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  "Approve"
+                )}
               </button>
             </div>
           </div>

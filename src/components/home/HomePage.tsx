@@ -681,7 +681,7 @@ export default function HomePage() {
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Remaining</p>
                 <p className="text-3xl text-[#800000]">
-                  {team?.budgetRemaining ? `${team?.budgetRemaining}M` : "--"}
+                  {team?.budgetRemaining != null ? `${team.budgetRemaining}M` : "--"}
                 </p>
               </div>
             </div>
