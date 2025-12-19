@@ -175,11 +175,20 @@ function TeamPageContent() {
         }
       }
     } catch (error) {
-      const message =
-        (error as { response?: { data?: { message?: string } }; message?: string })?.response?.data?.message ||
-        (error as { message?: string })?.message ||
-        'Failed to load team. Please try again.';
-      setCreateTeamError(message);
+      // Check if this is a 404 "team not found" error - this is expected when no team exists
+      const statusCode = (error as { response?: { status?: number; data?: { error?: { statusCode?: number } } } })?.response?.status ||
+        (error as { response?: { data?: { error?: { statusCode?: number } } } })?.response?.data?.error?.statusCode;
+      const errorMessage = (error as { response?: { data?: { error?: { message?: string }; message?: string } } })?.response?.data?.error?.message ||
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (error as { message?: string })?.message;
+      
+      // Don't show error for expected "team not found" 404 - user just hasn't created a team yet
+      if (statusCode === 404 || errorMessage?.toLowerCase().includes('team not found')) {
+        // This is expected, not an error - just means user needs to create a team
+        return;
+      }
+      
+      setCreateTeamError(errorMessage || 'Failed to load team. Please try again.');
     } finally {
       setIsFetchingTeam(false);
     }

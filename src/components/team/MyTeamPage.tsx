@@ -643,7 +643,7 @@ console.log(apiPlayers)
       await syncRolesWithApi(squad);
 
       setSquadPlayers(squad);
-      setShowAssignModal(false);
+      // Modal handles closing itself on success
     } catch (error) {
       const message =
         (
@@ -655,6 +655,7 @@ console.log(apiPlayers)
         (error as { message?: string })?.message ||
         "Failed to save squad. Please try again.";
       toast.error(message);
+      throw error; // Re-throw so the modal knows the save failed
     }
   };
 
