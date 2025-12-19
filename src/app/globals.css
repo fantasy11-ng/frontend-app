@@ -20,6 +20,12 @@ body {
   font-family: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 }
 
+/* Make all buttons have pointer cursor by default */
+button,
+[role="button"] {
+  cursor: pointer;
+}
+
 /* Line clamp utilities */
 .line-clamp-2 {
   display: -webkit-box;

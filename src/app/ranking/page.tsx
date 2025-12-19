@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import GlobalRankingsTable from "@/components/ranking/GlobalRankingsTable";
 import AthleteRankingsTable from "@/components/ranking/AthleteRankingsTable";
 import { GlobalRanking, AthleteRanking } from "@/types/ranking";
 import { leaderboardApi } from "@/lib/api";
 import { Spinner } from "@/components/common/Spinner";
+import NoTeamModal from "@/components/common/NoTeamModal";
 import { ProtectedRoute } from "@/components/auth";
 
 const mockAthleteRankings: AthleteRanking[] = [
@@ -126,10 +128,12 @@ const mockAthleteRankings: AthleteRanking[] = [
 type TabType = "global" | "athlete";
 
 function RankingPageContent() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>("global");
   const [globalRankings, setGlobalRankings] = useState<GlobalRanking[]>([]);
   const [loadingGlobal, setLoadingGlobal] = useState<boolean>(true);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [showNoTeamModal, setShowNoTeamModal] = useState<boolean>(false);
   const ready = true;
 
   useEffect(() => {
@@ -147,17 +151,27 @@ function RankingPageContent() {
           setGlobalRankings(items);
         }
       } catch (error) {
+        const errorResponse = error as {
+          response?: { data?: { message?: string; error?: { message?: string } } };
+          message?: string;
+        };
         const message =
-          (
-            error as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          )?.response?.data?.message ??
-          (error as { message?: string })?.message ??
+          errorResponse?.response?.data?.error?.message ??
+          errorResponse?.response?.data?.message ??
+          errorResponse?.message ??
           "Failed to load global leaderboard.";
+        
+        // Check if the error is because user doesn't have a team
+        const isNoTeamError = message.toLowerCase().includes("fantasy team not found") ||
+          message.toLowerCase().includes("team not found");
+        
         if (isMounted) {
-          setGlobalError(message);
+          if (isNoTeamError) {
+            setShowNoTeamModal(true);
+            setGlobalError(null);
+          } else {
+            setGlobalError(message);
+          }
         }
       } finally {
         if (isMounted) {
@@ -175,6 +189,10 @@ function RankingPageContent() {
 
   return (
     <>
+      <NoTeamModal 
+        isOpen={showNoTeamModal} 
+        onGoBack={() => router.push("/")}
+      />
       {ready ? (
         <div className="min-h-screen bg-gray-50">
           <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
