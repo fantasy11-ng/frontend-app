@@ -14,6 +14,7 @@ import { ChampionshipDetails, LeagueOption, UserLeague } from "@/types/league";
 import { leagueApi, leaderboardApi } from "@/lib/api";
 import { teamApi } from "@/lib/api/team";
 import { Spinner } from "@/components/common/Spinner";
+import NoTeamModal from "@/components/common/NoTeamModal";
 import { useCurrentUser } from "@/lib/api/hooks/useAuth";
 import { GlobalRanking } from "@/types/ranking";
 import { ProtectedRoute } from "@/components/auth";
@@ -63,6 +64,7 @@ function LeaguePageContent() {
   const [copyingLeagueId, setCopyingLeagueId] = useState<string | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [isLoadingUserStats, setIsLoadingUserStats] = useState(false);
+  const [showNoTeamModal, setShowNoTeamModal] = useState(false);
   const ready = true;
 
   const getErrorMessage = useCallback((error: unknown, fallback: string) => {
@@ -136,7 +138,23 @@ function LeaguePageContent() {
           totalAssists: userEntry?.assists ?? 0,
         });
       } catch (error) {
-        console.error("Failed to fetch user stats:", error);
+        const errorResponse = error as {
+          response?: { data?: { message?: string; error?: { message?: string } } };
+          message?: string;
+        };
+        const message =
+          errorResponse?.response?.data?.error?.message ??
+          errorResponse?.response?.data?.message ??
+          errorResponse?.message ??
+          "";
+        
+        // Check if the error is because user doesn't have a team
+        const isNoTeamError = message.toLowerCase().includes("fantasy team not found") ||
+          message.toLowerCase().includes("team not found");
+        
+        if (isNoTeamError) {
+          setShowNoTeamModal(true);
+        }
       } finally {
         setIsLoadingUserStats(false);
       }
@@ -303,10 +321,12 @@ function LeaguePageContent() {
   const showChampionship =
     !hasLeagues && currentView === "championship" && !currentLeague;
 
-    console.log(userStats)
-
   return (
     <>
+      <NoTeamModal 
+        isOpen={showNoTeamModal} 
+        onGoBack={() => router.push("/")}
+      />
       {showChampionship && (
         <ChampionshipPage
           details={mockChampionshipDetails}
