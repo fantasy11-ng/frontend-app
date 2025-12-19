@@ -1,16 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowUpDown, ArrowDown, ArrowUp, Crown } from 'lucide-react';
+import { ArrowUpDown, ArrowDown, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
 import { GlobalRanking, SortField, SortDirection } from '@/types/ranking';
 
 interface GlobalRankingsTableProps {
   rankings: GlobalRanking[];
+  itemsPerPage?: number;
 }
 
-export default function GlobalRankingsTable({ rankings }: GlobalRankingsTableProps) {
+const ITEMS_PER_PAGE = 20;
+
+export default function GlobalRankingsTable({ rankings, itemsPerPage = ITEMS_PER_PAGE }: GlobalRankingsTableProps) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -66,6 +70,18 @@ export default function GlobalRankingsTable({ rankings }: GlobalRankingsTablePro
       return bValue - aValue;
     }
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(sortedRankings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRankings = sortedRankings.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field || !sortDirection) {
@@ -134,18 +150,20 @@ export default function GlobalRankingsTable({ rankings }: GlobalRankingsTablePro
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {sortedRankings.map((ranking) => (
+            {paginatedRankings.map((ranking, index) => {
+              const displayRank = startIndex + index + 1;
+              return (
               <tr key={ranking.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {ranking.rank <= 3 ? (
-                    <div className="w-5 h-5 rounded-full bg-[#800000] flex items-center justify-center">
-                      <span className="text-white text-[10px] font-semibold">{ranking.rank}</span>
-                    </div>
-                  ) : (
-                    <div className="w-5 h-5 rounded-full bg-[#800000] flex items-center justify-center">
-                      <Crown className="w-3 h-3 text-white" />
-                    </div>
-                  )}
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    displayRank <= 3 ? 'bg-[#800000]' : 'bg-[#F1F2F4]'
+                  }`}>
+                    <span className={`text-[11px] font-semibold ${
+                      displayRank <= 3 ? 'text-white' : 'text-[#656E81]'
+                    }`}>
+                      {displayRank}
+                    </span>
+                  </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-[#070A11] text-sm">{ranking.team}</div>
@@ -171,10 +189,84 @@ export default function GlobalRankingsTable({ rankings }: GlobalRankingsTablePro
                   {ranking.cards}
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-6 py-4 border-t border-[#F1F2F4]">
+          <div className="text-sm text-[#656E81]">
+            Showing {startIndex + 1} - {Math.min(endIndex, sortedRankings.length)} of {sortedRankings.length} teams
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-colors ${
+                currentPage === 1
+                  ? 'border-[#F1F2F4] text-[#D4D7DD] cursor-not-allowed'
+                  : 'border-[#D4D7DD] text-[#656E81] hover:bg-gray-50'
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            
+            {/* Page Numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                // Show first, last, current, and adjacent pages
+                const showPage = 
+                  page === 1 || 
+                  page === totalPages || 
+                  Math.abs(page - currentPage) <= 1;
+                
+                const showEllipsis = 
+                  (page === 2 && currentPage > 3) || 
+                  (page === totalPages - 1 && currentPage < totalPages - 2);
+
+                if (!showPage && !showEllipsis) return null;
+
+                if (showEllipsis && !showPage) {
+                  return (
+                    <span key={page} className="px-2 text-[#656E81]">
+                      ...
+                    </span>
+                  );
+                }
+
+                return (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`flex items-center justify-center min-w-8 h-8 px-2 rounded-lg text-sm font-medium transition-colors ${
+                      page === currentPage
+                        ? 'bg-[#4AA96C] text-white'
+                        : 'text-[#656E81] hover:bg-gray-100'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-colors ${
+                currentPage === totalPages
+                  ? 'border-[#F1F2F4] text-[#D4D7DD] cursor-not-allowed'
+                  : 'border-[#D4D7DD] text-[#656E81] hover:bg-gray-50'
+              }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

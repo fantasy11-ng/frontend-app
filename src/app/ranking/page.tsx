@@ -12,6 +12,13 @@ import { Spinner } from "@/components/common/Spinner";
 import NoTeamModal from "@/components/common/NoTeamModal";
 import { ProtectedRoute } from "@/components/auth";
 
+// Mock global rankings data for testing pagination and sorting
+const mockGlobalRankings: GlobalRanking[] = [
+];
+
+// Set to true to test with mock data
+const USE_MOCK_DATA = false;
+
 const mockAthleteRankings: AthleteRanking[] = [
   {
     id: "1",
@@ -142,6 +149,16 @@ function RankingPageContent() {
     const fetchGlobalLeaderboard = async () => {
       setLoadingGlobal(true);
       setGlobalError(null);
+      
+      // Use mock data for testing
+      if (USE_MOCK_DATA) {
+        if (isMounted) {
+          setGlobalRankings(mockGlobalRankings);
+          setLoadingGlobal(false);
+        }
+        return;
+      }
+      
       try {
         const { items } = await leaderboardApi.getGlobalLeaderboard({
           page: 1,

@@ -9,6 +9,13 @@ import NoTeamModal from '@/components/common/NoTeamModal';
 import { leaderboardApi } from '@/lib/api';
 import { GlobalRanking } from '@/types/ranking';
 
+// Mock global rankings data for testing pagination and sorting
+const mockGlobalRankings: GlobalRanking[] = [
+];
+
+// Set to true to test with mock data
+const USE_MOCK_DATA = false;
+
 export default function GlobalLeagueLeaderboardPage() {
   const router = useRouter();
   const [rankings, setRankings] = useState<GlobalRanking[]>([]);
@@ -22,6 +29,16 @@ export default function GlobalLeagueLeaderboardPage() {
     const fetchLeaderboard = async () => {
       setLoading(true);
       setError(null);
+      
+      // Use mock data for testing
+      if (USE_MOCK_DATA) {
+        if (isMounted) {
+          setRankings(mockGlobalRankings);
+          setLoading(false);
+        }
+        return;
+      }
+      
       try {
         const { items } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 50 });
         if (isMounted) {
