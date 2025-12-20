@@ -65,6 +65,7 @@ function LeaguePageContent() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [isLoadingUserStats, setIsLoadingUserStats] = useState(false);
   const [showNoTeamModal, setShowNoTeamModal] = useState(false);
+  const [currentGameweekId, setCurrentGameweekId] = useState<number | null>(null);
   const ready = true;
 
   const getErrorMessage = useCallback((error: unknown, fallback: string) => {
@@ -100,6 +101,22 @@ function LeaguePageContent() {
     fetchUserLeagues();
   }, [fetchUserLeagues]);
 
+  // Fetch current gameweek from fixtures
+  useEffect(() => {
+    const fetchCurrentGameweek = async () => {
+      try {
+        const fixtures = await teamApi.getUpcomingFixtures({ limit: 1 });
+        if (fixtures && fixtures.length > 0 && fixtures[0]?.gameweekId) {
+          setCurrentGameweekId(fixtures[0].gameweekId);
+        }
+      } catch {
+        // Silently fail - gameweek will show fallback
+      }
+    };
+
+    fetchCurrentGameweek();
+  }, []);
+
   // Fetch user stats (global rank, points, goals, assists)
   useEffect(() => {
     const fetchUserStats = async () => {
@@ -110,7 +127,6 @@ function LeaguePageContent() {
         
         // Try to get team info
         let teamName = "—";
-        const currentGameweek = "GW 1";
         try {
           const teamData = await teamApi.getMyTeam();
           teamName = teamData?.team?.name ?? "—";
@@ -132,7 +148,7 @@ function LeaguePageContent() {
           globalRank: me?.rank ?? userEntry?.rank ?? null,
           teamName,
           userName,
-          currentGameweek,
+          currentGameweek: currentGameweekId ? `GW ${currentGameweekId}` : "GW -",
           totalPoints: me?.totalPoints ?? userEntry?.totalPoints ?? 0,
           totalGoals: userEntry?.goals ?? 0,
           totalAssists: userEntry?.assists ?? 0,
@@ -161,7 +177,7 @@ function LeaguePageContent() {
     };
 
     fetchUserStats();
-  }, [currentUser]);
+  }, [currentUser, currentGameweekId]);
 
   const handleSelectLeague = (league: UserLeague) => {
     if (!league?.id) return;

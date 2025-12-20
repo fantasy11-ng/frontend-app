@@ -66,7 +66,8 @@ type RawLeaderboardEntry = {
   cleansheet?: number;
   goals?: number;
   assists?: number;
-  cards?: number;
+  yellowCards?: number;
+  redCards?: number;
 };
 
 const normalizeLeague = (entry: RawMyLeague): UserLeague => {
@@ -186,7 +187,7 @@ export const leagueApi = {
         cleansheet: entry.cleansheet ?? 0,
         goals: entry.goals ?? 0,
         assists: entry.assists ?? 0,
-        cards: entry.cards ?? 0,
+        cards: (entry.yellowCards ?? 0) + (entry.redCards ?? 0),
       };
     });
 

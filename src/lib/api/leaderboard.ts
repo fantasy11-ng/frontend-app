@@ -22,7 +22,8 @@ type RawGlobalLeaderboardEntry = {
   cleanSheet?: number;
   goals?: number;
   assists?: number;
-  cards?: number;
+  yellowCards?: number;
+  redCards?: number;
 };
 
 type LeaderboardMeta = {
@@ -104,7 +105,7 @@ export const leaderboardApi = {
         cleansheet: entry.cleansheet ?? entry.cleanSheet ?? 0,
         goals: entry.goals ?? 0,
         assists: entry.assists ?? 0,
-        cards: entry.cards ?? 0,
+        cards: (entry.yellowCards ?? 0) + (entry.redCards ?? 0),
       };
     });
 
