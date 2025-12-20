@@ -178,7 +178,7 @@ export default function HomePage() {
 
   // Global ranking
   const [globalRank, setGlobalRank] = useState<number | null>(null);
-
+  const [totalPoints, setTotalPoints] = useState<number | null>(null);
   // Fetch team data
   useEffect(() => {
     const loadTeamData = async () => {
@@ -360,7 +360,7 @@ export default function HomePage() {
     loadTopPlayers();
   }, []);
 
-  // Fetch global ranking
+  // Fetch global ranking and total points
   useEffect(() => {
     const loadGlobalRank = async () => {
       try {
@@ -369,8 +369,10 @@ export default function HomePage() {
           limit: 1,
         });
         setGlobalRank(me?.rank ?? null);
+        setTotalPoints(me?.totalPoints ?? 0);
       } catch {
         setGlobalRank(null);
+        setTotalPoints(null);
       }
     };
 
@@ -589,7 +591,7 @@ export default function HomePage() {
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Total points</p>
                 <p className="text-3xl text-[#800000]">
-                  {team?.points ?? "--"}
+                  {totalPoints ?? "--"}
                 </p>
               </div>
             </div>

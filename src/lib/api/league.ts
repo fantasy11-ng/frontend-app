@@ -63,7 +63,9 @@ type RawLeaderboardEntry = {
   recentPoints?: number;
   lastPoints?: number;
   budget?: number | string;
+  budgetRemaining?: number | string;
   cleansheet?: number;
+  cleanSheets?: number;
   goals?: number;
   assists?: number;
   yellowCards?: number;
@@ -142,6 +144,7 @@ export const leagueApi = {
       rank?: number;
       totalPoints?: number;
       budgetRemaining?: number | string;
+      budget?: number | string;
     };
   }> => {
     const response = await apiClient.get(`/fantasy/leagues/${leagueId}/leaderboard/season`, {
@@ -176,6 +179,17 @@ export const leagueApi = {
         entry.user?.name ??
         "Manager";
 
+      // Format budget - could be in budget or budgetRemaining field
+      const rawBudget = entry.budget ?? entry.budgetRemaining;
+      let budgetDisplay = "—";
+      if (typeof rawBudget === "number") {
+        // If budget is in raw units (e.g., 100000000), convert to millions
+        const budgetInMillions = rawBudget >= 1000000 ? rawBudget / 1000000 : rawBudget;
+        budgetDisplay = `$${budgetInMillions.toFixed(1)}M`;
+      } else if (typeof rawBudget === "string" && rawBudget) {
+        budgetDisplay = rawBudget;
+      }
+
       return {
         id: entry.id ?? entry.teamId ?? `${leagueId}-${index}`,
         rank: entry.rank ?? entry.position ?? index + 1,
@@ -183,8 +197,8 @@ export const leagueApi = {
         manager: managerName,
         totalPoints: entry.totalPoints ?? entry.points ?? entry.score ?? 0,
         matchDayPoints: entry.matchDayPoints ?? entry.recentPoints ?? entry.lastPoints ?? 0,
-        budget: typeof entry.budget === "number" ? `$${entry.budget}M` : entry.budget ?? "—",
-        cleansheet: entry.cleansheet ?? 0,
+        budget: budgetDisplay,
+        cleansheet: entry.cleansheet ?? entry.cleanSheets ?? 0,
         goals: entry.goals ?? 0,
         assists: entry.assists ?? 0,
         cards: (entry.yellowCards ?? 0) + (entry.redCards ?? 0),
@@ -196,10 +210,25 @@ export const leagueApi = {
       raw?.data?.meta ??
       raw?.data?.data?.meta;
 
-    const me =
+    const rawMe =
       raw?.me ??
       raw?.data?.me ??
       raw?.data?.data?.me;
+
+    // Format the me object's budgetRemaining
+    let formattedBudgetRemaining: number | string | undefined = rawMe?.budgetRemaining ?? rawMe?.budget;
+    if (typeof formattedBudgetRemaining === "number") {
+      // If budget is in raw units (e.g., 100000000), convert to millions
+      const budgetInMillions = formattedBudgetRemaining >= 1000000 
+        ? formattedBudgetRemaining / 1000000 
+        : formattedBudgetRemaining;
+      formattedBudgetRemaining = `$${budgetInMillions.toFixed(1)}M`;
+    }
+
+    const me = rawMe ? {
+      ...rawMe,
+      budgetRemaining: formattedBudgetRemaining,
+    } : undefined;
 
     return { members, meta, me };
   },
