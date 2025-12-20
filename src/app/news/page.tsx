@@ -216,7 +216,7 @@ export default function NewsPage() {
             {generalNews.length === 0 && teamNews.length === 0 && playerNews.length === 0 && otherArticles.length > 0 && (
               <NewsSection
                 title="All News"
-                articles={otherArticles.slice(0, 8)}
+                articles={[...otherArticles, ...otherArticles].slice(0, 8)}
                 seeAllLink="/news"
               />
             )}
