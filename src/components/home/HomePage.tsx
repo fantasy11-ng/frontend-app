@@ -44,6 +44,92 @@ const formatReadingTime = (minutes: number): string => {
   return `${minutes} min read`;
 };
 
+type GameweekCountdown = {
+  text: string;
+  isGameweekInProgress: boolean;
+};
+
+const calculateGameweekCountdown = (fixtures: HomeFixture[]): GameweekCountdown => {
+  if (!fixtures.length) {
+    return { text: "", isGameweekInProgress: false };
+  }
+
+  const now = Date.now();
+  const currentGameweekId = fixtures[0]?.gameweekId;
+  
+  if (!currentGameweekId) {
+    return { text: "", isGameweekInProgress: false };
+  }
+
+  // Get all fixtures for the current gameweek
+  const gameweekFixtures = fixtures.filter(fx => fx.gameweekId === currentGameweekId);
+  
+  if (!gameweekFixtures.length) {
+    return { text: "", isGameweekInProgress: false };
+  }
+
+  // Sort by start time to get first and last match
+  const sortedFixtures = gameweekFixtures
+    .filter(fx => fx.startsAt)
+    .sort((a, b) => new Date(a.startsAt!).getTime() - new Date(b.startsAt!).getTime());
+
+  if (!sortedFixtures.length) {
+    return { text: "", isGameweekInProgress: false };
+  }
+
+  const firstMatchStart = new Date(sortedFixtures[0].startsAt!).getTime();
+  const lastMatchStart = new Date(sortedFixtures[sortedFixtures.length - 1].startsAt!).getTime();
+  // Assume each match lasts ~2 hours
+  const lastMatchEnd = lastMatchStart + 2 * 60 * 60 * 1000;
+
+  // Before gameweek starts
+  if (now < firstMatchStart) {
+    const diffMs = firstMatchStart - now;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays >= 1) {
+      return { text: `${diffDays} day${diffDays === 1 ? "" : "s"} left`, isGameweekInProgress: false };
+    } else if (diffHours >= 1) {
+      return { text: `${diffHours} hour${diffHours === 1 ? "" : "s"} left`, isGameweekInProgress: false };
+    } else {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return { text: `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} left`, isGameweekInProgress: false };
+    }
+  }
+
+  // During gameweek (between first match start and last match end)
+  if (now >= firstMatchStart && now <= lastMatchEnd) {
+    return { text: "", isGameweekInProgress: true };
+  }
+
+  // After gameweek ends - look for next gameweek
+  const nextGameweekFixtures = fixtures.filter(fx => 
+    fx.gameweekId && fx.gameweekId > currentGameweekId && fx.startsAt
+  );
+
+  if (nextGameweekFixtures.length > 0) {
+    const nextFirstMatch = nextGameweekFixtures
+      .sort((a, b) => new Date(a.startsAt!).getTime() - new Date(b.startsAt!).getTime())[0];
+    
+    const nextMatchStart = new Date(nextFirstMatch.startsAt!).getTime();
+    const diffMs = nextMatchStart - now;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays >= 1) {
+      return { text: `${diffDays} day${diffDays === 1 ? "" : "s"} left`, isGameweekInProgress: false };
+    } else if (diffHours >= 1) {
+      return { text: `${diffHours} hour${diffHours === 1 ? "" : "s"} left`, isGameweekInProgress: false };
+    } else {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      return { text: `${diffMinutes} min${diffMinutes === 1 ? "" : "s"} left`, isGameweekInProgress: false };
+    }
+  }
+
+  return { text: "", isGameweekInProgress: false };
+};
+
 export default function HomePage() {
   const { user } = useAuth();
   const userName =
@@ -62,6 +148,7 @@ export default function HomePage() {
   const [fixtures, setFixtures] = useState<HomeFixture[]>([]);
   const [isLoadingFixtures, setIsLoadingFixtures] = useState(false);
   const [fixturesError, setFixturesError] = useState<string | null>(null);
+  const [gameweekCountdown, setGameweekCountdown] = useState<GameweekCountdown>({ text: "", isGameweekInProgress: false });
 
   // Team card info
   const [team, setTeam] = useState<Team | null>(null);
@@ -91,7 +178,7 @@ export default function HomePage() {
 
   // Global ranking
   const [globalRank, setGlobalRank] = useState<number | null>(null);
-
+  const [totalPoints, setTotalPoints] = useState<number | null>(null);
   // Fetch team data
   useEffect(() => {
     const loadTeamData = async () => {
@@ -231,6 +318,21 @@ export default function HomePage() {
     loadFixtures();
   }, []);
 
+  // Calculate gameweek countdown and update every minute
+  useEffect(() => {
+    if (fixtures.length === 0) return;
+
+    // Calculate immediately
+    setGameweekCountdown(calculateGameweekCountdown(fixtures));
+
+    // Update every minute
+    const interval = setInterval(() => {
+      setGameweekCountdown(calculateGameweekCountdown(fixtures));
+    }, 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [fixtures]);
+
   // Fetch top 5 players by points
   // Fetch top 5 players by points using statsApi with proper sorting
   useEffect(() => {
@@ -258,7 +360,7 @@ export default function HomePage() {
     loadTopPlayers();
   }, []);
 
-  // Fetch global ranking
+  // Fetch global ranking and total points
   useEffect(() => {
     const loadGlobalRank = async () => {
       try {
@@ -267,8 +369,10 @@ export default function HomePage() {
           limit: 1,
         });
         setGlobalRank(me?.rank ?? null);
+        setTotalPoints(me?.totalPoints ?? 0);
       } catch {
         setGlobalRank(null);
+        setTotalPoints(null);
       }
     };
 
@@ -295,10 +399,12 @@ export default function HomePage() {
             <span className="px-4 py-2 bg-[#F5EBEB] text-[#800000] rounded-full text-sm font-medium">
               {fixtures[0]?.gameweekId ? `Gameweek ${fixtures[0].gameweekId}` : "Gameweek -"}
             </span>
-            <div className="flex items-center text-[#656E81] border border-[#D4D7DD] rounded-full px-2 py-1">
-              <Clock className="w-4 h-4 mr-2" />
-              <span className="text-sm">2 days left</span>
-            </div>
+            {!gameweekCountdown.isGameweekInProgress && gameweekCountdown.text && (
+              <div className="flex items-center text-[#656E81] border border-[#D4D7DD] rounded-full px-2 py-1">
+                <Clock className="w-4 h-4 mr-2" />
+                <span className="text-sm">{gameweekCountdown.text}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -485,7 +591,7 @@ export default function HomePage() {
               <div className="p-6 relative z-10">
                 <p className="text-sm text-[#800000] mb-1">Total points</p>
                 <p className="text-3xl text-[#800000]">
-                  {team?.points ?? "--"}
+                  {totalPoints ?? "--"}
                 </p>
               </div>
             </div>

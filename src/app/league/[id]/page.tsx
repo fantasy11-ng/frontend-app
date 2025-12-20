@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 
 import { LeagueLeaderboard } from '@/components/league';
 import { leagueApi } from '@/lib/api/league';
+import { teamApi } from '@/lib/api/team';
 import { LeagueMember, LeagueStats, UserLeague } from '@/types/league';
 import { Spinner } from '@/components/common/Spinner';
 import LeaveLeagueModal from '@/components/league/LeaveLeagueModal';
@@ -31,23 +32,32 @@ export default function LeagueDetailPage() {
       setLoading(true);
       setError(null);
       try {
-        const [leagues, leaderboard] = await Promise.all([
+        // Fetch leagues, leaderboard, and team data in parallel
+        const [leagues, leaderboard, teamData] = await Promise.all([
           leagueApi.getMyLeagues(),
           leagueApi.getLeagueLeaderboard({ leagueId, page: 1, limit: 50 }),
+          teamApi.getMyTeam().catch(() => null), // Don't fail if team doesn't exist
         ]);
 
         setMembers(leaderboard.members);
         const found = leagues.find((l) => l.id === leagueId);
         setLeague(found ?? null);
+
+        // Get budget from team data (same as HomePage)
+        let budgetLeft = '—';
+        if (teamData?.team?.budgetRemaining != null) {
+          const budgetInMillions = teamData.team.budgetRemaining / 1000000;
+          budgetLeft = `$${budgetInMillions.toFixed(1)}M`;
+        } else if (leaderboard.me?.budgetRemaining !== undefined) {
+          budgetLeft = `${leaderboard.me.budgetRemaining}`;
+        }
+
         setStats({
           globalRank: leaderboard.me?.rank ?? leaderboard.members[0]?.rank ?? 0,
           totalPoints:
             leaderboard.me?.totalPoints ??
             leaderboard.members.reduce((sum, m) => sum + (m.totalPoints ?? 0), 0),
-          budgetLeft:
-            leaderboard.me?.budgetRemaining !== undefined
-              ? `${leaderboard.me?.budgetRemaining}`
-              : '—',
+          budgetLeft,
         });
       } catch (err) {
         setError(

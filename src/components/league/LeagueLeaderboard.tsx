@@ -329,9 +329,6 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
                     Match Day Points
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
-                    Budget
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
                     Cleansheet
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
@@ -366,9 +363,6 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
                       <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#F1F2F4] text-sm font-medium text-[#070A11]">
                         {member.matchDayPoints}
                       </span>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-[#070A11]">
-                      {member.budget}
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-[#070A11]">
                       {member.cleansheet}

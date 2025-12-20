@@ -216,7 +216,8 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
         weight?: string;
         goals?: number;
         assists?: number;
-        cards?: number;
+        yellowCards?: number;
+        redCards?: number;
         club?: string;
         dateOfBirth?: string;
       }>
@@ -253,7 +254,7 @@ console.log(p)
           weight: p.weight,
           goals: p.goals ?? 0,
           assists: p.assists ?? 0,
-          cards: p.cards ?? 0,
+          cards: (p.yellowCards ?? 0) + (p.redCards ?? 0),
           club: p.club,
         };
       });
