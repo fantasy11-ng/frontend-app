@@ -20,9 +20,7 @@ import { GlobalRanking } from "@/types/ranking";
 import { ProtectedRoute } from "@/components/auth";
 
 const mockChampionshipDetails: ChampionshipDetails = {
-  totalPrizePool: "₦1,000,000",
-  activeManagers: "1K+",
-  winnerPrize: "₦1,000,000",
+  totalPrizePool: "₦1,000,000+",
   entryFee: "FREE",
 };
 
