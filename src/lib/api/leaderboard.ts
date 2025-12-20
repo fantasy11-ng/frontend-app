@@ -20,9 +20,11 @@ type RawGlobalLeaderboardEntry = {
   score?: number;
   cleansheet?: number;
   cleanSheet?: number;
+  cleanSheets?: number;
   goals?: number;
   assists?: number;
-  cards?: number;
+  yellowCards?: number;
+  redCards?: number;
 };
 
 type LeaderboardMeta = {
@@ -101,10 +103,10 @@ export const leaderboardApi = {
         team: teamName,
         manager: managerName,
         totalPoints: entry.totalPoints ?? entry.points ?? entry.score ?? 0,
-        cleansheet: entry.cleansheet ?? entry.cleanSheet ?? 0,
+        cleansheet: entry.cleansheet ?? entry.cleanSheet ?? entry.cleanSheets ?? 0,
         goals: entry.goals ?? 0,
         assists: entry.assists ?? 0,
-        cards: entry.cards ?? 0,
+        cards: (entry.yellowCards ?? 0) + (entry.redCards ?? 0),
       };
     });
 
