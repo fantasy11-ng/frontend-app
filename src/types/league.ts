@@ -41,8 +41,6 @@ export interface LeagueStats {
 
 export interface ChampionshipDetails {
   totalPrizePool: string;
-  activeManagers: string;
-  winnerPrize: string;
   entryFee: string;
 }
 

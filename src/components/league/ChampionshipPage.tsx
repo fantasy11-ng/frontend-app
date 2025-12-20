@@ -48,14 +48,6 @@ const ChampionshipPage: React.FC<ChampionshipPageProps> = ({
                 <span className="text-[#070A11]">{details.totalPrizePool}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-[#070A11]">Active Managers:</span>
-                <span className="text-[#070A11]">{details.activeManagers}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[#070A11]">Winner Prize:</span>
-                <span className="text-[#070A11]">{details.winnerPrize}</span>
-              </div>
-              <div className="flex justify-between items-center">
                 <span className="text-[#070A11]">Entry Fee:</span>
                 <span className="text-[#4AA96C]">{details.entryFee}</span>
               </div>
