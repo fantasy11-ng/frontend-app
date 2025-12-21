@@ -224,3 +224,176 @@ button,
   vertical-align: super;
 }
 
+/* TipTap Rendered Content Styles (for displaying saved content) */
+.tiptap-content {
+  color: #070A11;
+  line-height: 1.7;
+}
+
+.tiptap-content h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.2;
+  color: #070A11;
+}
+
+.tiptap-content h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+  color: #070A11;
+}
+
+.tiptap-content h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.4;
+  color: #070A11;
+}
+
+.tiptap-content p {
+  margin-bottom: 0.75em;
+  line-height: 1.7;
+  color: #070A11;
+}
+
+.tiptap-content ul,
+.tiptap-content ol {
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.tiptap-content ul {
+  list-style-type: disc;
+}
+
+.tiptap-content ol {
+  list-style-type: decimal;
+}
+
+.tiptap-content li {
+  margin-bottom: 0.25em;
+  color: #070A11;
+}
+
+.tiptap-content li p {
+  margin-bottom: 0.25em;
+}
+
+.tiptap-content blockquote {
+  border-left: 4px solid #10b981;
+  padding-left: 1em;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 1em;
+  color: #4b5563;
+  font-style: italic;
+}
+
+.tiptap-content code {
+  background-color: #f3f4f6;
+  color: #dc2626;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.875em;
+}
+
+.tiptap-content pre {
+  background-color: #1f2937;
+  color: #f9fafb;
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.tiptap-content pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+  font-size: 0.875em;
+}
+
+.tiptap-content hr {
+  border: none;
+  border-top: 2px solid #e5e7eb;
+  margin: 1.5em 0;
+}
+
+.tiptap-content a {
+  color: #059669;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-content a:hover {
+  color: #047857;
+}
+
+.tiptap-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5em;
+  margin: 1em 0;
+}
+
+.tiptap-content .youtube-video {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.5em;
+  margin: 1em 0;
+}
+
+.tiptap-content iframe {
+  border-radius: 0.5em;
+  margin: 1em 0;
+  width: 100%;
+  max-width: 640px;
+}
+
+.tiptap-content mark {
+  background-color: #fef08a;
+  border-radius: 0.25em;
+  padding: 0.1em 0.2em;
+}
+
+.tiptap-content sub {
+  font-size: 0.75em;
+  vertical-align: sub;
+}
+
+.tiptap-content sup {
+  font-size: 0.75em;
+  vertical-align: super;
+}
+
+/* Text alignment */
+.tiptap-content [style*="text-align: left"] {
+  text-align: left;
+}
+
+.tiptap-content [style*="text-align: center"] {
+  text-align: center;
+}
+
+.tiptap-content [style*="text-align: right"] {
+  text-align: right;
+}
+
+.tiptap-content [style*="text-align: justify"] {
+  text-align: justify;
+}
+
+/* Text color and highlight support */
+.tiptap-content [style*="color"] {
+  /* Preserve inline color styles */
+}
+
