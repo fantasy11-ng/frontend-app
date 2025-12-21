@@ -58,8 +58,6 @@ const PlayerDetailsModal: React.FC<PlayerDetailsModalProps> = ({
     return labels[position] || position;
   };
 
-  console.log(player);
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 relative">

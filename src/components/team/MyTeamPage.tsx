@@ -236,7 +236,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
           const today = new Date();
           age = today.getFullYear() - birthDate.getFullYear();
         }
-console.log(p)
+
         return {
           id: String(p.id ?? Math.random()),
           name: p.commonName || p.name || "Player",
@@ -275,7 +275,6 @@ console.log(p)
           limit: TRANSFER_PAGE_SIZE,
           search: search || undefined,
         });
-console.log(apiPlayers)
         const mapped = mapApiPlayersToTransfer(apiPlayers);
         setTransferPlayers((prev) => (append ? [...prev, ...mapped] : mapped));
         setTransferPlayersPage(page);

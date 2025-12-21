@@ -314,7 +314,6 @@ function TeamPageContent() {
 
   const handleAppointStarting11 = () => {
     // Navigate to player selection page or open modal
-    console.log('Appoint starting 11');
   };
 
   const handleAssignModalOpen = () => {

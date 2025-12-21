@@ -1,17 +1,31 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, ChevronDown } from "lucide-react";
 import FeaturedArticle from "@/components/news/FeaturedArticle";
 import { NewsCard, NewsSection } from "@/components/news";
-import { useBlogPosts } from "@/lib/api";
+import { useBlogPosts, useBlogCategories } from "@/lib/api";
 import { Spinner } from "@/components/common/Spinner";
+import { BLOG_CATEGORY_SLUGS, BLOG_CATEGORIES } from "@/lib/constants";
 
 export default function NewsPage() {
+  const searchParams = useSearchParams();
+  const categoryFromUrl = searchParams.get("category");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    categoryFromUrl || "all"
+  );
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+
+  // Update selected category when URL param changes
+  useEffect(() => {
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [categoryFromUrl]);
 
   // Debounce search query with 700ms delay
   useEffect(() => {
@@ -24,46 +38,115 @@ export default function NewsPage() {
     };
   }, [searchQuery]);
 
+  // Get categories to map slugs to UUIDs for API calls
+  const { data: categoriesData } = useBlogCategories();
+  const categories = useMemo(() => {
+    return Array.isArray(categoriesData) ? categoriesData : [];
+  }, [categoriesData]);
+
   // Build API params using debounced search query
   const apiParams = useMemo(() => {
-    const params: { q?: string; status?: string; category?: string } = {
+    const params: {
+      q?: string;
+      status?: "draft" | "published";
+      category?: string;
+    } = {
       status: "published",
     };
-    
+
     if (debouncedSearchQuery) {
       params.q = debouncedSearchQuery;
     }
-    
+
     if (selectedCategory !== "all") {
-      params.category = selectedCategory;
+      // Convert slug to UUID if needed (API expects UUID)
+      const category = categories.find((cat) => cat.slug === selectedCategory);
+      if (category) {
+        params.category = category.id;
+      } else {
+        // Fallback: if it's already a UUID, use it directly
+        params.category = selectedCategory;
+      }
     }
-    
+
     return params;
-  }, [debouncedSearchQuery, selectedCategory]);
+  }, [debouncedSearchQuery, selectedCategory, categories]);
 
   const { data, isLoading, error } = useBlogPosts(apiParams);
 
-  const categories = [
-    { value: "all", label: "All Categories" },
-    { value: "general", label: "General" },
-    { value: "team", label: "Team News" },
-    { value: "player", label: "Player News" },
-  ];
+  // Extract articles from response - API returns { items, total, page, limit }
+  const articles = useMemo(() => {
+    if (!data) {
+      return [];
+    }
+    // Handle both direct { items } structure and any wrapped structures
+    if ("items" in data && Array.isArray(data.items)) {
+      return data.items;
+    }
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return [];
+  }, [data]);
 
-  const articles = data?.items || [];
   const featuredArticle = articles.length > 0 ? articles[0] : null;
   const otherArticles = articles.slice(1);
 
-  // Group articles by category for display
-  const generalNews = otherArticles.filter(
-    (article) => article.category.slug === "general" || article.category.name.toLowerCase().includes("general")
+  // Debug: Log all articles and their categories
+  console.log(
+    "[NewsPage] All articles:",
+    articles.map((a) => ({
+      id: a.id,
+      title: a.title,
+      categoryId: a.category?.id,
+      categoryName: a.category?.name,
+      categorySlug: a.category?.slug,
+    }))
   );
-  const teamNews = otherArticles.filter(
-    (article) => article.category.slug === "team" || article.category.name.toLowerCase().includes("team")
+  console.log(
+    "[NewsPage] Category slugs we're looking for:",
+    BLOG_CATEGORY_SLUGS
   );
-  const playerNews = otherArticles.filter(
-    (article) => article.category.slug === "player" || article.category.name.toLowerCase().includes("player")
-  );
+  console.log("[NewsPage] otherArticles count:", otherArticles.length);
+
+  // Group articles by category for display using category slugs (more stable across environments)
+  const generalNews = otherArticles.filter((article) => {
+    const matches =
+      article.category && article.category.slug === BLOG_CATEGORY_SLUGS.general;
+    if (article.category) {
+      console.log(
+        `[NewsPage] Article "${article.title}" - category.slug: ${article.category.slug}, matches General: ${matches}`
+      );
+    }
+    return matches;
+  });
+  const teamNews = otherArticles.filter((article) => {
+    const matches =
+      article.category && article.category.slug === BLOG_CATEGORY_SLUGS.team;
+    if (article.category) {
+      console.log(
+        `[NewsPage] Article "${article.title}" - category.slug: ${article.category.slug}, matches Team: ${matches}`
+      );
+    }
+    return matches;
+  });
+  const playerNews = otherArticles.filter((article) => {
+    const matches =
+      article.category && article.category.slug === BLOG_CATEGORY_SLUGS.player;
+    if (article.category) {
+      console.log(
+        `[NewsPage] Article "${article.title}" - category.slug: ${article.category.slug}, matches Player: ${matches}`
+      );
+    }
+    return matches;
+  });
+
+  console.log("[NewsPage] Filtered results:", {
+    generalNews: generalNews.length,
+    teamNews: teamNews.length,
+    playerNews: playerNews.length,
+    totalOtherArticles: otherArticles.length,
+  });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -75,7 +158,7 @@ export default function NewsPage() {
   };
 
   const selectedCategoryLabel =
-    categories.find((cat) => cat.value === selectedCategory)?.label ||
+    BLOG_CATEGORIES.find((cat) => cat.value === selectedCategory)?.label ||
     "All Categories";
 
   return (
@@ -132,7 +215,7 @@ export default function NewsPage() {
 
                 {isCategoryDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-                    {categories.map((category) => (
+                    {BLOG_CATEGORIES.map((category) => (
                       <button
                         key={category.value}
                         onClick={() => {
@@ -165,20 +248,25 @@ export default function NewsPage() {
         {/* Error State */}
         {error && !isLoading && (
           <div className="text-center py-12">
-            <div className="text-red-600">Error loading news. Please try again later.</div>
+            <div className="text-red-600">
+              Error loading news. Please try again later.
+            </div>
           </div>
         )}
 
         {/* No Search Results */}
-        {!isLoading && !error && debouncedSearchQuery && articles.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-500 text-md mb-2">
-              Oops! It looks like we couldn&apos;t find any results for &quot;
-              {debouncedSearchQuery}&quot;.
+        {!isLoading &&
+          !error &&
+          debouncedSearchQuery &&
+          articles.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-500 text-md mb-2">
+                Oops! It looks like we couldn&apos;t find any results for &quot;
+                {debouncedSearchQuery}&quot;.
+              </div>
+              <p className="text-gray-400">Try searching for something else.</p>
             </div>
-            <p className="text-gray-400">Try searching for something else.</p>
-          </div>
-        )}
+          )}
 
         {/* Featured Article */}
         {!isLoading && !error && !debouncedSearchQuery && featuredArticle && (
@@ -186,67 +274,82 @@ export default function NewsPage() {
         )}
 
         {/* News Sections */}
-        {!isLoading && !error && !debouncedSearchQuery && (
-          <div className="space-y-12">
-            {generalNews.length > 0 && (
-              <NewsSection
-                title="News"
-                articles={generalNews.slice(0, 4)}
-                seeAllLink="/news?category=general"
-              />
-            )}
+        {!isLoading &&
+          !error &&
+          !debouncedSearchQuery &&
+          articles.length > 0 && (
+            <div className="space-y-12">
+              {generalNews.length > 0 && (
+                <NewsSection
+                  title="General News"
+                  articles={generalNews.slice(0, 4)}
+                  seeAllLink={`/news?category=${BLOG_CATEGORY_SLUGS.general}`}
+                />
+              )}
 
-            {teamNews.length > 0 && (
-              <NewsSection
-                title="Team News"
-                articles={teamNews.slice(0, 4)}
-                seeAllLink="/news?category=team"
-              />
-            )}
+              {teamNews.length > 0 && (
+                <NewsSection
+                  title="Team News"
+                  articles={teamNews.slice(0, 4)}
+                  seeAllLink={`/news?category=${BLOG_CATEGORY_SLUGS.team}`}
+                />
+              )}
 
-            {playerNews.length > 0 && (
-              <NewsSection
-                title="Player News"
-                articles={playerNews.slice(0, 4)}
-                seeAllLink="/news?category=player"
-              />
-            )}
+              {playerNews.length > 0 && (
+                <NewsSection
+                  title="Player News"
+                  articles={playerNews.slice(0, 4)}
+                  seeAllLink={`/news?category=${BLOG_CATEGORY_SLUGS.player}`}
+                />
+              )}
 
-            {/* Show remaining articles if no specific category sections */}
-            {generalNews.length === 0 && teamNews.length === 0 && playerNews.length === 0 && otherArticles.length > 0 && (
-              <NewsSection
-                title="All News"
-                articles={otherArticles.slice(0, 8)}
-                seeAllLink="/news"
-              />
-            )}
-          </div>
-        )}
+              {/* Show remaining articles if no specific category sections match */}
+              {generalNews.length === 0 &&
+                teamNews.length === 0 &&
+                playerNews.length === 0 &&
+                otherArticles.length > 0 && (
+                  <NewsSection
+                    title="All News"
+                    articles={otherArticles.slice(0, 8)}
+                    seeAllLink="/news"
+                  />
+                )}
+            </div>
+          )}
 
         {/* Search Results */}
-        {!isLoading && !error && debouncedSearchQuery && articles.length > 0 && (
-          <div className="space-y-8">
-            <h2 className="text-2xl font-bold text-[#070A11]">
-              Search Results ({articles.length})
-            </h2>
-            <div className="flex overflow-x-auto gap-6 pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-              {articles.map((article) => (
-                <div key={article.id} className="flex-shrink-0 w-full min-w-[280px] max-w-[300px]">
-                  <NewsCard article={article} />
-                </div>
-              ))}
+        {!isLoading &&
+          !error &&
+          debouncedSearchQuery &&
+          articles.length > 0 && (
+            <div className="space-y-8">
+              <h2 className="text-2xl font-bold text-[#070A11]">
+                Search Results ({articles.length})
+              </h2>
+              <div className="flex overflow-x-auto gap-6 pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                {articles.map((article) => (
+                  <div
+                    key={article.id}
+                    className="flex-shrink-0 w-full min-w-[280px] max-w-[300px]"
+                  >
+                    <NewsCard article={article} />
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* No articles at all */}
-        {!isLoading && !error && articles.length === 0 && !debouncedSearchQuery && (
-          <div className="text-center py-12">
-            <div className="text-gray-500 text-md mb-2">
-              No news articles available at the moment.
+        {!isLoading &&
+          !error &&
+          articles.length === 0 &&
+          !debouncedSearchQuery && (
+            <div className="text-center py-12">
+              <div className="text-gray-500 text-md mb-2">
+                No news articles available at the moment.
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

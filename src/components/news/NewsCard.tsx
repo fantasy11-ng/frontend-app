@@ -28,15 +28,15 @@ const formatReadingTime = (minutes: number): string => {
 export default function NewsCard({ article }: NewsCardProps) {
   return (
     <Link href={`/news/${article.slug}`} className="block group">
-      <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
+      <div className="p-2 bg-white rounded-lg shadow-sm duration-300 overflow-hidden">
         {/* Article Image */}
-        <div className="relative h-48 bg-gradient-to-br from-green-400 to-green-600">
+        <div className="relative h-48">
           {article.coverImageUrl ? (
             <Image
               fill
               src={article.coverImageUrl}
               alt={article.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-[8px] md:rounded-[16px] overflow-hidden"
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-700 flex items-center justify-center">
@@ -46,8 +46,8 @@ export default function NewsCard({ article }: NewsCardProps) {
         </div>
 
         {/* Article Content */}
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3 group-hover:text-green-600 transition-colors line-clamp-2">
+        <div className="px-1 pt-2">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-green-600 transition-colors line-clamp-2">
             {article.title}
           </h3>
           

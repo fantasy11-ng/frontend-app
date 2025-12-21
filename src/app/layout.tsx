@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AdminAuthProvider } from "@/contexts/AdminAuthContext";
 import LayoutWrapper from "@/components/layout/LayoutWrapper";
 import { Toaster } from "react-hot-toast";
 
@@ -106,9 +107,11 @@ export default function RootLayout({
         </noscript>
         <QueryProvider>
           <AuthProvider>
-            <LayoutWrapper>
-              {children}
-            </LayoutWrapper>
+            <AdminAuthProvider>
+              <LayoutWrapper>
+                {children}
+              </LayoutWrapper>
+            </AdminAuthProvider>
             <Toaster
               position="top-right"
               toastOptions={{
