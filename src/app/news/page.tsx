@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, ChevronDown } from "lucide-react";
 import FeaturedArticle from "@/components/news/FeaturedArticle";
@@ -9,7 +9,7 @@ import { useBlogPosts, useBlogCategories } from "@/lib/api";
 import { Spinner } from "@/components/common/Spinner";
 import { BLOG_CATEGORY_SLUGS, BLOG_CATEGORIES } from "@/lib/constants";
 
-export default function NewsPage() {
+function NewsPageContent() {
   const searchParams = useSearchParams();
   const categoryFromUrl = searchParams.get("category");
 
@@ -352,5 +352,19 @@ export default function NewsPage() {
           )}
       </div>
     </div>
+  );
+}
+
+export default function NewsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
+          <Spinner size={32} className="text-gray-500" />
+        </div>
+      }
+    >
+      <NewsPageContent />
+    </Suspense>
   );
 }

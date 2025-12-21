@@ -5,7 +5,7 @@ import { X, Search, Plus, Check } from "lucide-react";
 import { Player, PlayerPosition, SquadValidation } from "@/types/team";
 import toast from "react-hot-toast";
 import { Spinner } from "../common/Spinner";
-import { getCountryName, countryImagesMap } from "@/lib/constants/countries";
+import { getCountryName } from "@/lib/constants/countries";
 
 interface AssignStarting11ModalProps {
   isOpen: boolean;
