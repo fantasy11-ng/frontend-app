@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, use } from "react";
+import { use } from "react";
 import Link from "next/link";
-import { ArrowLeft, Share2, Bookmark } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import RelatedNews from "@/components/news/RelatedNews";
 import { useBlogPost } from "@/lib/api";
 import Image from "next/image";
@@ -37,32 +37,8 @@ export default function ArticlePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const { id } = use(params);
   const { data, isLoading, error } = useBlogPost(id);
-
-  const handleShare = async () => {
-    if (!data?.post) return;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: data.post.title,
-          text: data.post.excerpt,
-          url: window.location.href,
-        });
-      } catch (error) {
-        console.log("Error sharing:", error);
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-    }
-  };
-
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-  };
 
   if (isLoading) {
     return (

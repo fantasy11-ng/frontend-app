@@ -11,6 +11,15 @@ import type {
 } from '@/types/news';
 import toast from 'react-hot-toast';
 
+// API Error type for axios-style errors
+interface ApiError extends Error {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 // Query keys
 export const blogKeys = {
   all: ['blog'] as const,
@@ -75,7 +84,7 @@ export function useCreatePost() {
       queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
       toast.success('Article created successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       const message = error?.response?.data?.message || error.message || 'Failed to create article';
       toast.error(message);
     },
@@ -95,7 +104,7 @@ export function useUpdatePost() {
       }
       toast.success('Article updated successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       const message = error?.response?.data?.message || error.message || 'Failed to update article';
       toast.error(message);
     },
@@ -112,7 +121,7 @@ export function useDeletePost() {
       queryClient.invalidateQueries({ queryKey: blogKeys.posts() });
       toast.success('Article deleted successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       const message = error?.response?.data?.message || error.message || 'Failed to delete article';
       toast.error(message);
     },
@@ -129,7 +138,7 @@ export function useCreateTag() {
       queryClient.invalidateQueries({ queryKey: blogKeys.tags() });
       toast.success('Tag created successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       const message = error?.response?.data?.message || error.message || 'Failed to create tag';
       toast.error(message);
     },
@@ -146,7 +155,7 @@ export function useCreateCategory() {
       queryClient.invalidateQueries({ queryKey: blogKeys.categories() });
       toast.success('Category created successfully!');
     },
-    onError: (error: any) => {
+    onError: (error: ApiError) => {
       const message = error?.response?.data?.message || error.message || 'Failed to create category';
       toast.error(message);
     },

@@ -299,12 +299,13 @@ function EditArticleContent() {
             />
             {coverImageUrl && (
               <div className="mt-4 relative aspect-video max-w-md rounded-lg overflow-hidden bg-gray-100">
-                <img
+                <Image
                   src={coverImageUrl}
                   alt="Cover preview"
-                  className="w-full h-full object-cover"
+                  fill
+                  unoptimized
+                  className="object-cover"
                   onError={(e) => {
-                    e.currentTarget.src = '';
                     e.currentTarget.style.display = 'none';
                   }}
                 />
