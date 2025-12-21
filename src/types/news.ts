@@ -1,16 +1,8 @@
 // Blog API Types
 export interface BlogAuthor {
   id: string;
-  fullName: string;
-  phone: string;
   email: string;
-  isActive: boolean;
-  password: string;
-  googleId: string;
-  facebookId: string;
-  refreshToken: string;
-  role: string;
-  profileImageUrl: string;
+  fullName: string;
 }
 
 export interface BlogCategory {
@@ -37,7 +29,7 @@ export interface BlogPost {
   createdAt: string;
   updatedAt: string;
   author: BlogAuthor;
-  category: BlogCategory;
+  category: BlogCategory | null;
   tags: BlogTag[];
 }
 
@@ -52,26 +44,54 @@ export interface BlogPostListItem {
   createdAt: string;
   updatedAt: string;
   author: BlogAuthor;
-  category: BlogCategory;
+  category: BlogCategory | null;
   tags: BlogTag[];
 }
 
+// API Response Types (matching Swagger docs)
 export interface BlogPostsResponse {
-  success: boolean;
-  data: {
-    items: BlogPostListItem[];
-    total: number;
-    page: number;
-    limit: number;
-  };
+  items: BlogPostListItem[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface BlogPostDetailResponse {
-  success: boolean;
-  data: {
-    post: BlogPost;
-    related: BlogPostListItem[];
-  };
+  post: BlogPost;
+  related: BlogPostListItem[];
+}
+
+// Admin API Types
+export interface CreatePostData {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  coverImageUrl?: string;
+  categoryId?: string;
+  tagIds?: string[];
+  status?: 'draft' | 'published';
+}
+
+export interface UpdatePostData {
+  title?: string;
+  slug?: string;
+  content?: string;
+  excerpt?: string;
+  coverImageUrl?: string;
+  categoryId?: string;
+  tagIds?: string[];
+  status?: 'draft' | 'published';
+}
+
+export interface CreateCategoryData {
+  name: string;
+  slug: string;
+}
+
+export interface CreateTagData {
+  name: string;
+  slug: string;
 }
 
 // Legacy types for backward compatibility (can be removed after migration)
