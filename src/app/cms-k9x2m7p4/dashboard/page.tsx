@@ -39,7 +39,7 @@ function DashboardContent() {
   
   const createTag = useCreateTag();
   const createCategory = useCreateCategory();
-  const { data: categoriesData, isLoading: categoriesLoading } = useBlogCategories();
+  const { data: categoriesData } = useBlogCategories();
   
   // Ensure categories is always an array
   const categories = Array.isArray(categoriesData) ? categoriesData : [];
@@ -450,10 +450,12 @@ function DashboardContent() {
                   {/* Article Image */}
                   <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
                     {article.coverImageUrl ? (
-                      <img
+                      <Image
                         src={article.coverImageUrl}
                         alt={article.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        fill
+                        unoptimized
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">

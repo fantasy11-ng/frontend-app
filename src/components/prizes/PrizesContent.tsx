@@ -1,6 +1,6 @@
 "use client";
 
-import { Bluetooth, Gift } from "lucide-react";
+import { Gift } from "lucide-react";
 import PastWinners from "./PastWinners";
 // import PredictorPrizes from "./PredictorPrizes";
 import GlobalPrizeCard from "./GlobalPrizeCard";
@@ -43,45 +43,6 @@ export default function PrizesContent() {
       color: 'bronze' as const,
       icon: Gift
     }
-  ];
-
-  const predictorPrizes = [
-    {
-      id: "p1",
-      place: 1,
-      title: "Perfect Predictor",
-      rewards: [
-        "AFCON 2025 VIP Experience",
-        "Signed Jersey Collection",
-        "Trophy & Medal",
-      ],
-      color: "gold" as const,
-      src: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764859524/trophy_1_hu6rne.png",
-    },
-    {
-      id: "p2",
-      place: 2,
-      title: "Second Place Champion",
-      rewards: [
-        "AFCON 2025 Premium Tickets",
-        "Signed Football",
-        "Medal",
-      ],
-      color: "silver" as const,
-      src:"https://res.cloudinary.com/dmfsyau8s/image/upload/v1764859525/trophy_2_cvgbys.png"
-    },
-    {
-      id: "p3",
-      place: 3,
-      title: "Third Place Champion",
-      rewards: [
-        "AFCON 2025 Standard Tickets",
-        "Team Merchandise",
-        "Medal",
-      ],
-      color: "bronze" as const,
-      src: "https://res.cloudinary.com/dmfsyau8s/image/upload/v1764859525/trophy_3_ijo5si.png"
-    },
   ];
 
   return (
