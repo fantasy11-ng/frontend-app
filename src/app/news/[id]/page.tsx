@@ -174,14 +174,10 @@ export default function ArticlePage({
           {/* Main Article Content */}
           <div className="flex-1 lg:max-w-[65%]">
             <article className="rounded-xl p-6 md:p-8">
-              {/* Repeat Title */}
-              <h2 className="text-xl md:text-2xl font-bold text-[#070A11] mb-6">
-                {post.title}
-              </h2>
 
               {/* Article Content */}
               <div
-                className="prose prose-lg max-w-none text-[#070A11]"
+                className="tiptap-content"
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
 

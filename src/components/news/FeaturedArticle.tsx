@@ -88,7 +88,7 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
                     <span className="border-l border-gray-200 h-4 mx-3 md:mx-4" />
                     <span>{formatReadingTime(article.readingTimeMinutes)}</span>
                   </div>
-                  <p className="text-xs sm:text-base leading-relaxed max-w-[400px] mt-3">
+                  <p className="text-xs sm:text-base leading-relaxed max-w-[400px] mt-3 line-clamp-3">
                     {article.excerpt}
                   </p>
                 </div>
