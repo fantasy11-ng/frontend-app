@@ -81,7 +81,7 @@ export default function FeaturedArticle({ article }: FeaturedArticleProps) {
                   <div className="flex items-center flex-wrap">
                     <span className="flex items-center gap-2">
                       <Calendar color="#fff" size={16} />
-                      {article.author.fullName}
+                      Fantasy11 Team
                     </span>
                     <span className="w-full md:w-auto border-l border-transparent md:border-gray-200 h-3 md:h-4 mx-3 md:mx-4" />
                     <span>{formatDate(article.createdAt)}</span>

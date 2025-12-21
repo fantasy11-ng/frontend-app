@@ -227,10 +227,10 @@ export default function ArticlePage({
             </article>
           </div>
 
-          {/* Sidebar - Related News */}
+          {/* Sidebar - Recent News */}
           <div className="lg:w-[35%]">
             {related && related.length > 0 && (
-              <RelatedNews articles={related} />
+              <RelatedNews articles={related.slice(0, 4)} />
             )}
           </div>
         </div>

@@ -42,7 +42,6 @@ export default function GlobalLeagueLeaderboardPage() {
       try {
         const { items } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 50 });
         if (isMounted) {
-          console.log(items)
           setRankings(items);
         }
       } catch (err) {

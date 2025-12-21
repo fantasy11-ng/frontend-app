@@ -13,13 +13,16 @@ export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
   
-  // Hide navbar on auth pages and landing page (when not authenticated)
+  // Hide navbar on auth pages, landing page (when not authenticated), and CMS pages
   const isAuthPage = pathname?.startsWith('/sign-in') || 
                      pathname?.startsWith('/sign-up') || 
                      pathname?.startsWith('/reset-password');
   
-  // Show navbar only for authenticated users on home page, or on other pages
-  const shouldShowNavbar = !isAuthPage && (isAuthenticated || pathname !== '/');
+  // Check if it's a CMS/admin page
+  const isCmsPage = pathname?.startsWith('/cms-');
+  
+  // Show navbar only for authenticated users on home page, or on other pages (excluding CMS)
+  const shouldShowNavbar = !isAuthPage && !isCmsPage && (isAuthenticated || pathname !== '/');
 
   return (
     <>
