@@ -148,7 +148,7 @@ function RankingPageContent() {
     itemsPerPage?: number;
   }>();
   const ready = true;
-  const PAGE_SIZE = 2;
+  const PAGE_SIZE = 20;
 
   useEffect(() => {
     let isMounted = true;
