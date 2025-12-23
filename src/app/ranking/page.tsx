@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GlobalRankingsTable from "@/components/ranking/GlobalRankingsTable";
-import AthleteRankingsTable from "@/components/ranking/AthleteRankingsTable";
-import { GlobalRanking, AthleteRanking } from "@/types/ranking";
+// import AthleteRankingsTable from "@/components/ranking/AthleteRankingsTable";
+import { GlobalRanking } from "@/types/ranking";
 import { leaderboardApi } from "@/lib/api";
 import { Spinner } from "@/components/common/Spinner";
 import NoTeamModal from "@/components/common/NoTeamModal";
@@ -19,118 +19,118 @@ const mockGlobalRankings: GlobalRanking[] = [
 // Set to true to test with mock data
 const USE_MOCK_DATA = false;
 
-const mockAthleteRankings: AthleteRanking[] = [
-  {
-    id: "1",
-    rank: 1,
-    player: "Mohammed Salah",
-    country: "Egypt",
-    points: 127,
-    cleansheet: 7,
-    goals: 7,
-    assists: 4,
-    cards: 1,
-  },
-  {
-    id: "2",
-    rank: 2,
-    player: "Sadio Mané",
-    country: "Senegal",
-    points: 114,
-    cleansheet: 6,
-    goals: 6,
-    assists: 5,
-    cards: 0,
-  },
-  {
-    id: "3",
-    rank: 3,
-    player: "Riyad Mahrez",
-    country: "Algeria",
-    points: 109,
-    cleansheet: 4,
-    goals: 4,
-    assists: 6,
-    cards: 2,
-  },
-  {
-    id: "4",
-    rank: 4,
-    player: "Victor Osimhen",
-    country: "Nigeria",
-    points: 91,
-    cleansheet: 8,
-    goals: 8,
-    assists: 2,
-    cards: 1,
-  },
-  {
-    id: "5",
-    rank: 5,
-    player: "Achraf Hakimi",
-    country: "Morocco",
-    points: 84,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: "6",
-    rank: 6,
-    player: "Amadou Diallo",
-    country: "Morocco",
-    points: 78,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: "7",
-    rank: 7,
-    player: "Hakim Ziyech",
-    country: "Morocco",
-    points: 69,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: "8",
-    rank: 8,
-    player: "Samuel Chukwueze",
-    country: "Morocco",
-    points: 72,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: "9",
-    rank: 9,
-    player: "Mohammed Kudus",
-    country: "Morocco",
-    points: 65,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-  {
-    id: "10",
-    rank: 10,
-    player: "Ilias Chair",
-    country: "Morocco",
-    points: 87,
-    cleansheet: 2,
-    goals: 2,
-    assists: 4,
-    cards: 3,
-  },
-];
+// const mockAthleteRankings: AthleteRanking[] = [
+//   {
+//     id: "1",
+//     rank: 1,
+//     player: "Mohammed Salah",
+//     country: "Egypt",
+//     points: 127,
+//     cleansheet: 7,
+//     goals: 7,
+//     assists: 4,
+//     cards: 1,
+//   },
+//   {
+//     id: "2",
+//     rank: 2,
+//     player: "Sadio Mané",
+//     country: "Senegal",
+//     points: 114,
+//     cleansheet: 6,
+//     goals: 6,
+//     assists: 5,
+//     cards: 0,
+//   },
+//   {
+//     id: "3",
+//     rank: 3,
+//     player: "Riyad Mahrez",
+//     country: "Algeria",
+//     points: 109,
+//     cleansheet: 4,
+//     goals: 4,
+//     assists: 6,
+//     cards: 2,
+//   },
+//   {
+//     id: "4",
+//     rank: 4,
+//     player: "Victor Osimhen",
+//     country: "Nigeria",
+//     points: 91,
+//     cleansheet: 8,
+//     goals: 8,
+//     assists: 2,
+//     cards: 1,
+//   },
+//   {
+//     id: "5",
+//     rank: 5,
+//     player: "Achraf Hakimi",
+//     country: "Morocco",
+//     points: 84,
+//     cleansheet: 2,
+//     goals: 2,
+//     assists: 4,
+//     cards: 3,
+//   },
+//   {
+//     id: "6",
+//     rank: 6,
+//     player: "Amadou Diallo",
+//     country: "Morocco",
+//     points: 78,
+//     cleansheet: 2,
+//     goals: 2,
+//     assists: 4,
+//     cards: 3,
+//   },
+//   {
+//     id: "7",
+//     rank: 7,
+//     player: "Hakim Ziyech",
+//     country: "Morocco",
+//     points: 69,
+//     cleansheet: 2,
+//     goals: 2,
+//     assists: 4,
+//     cards: 3,
+//   },
+//   {
+//     id: "8",
+//     rank: 8,
+//     player: "Samuel Chukwueze",
+//     country: "Morocco",
+//     points: 72,
+//     cleansheet: 2,
+//     goals: 2,
+//     assists: 4,
+//     cards: 3,
+//   },
+//   {
+//     id: "9",
+//     rank: 9,
+//     player: "Mohammed Kudus",
+//     country: "Morocco",
+//     points: 65,
+//     cleansheet: 2,
+//     goals: 2,
+//     assists: 4,
+//     cards: 3,
+//   },
+//   {
+//     id: "10",
+//     rank: 10,
+//     player: "Ilias Chair",
+//     country: "Morocco",
+//     points: 87,
+//     cleansheet: 2,
+//     goals: 2,
+//     assists: 4,
+//     cards: 3,
+//   },
+// ];
 
 type TabType = "global" | "athlete";
 
@@ -141,12 +141,19 @@ function RankingPageContent() {
   const [loadingGlobal, setLoadingGlobal] = useState<boolean>(true);
   const [globalError, setGlobalError] = useState<string | null>(null);
   const [showNoTeamModal, setShowNoTeamModal] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [meta, setMeta] = useState<{
+    totalPages?: number;
+    totalItems?: number;
+    itemsPerPage?: number;
+  }>();
   const ready = true;
+  const PAGE_SIZE = 2;
 
   useEffect(() => {
     let isMounted = true;
 
-    const fetchGlobalLeaderboard = async () => {
+    const fetchGlobalLeaderboard = async (page: number) => {
       setLoadingGlobal(true);
       setGlobalError(null);
       
@@ -160,12 +167,17 @@ function RankingPageContent() {
       }
       
       try {
-        const { items } = await leaderboardApi.getGlobalLeaderboard({
-          page: 1,
-          limit: 50,
+        const { items, meta: responseMeta } = await leaderboardApi.getGlobalLeaderboard({
+          page,
+          limit: PAGE_SIZE,
         });
         if (isMounted) {
           setGlobalRankings(items);
+          setMeta({
+            totalPages: responseMeta?.totalPages ?? undefined,
+            totalItems: responseMeta?.totalItems ?? undefined,
+            itemsPerPage: responseMeta?.itemsPerPage ?? PAGE_SIZE,
+          });
         }
       } catch (error) {
         const errorResponse = error as {
@@ -189,6 +201,8 @@ function RankingPageContent() {
           } else {
             setGlobalError(message);
           }
+          setGlobalRankings([]);
+          setMeta(undefined);
         }
       } finally {
         if (isMounted) {
@@ -197,12 +211,12 @@ function RankingPageContent() {
       }
     };
 
-    fetchGlobalLeaderboard();
+    fetchGlobalLeaderboard(currentPage);
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [currentPage]);
 
   return (
     <>
@@ -258,13 +272,20 @@ function RankingPageContent() {
                       No global leaderboard data available.
                     </p>
                   ) : (
-                    <GlobalRankingsTable rankings={globalRankings} />
+                    <GlobalRankingsTable
+                      rankings={globalRankings}
+                      itemsPerPage={meta?.itemsPerPage ?? PAGE_SIZE}
+                      currentPage={currentPage}
+                      totalPages={meta?.totalPages}
+                      totalItems={meta?.totalItems}
+                      onPageChange={setCurrentPage}
+                    />
                   )}
                 </>
               )}
-              {activeTab === "athlete" && (
+              {/* {activeTab === "athlete" && (
                 <AthleteRankingsTable rankings={mockAthleteRankings} />
-              )}
+              )} */}
             </div>
           </div>
         </div>

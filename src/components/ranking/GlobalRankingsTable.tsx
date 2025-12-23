@@ -7,14 +7,24 @@ import { GlobalRanking, SortField, SortDirection } from '@/types/ranking';
 interface GlobalRankingsTableProps {
   rankings: GlobalRanking[];
   itemsPerPage?: number;
+  currentPage?: number;
+  totalPages?: number;
+  totalItems?: number;
+  onPageChange?: (page: number) => void;
 }
 
-const ITEMS_PER_PAGE = 20;
+const DEFAULT_ITEMS_PER_PAGE = 50;
 
-export default function GlobalRankingsTable({ rankings, itemsPerPage = ITEMS_PER_PAGE }: GlobalRankingsTableProps) {
+export default function GlobalRankingsTable({
+  rankings,
+  itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
+  currentPage = 1,
+  totalPages,
+  totalItems,
+  onPageChange,
+}: GlobalRankingsTableProps) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
-  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -71,15 +81,17 @@ export default function GlobalRankingsTable({ rankings, itemsPerPage = ITEMS_PER
     }
   });
 
-  // Pagination logic
-  const totalPages = Math.ceil(sortedRankings.length / itemsPerPage);
+  const computedTotalPages =
+    totalPages ??
+    (totalItems ? Math.max(1, Math.ceil(totalItems / itemsPerPage)) : Math.max(1, Math.ceil(sortedRankings.length / itemsPerPage)));
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedRankings = sortedRankings.slice(startIndex, endIndex);
+  const displayedRankings = sortedRankings;
+  const totalCount = totalItems ?? (totalPages ? totalPages * itemsPerPage : displayedRankings.length);
 
   const goToPage = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+    if (!onPageChange) return;
+    if (page >= 1 && page <= computedTotalPages) {
+      onPageChange(page);
     }
   };
 
@@ -150,7 +162,7 @@ export default function GlobalRankingsTable({ rankings, itemsPerPage = ITEMS_PER
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {paginatedRankings.map((ranking, index) => {
+            {displayedRankings.map((ranking, index) => {
               const displayRank = startIndex + index + 1;
               return (
               <tr key={ranking.id} className="hover:bg-gray-50">
@@ -196,10 +208,10 @@ export default function GlobalRankingsTable({ rankings, itemsPerPage = ITEMS_PER
       </div>
 
       {/* Pagination Controls */}
-      {totalPages > 1 && (
+      {computedTotalPages > 1 && (
         <div className="flex items-center justify-between px-6 py-4 border-t border-[#F1F2F4]">
           <div className="text-sm text-[#656E81]">
-            Showing {startIndex + 1} - {Math.min(endIndex, sortedRankings.length)} of {sortedRankings.length} teams
+            Showing {startIndex + 1} - {Math.min(startIndex + displayedRankings.length, totalCount)} of {totalCount} teams
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -216,16 +228,16 @@ export default function GlobalRankingsTable({ rankings, itemsPerPage = ITEMS_PER
             
             {/* Page Numbers */}
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+              {Array.from({ length: computedTotalPages }, (_, i) => i + 1).map((page) => {
                 // Show first, last, current, and adjacent pages
                 const showPage = 
                   page === 1 || 
-                  page === totalPages || 
+                  page === computedTotalPages || 
                   Math.abs(page - currentPage) <= 1;
                 
                 const showEllipsis = 
                   (page === 2 && currentPage > 3) || 
-                  (page === totalPages - 1 && currentPage < totalPages - 2);
+                  (page === computedTotalPages - 1 && currentPage < computedTotalPages - 2);
 
                 if (!showPage && !showEllipsis) return null;
 
@@ -255,9 +267,9 @@ export default function GlobalRankingsTable({ rankings, itemsPerPage = ITEMS_PER
 
             <button
               onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
+              disabled={currentPage === computedTotalPages}
               className={`flex items-center justify-center w-8 h-8 rounded-lg border transition-colors ${
-                currentPage === totalPages
+                currentPage === computedTotalPages
                   ? 'border-[#F1F2F4] text-[#D4D7DD] cursor-not-allowed'
                   : 'border-[#D4D7DD] text-[#656E81] hover:bg-gray-50'
               }`}
