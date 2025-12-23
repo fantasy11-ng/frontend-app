@@ -273,7 +273,9 @@ export default function LandingPage() {
                 />
               </div>
               <h3 className="text-2xl font-bold mb-2">Second Place Champion</h3>
-              <p className="text-3xl font-bold text-gray-300 mb-4 invisible">.</p>
+              <p className="text-3xl font-bold text-gray-300 mb-4 invisible">
+                .
+              </p>
               <ul className="text-left space-y-2 text-red-100">
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
@@ -301,8 +303,12 @@ export default function LandingPage() {
                   className=""
                 />
               </div>
-              <h3 className="text-2xl font-bold mb-2">Top 3 Predictor Winners</h3>
-              <p className="text-3xl font-bold text-amber-400 mb-4 invisible">.</p>
+              <h3 className="text-2xl font-bold mb-2">
+                Top 3 Predictor Winners
+              </h3>
+              <p className="text-3xl font-bold text-amber-400 mb-4 invisible">
+                .
+              </p>
               <ul className="text-left space-y-2 text-red-100">
                 <li className="flex items-center">
                   <Plus className="w-4 h-4 mr-2" />
@@ -409,6 +415,16 @@ export default function LandingPage() {
                 question: "About AFCON 2026 Fantasy?",
                 answer:
                   "AFCON 2026 Fantasy is a fantasy football platform where you can build your dream team, make predictions, and compete for amazing prizes during the African Cup of Nations tournament.",
+              },
+              {
+                question: "How are points calculated for my fantasy team?",
+                answer:
+                  "Your players earn points based on real match performances. Goals score 5 points, assists earn 3 points, and simply playing a match gets 1 point. Defenders and goalkeepers get 4 bonus points for clean sheets, while goalkeepers earn 1 point for every 3 saves. High-rated performances unlock bonus points. Watch out for deductions though — yellow cards cost -1 point, red cards -3, penalty misses -3, own goals -2, and every 2 goals conceded costs defenders/goalkeepers -1 point.",
+              },
+              {
+                question: "How does scoring work for the predictor?",
+                answer:
+                  "In the group stage, correctly predicting a team's position (1st, 2nd, 3rd, or 4th) earns 1 point, with a 5-point bonus if you nail all positions in a group. In the knockout phase, round of 16 winners earn 2 points, quarter-finals 3 points, semi-finals 4 points, and correctly predicting the 3rd place or tournament winner gets you 5 points each!",
               },
               {
                 question: "How do I join a league?",
