@@ -99,7 +99,7 @@ export default function GlobalLeagueLeaderboardPage() {
             </button>
           </div>
 
-          <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6">
+          <div className="md:bg-white md:rounded-2xl md:border md:border-[#F1F2F4] md:shadow-sm md:p-6">
             <div className="mb-4">
               <h1 className="text-2xl font-semibold text-[#070A11]">Global Leaderboard</h1>
               <p className="text-sm text-[#656E81] mt-1">

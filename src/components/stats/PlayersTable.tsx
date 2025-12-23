@@ -435,7 +435,7 @@ export default function PlayersTable({
             <div className="text-sm text-gray-600 hidden md:block">
               Showing {startIndex} to {endIndex} of {meta.totalItems}
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center justify-between w-full space-x-4">
               <button
                 onClick={handlePrevious}
                 disabled={currentPage === 1}
