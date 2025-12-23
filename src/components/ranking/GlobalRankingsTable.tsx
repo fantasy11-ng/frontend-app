@@ -13,7 +13,7 @@ interface GlobalRankingsTableProps {
   onPageChange?: (page: number) => void;
 }
 
-const DEFAULT_ITEMS_PER_PAGE = 50;
+const DEFAULT_ITEMS_PER_PAGE = 2;
 
 export default function GlobalRankingsTable({
   rankings,
@@ -210,10 +210,10 @@ export default function GlobalRankingsTable({
       {/* Pagination Controls */}
       {computedTotalPages > 1 && (
         <div className="flex items-center justify-between px-6 py-4 border-t border-[#F1F2F4]">
-          <div className="text-sm text-[#656E81]">
+          <div className="hidden md:block text-sm text-[#656E81]">
             Showing {startIndex + 1} - {Math.min(startIndex + displayedRankings.length, totalCount)} of {totalCount} teams
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 justify-between w-full">
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}

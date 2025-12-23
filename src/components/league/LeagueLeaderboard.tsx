@@ -142,7 +142,7 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
+      <div className="max-w-[1440px] md:px-4 md:px-12 mx-auto py-8">
         {/* Header */}
         <div className="flex flex-col gap-3 mb-8 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
@@ -187,11 +187,14 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
 
         {/* Stats Cards */}
         <div className="mb-8">
-          <div className="flex gap-8 overflow-x-auto pb-3 pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <div
+            className="flex gap-8 overflow-x-auto pb-3 pr-2 scrollbar-thin 
+          scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+          >
             {statCards.map((card) => (
               <div
                 key={card.label}
-                className="border border-[#F1F2F4] p-2 rounded-2xl w-[432px]"
+                className="md:border md:border-[#F1F2F4] md:p-2 md:rounded-2xl w-[432px]"
               >
                 <div className="flex items-center gap-3 p-3">
                   <Image
@@ -216,7 +219,7 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
         </div>
 
         {/* Leaderboard Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-[#F1F2F4] p-6">
+        <div className="md:bg-white md:rounded-2xl md:shadow-sm md:border md:border-[#F1F2F4] md:p-6">
           <div className="mb-6">
             <h2 className="text-2xl font-semibold text-[#070A11] mb-1">
               Leaderboard
@@ -309,9 +312,9 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto bg-white rounded-2xl shadow-sm border border-[#F1F2F4]">
             <table className="w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 ">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-[#656E81] uppercase">
                     Rank
@@ -384,7 +387,7 @@ const LeagueLeaderboard: React.FC<LeagueLeaderboardProps> = ({
 
           {/* Pagination */}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-6 pt-4 border-t border-[#F1F2F4]">
-            <div className="text-sm text-[#656E81]">
+            <div className="hidden md:block text-sm text-[#656E81]">
               Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
               {Math.min(currentPage * itemsPerPage, filteredMembers.length)} of{" "}
               {filteredMembers.length} teams
