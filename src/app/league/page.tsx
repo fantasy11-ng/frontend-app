@@ -63,7 +63,9 @@ function LeaguePageContent() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [isLoadingUserStats, setIsLoadingUserStats] = useState(false);
   const [showNoTeamModal, setShowNoTeamModal] = useState(false);
-  const [currentGameweekId, setCurrentGameweekId] = useState<number | null>(null);
+  const [currentGameweekId, setCurrentGameweekId] = useState<number | null>(
+    null
+  );
   const ready = true;
 
   const getErrorMessage = useCallback((error: unknown, fallback: string) => {
@@ -121,8 +123,11 @@ function LeaguePageContent() {
       setIsLoadingUserStats(true);
       try {
         // Fetch global leaderboard to get user's stats
-        const { items, me } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 50 });
-        
+        const { items, me } = await leaderboardApi.getGlobalLeaderboard({
+          page: 1,
+          limit: 50,
+        });
+
         // Try to get team info
         let teamName = "—";
         try {
@@ -133,27 +138,32 @@ function LeaguePageContent() {
         }
 
         // Find user's entry in leaderboard for full stats
-        const userEntry = me?.teamId 
+        const userEntry = me?.teamId
           ? items.find((item: GlobalRanking) => item.id === me.teamId)
           : null;
 
-        const userName = currentUser?.fullName ?? 
-          (currentUser?.firstName && currentUser?.lastName 
-            ? `${currentUser.firstName} ${currentUser.lastName}` 
+        const userName =
+          currentUser?.fullName ??
+          (currentUser?.firstName && currentUser?.lastName
+            ? `${currentUser.firstName} ${currentUser.lastName}`
             : currentUser?.email ?? "Manager");
 
         setUserStats({
           globalRank: me?.rank ?? userEntry?.rank ?? null,
           teamName,
           userName,
-          currentGameweek: currentGameweekId ? `GW ${currentGameweekId}` : "GW -",
+          currentGameweek: currentGameweekId
+            ? `GW ${currentGameweekId}`
+            : "GW -",
           totalPoints: me?.totalPoints ?? userEntry?.totalPoints ?? 0,
           totalGoals: userEntry?.goals ?? 0,
           totalAssists: userEntry?.assists ?? 0,
         });
       } catch (error) {
         const errorResponse = error as {
-          response?: { data?: { message?: string; error?: { message?: string } } };
+          response?: {
+            data?: { message?: string; error?: { message?: string } };
+          };
           message?: string;
         };
         const message =
@@ -161,11 +171,12 @@ function LeaguePageContent() {
           errorResponse?.response?.data?.message ??
           errorResponse?.message ??
           "";
-        
+
         // Check if the error is because user doesn't have a team
-        const isNoTeamError = message.toLowerCase().includes("fantasy team not found") ||
+        const isNoTeamError =
+          message.toLowerCase().includes("fantasy team not found") ||
           message.toLowerCase().includes("team not found");
-        
+
         if (isNoTeamError) {
           setShowNoTeamModal(true);
         }
@@ -337,10 +348,7 @@ function LeaguePageContent() {
 
   return (
     <>
-      <NoTeamModal 
-        isOpen={showNoTeamModal} 
-        onGoBack={() => router.push("/")}
-      />
+      <NoTeamModal isOpen={showNoTeamModal} onGoBack={() => router.push("/")} />
       {showChampionship && (
         <ChampionshipPage
           details={mockChampionshipDetails}
@@ -350,7 +358,7 @@ function LeaguePageContent() {
 
       {!hasLeagues && !showChampionship && (
         <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-6">
-          <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6">
+          <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-3 md:p-6">
             {leaguesError && (
               <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {leaguesError}
@@ -386,10 +394,10 @@ function LeaguePageContent() {
 
       {hasLeagues && (
         <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-6 flex flex-col gap-6">
-          <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6">
+          <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-3 md:p-6">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex-1">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                   <div>
                     <h2 className="text-xl font-semibold text-[#070A11]">
                       Global Leaderboard
@@ -413,45 +421,63 @@ function LeaguePageContent() {
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-[#F5EBEB] flex items-center justify-center">
                       <span className="text-[#800000] font-semibold text-sm">
-                        {isLoadingUserStats ? "..." : userStats?.globalRank ? `#${userStats.globalRank}` : "—"}
+                        {isLoadingUserStats
+                          ? "..."
+                          : userStats?.globalRank
+                          ? `#${userStats.globalRank}`
+                          : "—"}
                       </span>
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-[#070A11] truncate max-w-[100px]">
-                        {isLoadingUserStats ? "..." : userStats?.teamName ?? "—"}
+                        {isLoadingUserStats
+                          ? "..."
+                          : userStats?.teamName ?? "—"}
                       </p>
                       <p className="text-[10px] text-[#656E81]">
                         {isLoadingUserStats ? "" : userStats?.userName ?? ""}
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Stats */}
                   <div className="flex items-center gap-4 sm:gap-6">
                     <div className="text-center">
                       <p className="text-lg font-semibold text-[#800000]">
-                        {isLoadingUserStats ? "..." : userStats?.totalPoints?.toLocaleString() ?? "0"}
+                        {isLoadingUserStats
+                          ? "..."
+                          : userStats?.totalPoints?.toLocaleString() ?? "0"}
                       </p>
-                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">Points</p>
+                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">
+                        Points
+                      </p>
                     </div>
                     <div className="text-center">
                       <p className="text-lg font-semibold text-[#800000]">
-                        {isLoadingUserStats ? "..." : userStats?.totalGoals?.toLocaleString() ?? "0"}
+                        {isLoadingUserStats
+                          ? "..."
+                          : userStats?.totalGoals?.toLocaleString() ?? "0"}
                       </p>
-                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">Goals</p>
+                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">
+                        Goals
+                      </p>
                     </div>
                     <div className="text-center">
                       <p className="text-lg font-semibold text-[#800000]">
-                        {isLoadingUserStats ? "..." : userStats?.totalAssists?.toLocaleString() ?? "0"}
+                        {isLoadingUserStats
+                          ? "..."
+                          : userStats?.totalAssists?.toLocaleString() ?? "0"}
                       </p>
-                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">Assists</p>
+                      <p className="text-[10px] text-[#656E81] uppercase tracking-wide">
+                        Assists
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-6">
+          <div className="bg-white border border-[#F1F2F4] rounded-2xl shadow-sm p-3 md:p-6">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
@@ -463,8 +489,8 @@ function LeaguePageContent() {
                     {visibleLeagues.length} of {filteredLeagues.length}.
                   </p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-center">
-                  <div className="relative flex-1 min-w-[220px]">
+                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-start md:items-center">
+                  <div className="relative flex-1 w-full md:min-w-[220px]">
                     <input
                       type="text"
                       value={searchTerm}
@@ -473,7 +499,8 @@ function LeaguePageContent() {
                         setVisibleCount(24);
                       }}
                       placeholder="Search leagues or codes"
-                      className="w-full rounded-lg border border-[#D4D7DD] bg-white py-2.5 pl-4 pr-4 text-sm text-[#070A11] placeholder:text-[#A0A6B1] focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
+                      className="w-full rounded-lg border border-[#D4D7DD] bg-white py-2.5 pl-4 pr-4 text-sm w-full md:w-auto
+                      text-[#070A11] placeholder:text-[#A0A6B1] focus:outline-none focus:ring-2 focus:ring-[#4AA96C]"
                     />
                   </div>
                   <button
@@ -510,11 +537,11 @@ function LeaguePageContent() {
                         key={
                           league.id || league.inviteCode || league.name || index
                         }
-                        className="w-full text-left px-4 py-3 flex items-start justify-between gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                        className="w-full text-left px-4 py-3 flex flex-col md:flex-row items-start justify-between gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h3 className="text-base font-semibold text-[#070A11] truncate">
+                            <h3 className="text-base font-semibold text-[#070A11] truncate max-w-[200px] md:max-w-full">
                               {league.name}
                             </h3>
                             <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#F1F2F4] text-[#4AA96C] font-semibold">
@@ -529,7 +556,7 @@ function LeaguePageContent() {
                               : ""}
                           </p>
                         </div>
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center justify-between gap-3 shrink-0 w-full md:w-auto">
                           {league.inviteCode && (
                             <div className="flex items-center gap-2">
                               <p className="text-xs text-[#070A11] font-mono">
