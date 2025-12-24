@@ -822,19 +822,15 @@ function PredictorPageContent() {
       <div className="max-w-[1440px] px-4 md:px-12 mx-auto py-8">
         {/* Header with Progress */}
         <div className="mb-8">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col md:flex-row gap-2 justify-between md:items-center mb-6">
             <h1 className="text-3xl text-[#070A11]">Tournament Predictor</h1>
-            <div className="text-right">
+            <div className="md:text-right">
               <div
                 className={`font-medium ${
                   overallProgress >= 100 ? "text-green-600" : "text-red-600"
                 }`}
               >
                 {overallProgress}% Complete
-              </div>
-              {/* TODO: Add the actual ending date and time of the tournament */}
-              <div className="text-gray-500 text-sm">
-                January 18, 2026 at 18:00 GMT
               </div>
             </div>
           </div>
