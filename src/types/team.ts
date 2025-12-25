@@ -2,7 +2,7 @@ export interface Team {
   id: string;
   name: string;
   logo?: string;
-  points: number;
+  totalPoints: number;
   budget: number;
   budgetRemaining: number;
   manager: string;
