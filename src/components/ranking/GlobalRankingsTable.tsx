@@ -18,13 +18,17 @@ const DEFAULT_ITEMS_PER_PAGE = 2;
 export default function GlobalRankingsTable({
   rankings,
   itemsPerPage = DEFAULT_ITEMS_PER_PAGE,
-  currentPage = 1,
-  totalPages,
-  totalItems,
+  currentPage: externalCurrentPage,
+  totalPages: externalTotalPages,
+  totalItems: externalTotalItems,
   onPageChange,
 }: GlobalRankingsTableProps) {
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [internalPage, setInternalPage] = useState(1);
+  
+  // Use external page if provided, otherwise use internal state
+  const currentPage = externalCurrentPage ?? internalPage;
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -81,17 +85,25 @@ export default function GlobalRankingsTable({
     }
   });
 
+  // For client-side pagination, calculate from data; for server-side, use provided values
+  const isClientSidePagination = !onPageChange;
+  const totalCount = externalTotalItems ?? sortedRankings.length;
   const computedTotalPages =
-    totalPages ??
-    (totalItems ? Math.max(1, Math.ceil(totalItems / itemsPerPage)) : Math.max(1, Math.ceil(sortedRankings.length / itemsPerPage)));
+    externalTotalPages ?? Math.max(1, Math.ceil(totalCount / itemsPerPage));
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const displayedRankings = sortedRankings;
-  const totalCount = totalItems ?? (totalPages ? totalPages * itemsPerPage : displayedRankings.length);
+  
+  // For client-side pagination, slice the data; for server-side, show all (already paginated by API)
+  const displayedRankings = isClientSidePagination
+    ? sortedRankings.slice(startIndex, startIndex + itemsPerPage)
+    : sortedRankings;
 
   const goToPage = (page: number) => {
-    if (!onPageChange) return;
     if (page >= 1 && page <= computedTotalPages) {
-      onPageChange(page);
+      if (onPageChange) {
+        onPageChange(page);
+      } else {
+        setInternalPage(page);
+      }
     }
   };
 

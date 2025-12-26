@@ -1371,7 +1371,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                 </h2>
                 <div className="mt-1">
                   <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                    {team.points} points
+                    {team.totalPoints} points
                   </span>
                 </div>
               </div>
