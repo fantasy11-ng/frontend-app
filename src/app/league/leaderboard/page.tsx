@@ -40,7 +40,8 @@ export default function GlobalLeagueLeaderboardPage() {
       }
       
       try {
-        const { items } = await leaderboardApi.getGlobalLeaderboard({ page: 1, limit: 50 });
+        // Fetch all items at once - pagination is handled client-side
+        const { items } = await leaderboardApi.getGlobalLeaderboard({});
         if (isMounted) {
           setRankings(items);
         }
@@ -66,6 +67,7 @@ export default function GlobalLeagueLeaderboardPage() {
           } else {
             setError(message);
           }
+          setRankings([]);
         }
       } finally {
         if (isMounted) {

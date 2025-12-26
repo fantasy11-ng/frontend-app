@@ -147,6 +147,8 @@ function TeamPageContent() {
     try {
       const data = await teamApi.getMyTeam();
       const apiTeam = data?.team;
+      const seasonTotalPoints = (data as { season?: { totalPoints?: number } })
+        ?.season?.totalPoints;
       const squadPlayers = data?.currentSquad?.players ?? [];
 
       if (apiTeam) {
@@ -154,7 +156,10 @@ function TeamPageContent() {
           id: apiTeam.id,
           name: apiTeam.name,
           logo: apiTeam.logo ?? (apiTeam as { logoUrl?: string }).logoUrl,
-          points: (apiTeam as { points?: number }).points ?? 0,
+          totalPoints:
+            seasonTotalPoints ??
+            (apiTeam as { totalPoints?: number }).totalPoints ??
+            0,
           budget: apiTeam.budgetRemaining ?? apiTeam.budgetTotal ?? 100000000,
           budgetRemaining: apiTeam.budgetRemaining ?? apiTeam.budgetTotal ?? 100000000,
           manager: (apiTeam as { owner?: { fullName?: string; email?: string } }).owner?.fullName ||
@@ -287,7 +292,7 @@ function TeamPageContent() {
         id: createdTeam.id,
         name: createdTeam.name,
         logo: createdTeam.logo || logoUrl,
-        points: createdTeam.points ?? 0,
+        totalPoints: createdTeam.totalPoints ?? 0,
         budget: createdTeam.budget ?? 100000000,
         budgetRemaining: createdTeam.budgetRemaining ?? 100000000,
         manager: createdTeam.manager ?? 'Current User',

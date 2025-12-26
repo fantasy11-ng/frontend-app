@@ -188,10 +188,10 @@ export default function HomePage() {
           setTeam({
             id: teamData.team.id ?? "",
             name: teamData.team.name ?? "",
-            points: teamData.team.points ?? 0,
+            totalPoints: teamData.team.totalPoints ?? 0,
             budget: teamData.team.budgetTotal ?? 0,
             budgetRemaining:
-              Number((teamData.team.budgetRemaining / 1000000).toFixed(1)) ?? 0,
+              Number(((teamData.team.budgetRemaining ?? 0) / 1000000).toFixed(1)),
             manager: teamData.team.manager ?? "",
             logo: teamData.team.logo ?? teamData.team.logoUrl,
           });
