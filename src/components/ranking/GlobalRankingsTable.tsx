@@ -13,7 +13,7 @@ interface GlobalRankingsTableProps {
   onPageChange?: (page: number) => void;
 }
 
-const DEFAULT_ITEMS_PER_PAGE = 2;
+const DEFAULT_ITEMS_PER_PAGE = 20;
 
 export default function GlobalRankingsTable({
   rankings,
