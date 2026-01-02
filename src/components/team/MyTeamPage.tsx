@@ -17,6 +17,7 @@ import { teamApi, FixturePerformanceItem } from "@/lib/api";
 import { TransferHistoryItem } from "@/lib/api/team";
 import toast from "react-hot-toast";
 import { Spinner } from "../common/Spinner";
+import { formatGameweekShort } from "@/lib/utils/gameweek";
 
 interface MyTeamPageProps {
   team: Team;
@@ -151,7 +152,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
             id: String(fx.id ?? Math.random()),
             homeTeam: { name: home?.name || "Home", flag: home?.logo },
             awayTeam: { name: away?.name || "Away", flag: away?.logo },
-            matchDay: fx.gameweekId ? `GW ${fx.gameweekId}` : "Upcoming",
+            matchDay: formatGameweekShort(fx.gameweekId),
             date: date
               ? date.toLocaleDateString(undefined, {
                   month: "short",
