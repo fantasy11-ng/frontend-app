@@ -12,6 +12,7 @@ import { BlogPostListItem } from "@/types/news";
 import { Fixture, Team } from "@/types/team";
 import { getCountryName } from "@/lib/constants/countries";
 import { Spinner } from "../common/Spinner";
+import { formatGameweekShort, formatGameweekLong } from "@/lib/utils/gameweek";
 
 type HomeFixture = Fixture & {
   time?: string;
@@ -56,6 +57,7 @@ const calculateGameweekCountdown = (fixtures: HomeFixture[]): GameweekCountdown 
 
   const now = Date.now();
   const currentGameweekId = fixtures[0]?.gameweekId;
+  console.log(fixtures)
   
   if (!currentGameweekId) {
     return { text: "", isGameweekInProgress: false };
@@ -290,7 +292,7 @@ export default function HomePage() {
             id: String(fx.id ?? Math.random()),
             homeTeam: { name: home?.name || "Home", flag: home?.logo },
             awayTeam: { name: away?.name || "Away", flag: away?.logo },
-            matchDay: fx.gameweekId ? `GW ${fx.gameweekId}` : "Upcoming",
+            matchDay: formatGameweekShort(fx.gameweekId),
             date: date,
             time,
             status: isLive ? "LIVE" : null,
@@ -397,7 +399,7 @@ export default function HomePage() {
           {/* Gameweek Info Bar */}
           <div className="flex flex-wrap items-center gap-3 mb-8 pb-4">
             <span className="px-4 py-2 bg-[#F5EBEB] text-[#800000] rounded-full text-sm font-medium">
-              {fixtures[0]?.gameweekId ? `Gameweek ${fixtures[0].gameweekId}` : "Gameweek -"}
+              {formatGameweekLong(fixtures[0]?.gameweekId)}
             </span>
             {!gameweekCountdown.isGameweekInProgress && gameweekCountdown.text && (
               <div className="flex items-center text-[#656E81] border border-[#D4D7DD] rounded-full px-2 py-1">

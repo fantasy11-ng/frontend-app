@@ -18,6 +18,7 @@ import NoTeamModal from "@/components/common/NoTeamModal";
 import { useCurrentUser } from "@/lib/api/hooks/useAuth";
 import { GlobalRanking } from "@/types/ranking";
 import { ProtectedRoute } from "@/components/auth";
+import { formatGameweekShort } from "@/lib/utils/gameweek";
 
 const mockChampionshipDetails: ChampionshipDetails = {
   totalPrizePool: "₦1,000,000+",
@@ -152,9 +153,7 @@ function LeaguePageContent() {
           globalRank: me?.rank ?? userEntry?.rank ?? null,
           teamName,
           userName,
-          currentGameweek: currentGameweekId
-            ? `GW ${currentGameweekId}`
-            : "GW -",
+          currentGameweek: formatGameweekShort(currentGameweekId),
           totalPoints: me?.totalPoints ?? userEntry?.totalPoints ?? 0,
           totalGoals: userEntry?.goals ?? 0,
           totalAssists: userEntry?.assists ?? 0,
