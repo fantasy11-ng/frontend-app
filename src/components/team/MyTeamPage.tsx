@@ -1560,7 +1560,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
               isTransferring={isProcessingTransfer}
             />
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-semibold text-gray-900">
                   Transfer History
@@ -1619,7 +1619,7 @@ const MyTeamPage: React.FC<MyTeamPageProps> = ({
                   </table>
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
         )}
 
